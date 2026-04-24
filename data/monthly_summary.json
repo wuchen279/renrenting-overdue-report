@@ -1,0 +1,10 @@
+[
+  {
+    "month": "2025-04",
+    "label": "2025年4月",
+    "total_orders": 7894,
+    "overdue_orders": 661,
+    "overdue_rate": 8.37,
+    "normal_orders": 7233
+  }
+]
