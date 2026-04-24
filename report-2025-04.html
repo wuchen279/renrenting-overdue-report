@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>人人租逾期分析 + 评分卡诊断报告</title>
+<title>人人租逾期分析 + 评分卡诊断报告 v3</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -104,24 +104,25 @@ footer {
 <body>
 
 <nav>
-  <div class="brand">人人租 逾期分析 + 评分卡诊断报告</div>
+  <div class="brand">人人租 逾期分析 + 评分卡诊断报告 v3</div>
   <div>
     <span class="tag">数据周期 2025-2026</span>
     <span class="tag">覆盖度 27%</span>
+    <span class="tag">新增：台数/首逾/DPD趋势</span>
   </div>
 </nav>
 
 <div class="hero">
-  <h1>人人租逾期数据分析<br/>× 信用评分卡诊断报告</h1>
+  <h1>人人租逾期数据分析<br/>× 信用评分卡诊断报告 v3</h1>
   <p>基于全店铺 7,894 条订单数据，结合评分卡框架，
      识别风险维度、诊断数据缺口、输出可落地优化建议</p>
 </div>
 
 <div class="container">
 
-<!-- KPI -->
+<!-- ==================== KPI ==================== -->
 <div class="section">
-  <div class="section-title">核心指标概览</div>
+  <div class="section-title">一、核心指标概览</div>
   <div class="metrics">
     <div class="metric">
       <span class="val blue">7,894</span>
@@ -150,9 +151,9 @@ footer {
   </div>
 </div>
 
-<!-- 多维度逾期分析 -->
+<!-- ==================== 多维度逾期分析 ==================== -->
 <div class="section">
-  <div class="section-title">多维度逾期分析</div>
+  <div class="section-title">二、多维度逾期分析</div>
   <div class="grid2">
     <div class="card">
       <h3>店铺逾期分布</h3>
@@ -164,20 +165,17 @@ footer {
     </div>
   </div>
   <div class="grid2" style="margin-top:1rem">
-    <div class="card">
-      <h3>省份逾期率 Top15</h3>
-      <canvas id="provChart" height="300"></canvas>
-    </div>
+    <!-- 省份图表已移除，由后面的 Top20 表格替代 -->
     <div class="card">
       <h3>订单来源逾期分布</h3>
       <canvas id="srcChart" height="260"></canvas>
     </div>
-  </div>
-  <div class="grid2" style="margin-top:1rem">
     <div class="card">
       <h3>总租金分档逾期率</h3>
       <canvas id="rentbinChart" height="260"></canvas>
     </div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
     <div class="card">
       <h3>品牌逾期率 Top12（≥10单）</h3>
       <canvas id="brandChart" height="260"></canvas>
@@ -185,9 +183,62 @@ footer {
   </div>
 </div>
 
-<!-- 逾期天数分布（修复） -->
+<!-- ==================== 台数分析（新增） ==================== -->
 <div class="section">
-  <div class="section-title">逾期天数分布分析</div>
+  <div class="section-title">三、台数分析（新增）</div>
+  <div class="card">
+    <div style="position:relative;height:300px;margin:16px 0;">
+      <canvas id="chartTai"></canvas>
+    </div>
+    <table class="rst">
+      <thead><tr><th>台数分组</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
+      <tbody>
+        <tr><td>1台</td><td>4,935</td><td>317</td><td style="color:#16a34a;font-weight:700">6.42%</td></tr>
+        <tr><td>2台</td><td>984</td><td>101</td><td style="color:#dc2626;font-weight:700">10.26%</td></tr>
+        <tr><td>3台</td><td>424</td><td>42</td><td style="color:#d97706;font-weight:700">9.91%</td></tr>
+        <tr><td>4台</td><td>304</td><td>40</td><td style="color:#dc2626;font-weight:700">13.16%</td></tr>
+        <tr><td>5台+</td><td>1,247</td><td>161</td><td style="color:#dc2626;font-weight:700">12.91%</td></tr>
+      </tbody>
+    </table>
+    <div style="background:#f0f7ff;border-left:4px solid var(--accent);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;color:#555;font-size:.88rem;">
+      📊 关键发现：下单台数越多，逾期表现越差。1台逾期率 6.42%，5台以上升至 12.91%。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 首逾月份分析（新增） ==================== -->
+<div class="section">
+  <div class="section-title">四、首逾月份分析（新增）</div>
+  <div class="card">
+    <div style="position:relative;height:300px;margin:16px 0;">
+      <canvas id="chartShou"></canvas>
+    </div>
+    <table class="rst">
+      <thead><tr><th>首逾月份（第N个月首次逾期）</th><th>订单数</th></tr></thead>
+      <tbody>
+        <tr><td>M0（正常，已排除）</td><td>—</td></tr>
+        <tr><td>M1</td><td>60</td></tr>
+        <tr><td>M2</td><td>117</td></tr>
+        <tr><td>M3</td><td>118</td></tr>
+        <tr><td>M4</td><td>102</td></tr>
+        <tr><td>M5</td><td>73</td></tr>
+        <tr><td>M6</td><td>69</td></tr>
+        <tr><td>M7</td><td>50</td></tr>
+        <tr><td>M8</td><td>24</td></tr>
+        <tr><td>M9</td><td>20</td></tr>
+        <tr><td>M10</td><td>12</td></tr>
+        <tr><td>M11</td><td>6</td></tr>
+      </tbody>
+    </table>
+    <div style="background:#f0f7ff;border-left:4px solid var(--accent);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;color:#555;font-size:.88rem;">
+      📊 关键发现：首逾高峰在 M2~M4（第2~4个月），占逾期订单的绝大多数。M0（正常）已排除。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 逾期天数分布（修复） ==================== -->
+<div class="section">
+  <div class="section-title">五、逾期天数分布分析</div>
   <div class="grid2">
     <div class="card">
       <h3>逾期天数直方图（逾期订单共 661 单）</h3>
@@ -200,9 +251,86 @@ footer {
   </div>
 </div>
 
-<!-- 风控标签 vs 逾期率（修复） -->
+<!-- ==================== 年度-月份DPD趋势（新增） ==================== -->
 <div class="section">
-  <div class="section-title">风控标签 vs 逾期率</div>
+  <div class="section-title">六、年度-月份逾期等级 + DPD趋势（新增）</div>
+  <div class="card">
+    <div style="position:relative;height:320px;margin:16px 0;">
+      <canvas id="chartYM"></canvas>
+    </div>
+    <table class="rst">
+      <thead><tr><th>年度月份</th><th>总订单</th><th>M1</th><th>M2</th><th>M3</th><th>M3+</th><th>正常</th><th>DPD30+</th><th>DPD30+率</th><th>DPD90+</th><th>DPD90+率</th></tr></thead>
+      <tbody>
+        <tr><td>2025-01</td><td>114</td><td>1</td><td>3</td><td>0</td><td>1</td><td>109</td><td style="color:#f59e0b;font-weight:600">4</td><td style="color:#f59e0b;">3.51%</td><td style="color:#ef4444;font-weight:600">1</td><td style="color:#ef4444;">0.88%</td></tr>
+        <tr><td>2025-02</td><td>244</td><td>2</td><td>0</td><td>2</td><td>7</td><td>233</td><td style="color:#f59e0b;font-weight:600">9</td><td style="color:#f59e0b;">3.69%</td><td style="color:#ef4444;font-weight:600">7</td><td style="color:#ef4444;">2.87%</td></tr>
+        <tr><td>2025-03</td><td>289</td><td>2</td><td>1</td><td>2</td><td>10</td><td>274</td><td style="color:#f59e0b;font-weight:600">13</td><td style="color:#f59e0b;">4.5%</td><td style="color:#ef4444;font-weight:600">10</td><td style="color:#ef4444;">3.46%</td></tr>
+        <tr><td>2025-04</td><td>249</td><td>6</td><td>1</td><td>2</td><td>14</td><td>226</td><td style="color:#f59e0b;font-weight:600">17</td><td style="color:#f59e0b;">6.83%</td><td style="color:#ef4444;font-weight:600">14</td><td style="color:#ef4444;">5.62%</td></tr>
+        <tr><td>2025-05</td><td>220</td><td>2</td><td>2</td><td>0</td><td>7</td><td>209</td><td style="color:#f59e0b;font-weight:600">9</td><td style="color:#f59e0b;">4.09%</td><td style="color:#ef4444;font-weight:600">7</td><td style="color:#ef4444;">3.18%</td></tr>
+        <tr><td>2025-06</td><td>444</td><td>3</td><td>2</td><td>3</td><td>26</td><td>410</td><td style="color:#f59e0b;font-weight:600">31</td><td style="color:#f59e0b;">6.98%</td><td style="color:#ef4444;font-weight:600">26</td><td style="color:#ef4444;">5.86%</td></tr>
+        <tr><td>2025-07</td><td>861</td><td>23</td><td>10</td><td>8</td><td>46</td><td>774</td><td style="color:#f59e0b;font-weight:600">64</td><td style="color:#f59e0b;">7.43%</td><td style="color:#ef4444;font-weight:600">46</td><td style="color:#ef4444;">5.34%</td></tr>
+        <tr><td>2025-08</td><td>762</td><td>18</td><td>16</td><td>15</td><td>27</td><td>686</td><td style="color:#f59e0b;font-weight:600">58</td><td style="color:#f59e0b;">7.61%</td><td style="color:#ef4444;font-weight:600">27</td><td style="color:#ef4444;">3.54%</td></tr>
+        <tr><td>2025-09</td><td>751</td><td>26</td><td>10</td><td>8</td><td>22</td><td>685</td><td style="color:#f59e0b;font-weight:600">40</td><td style="color:#f59e0b;">5.33%</td><td style="color:#ef4444;font-weight:600">22</td><td style="color:#ef4444;">2.93%</td></tr>
+        <tr><td>2025-10</td><td>596</td><td>29</td><td>10</td><td>6</td><td>19</td><td>532</td><td style="color:#f59e0b;font-weight:600">35</td><td style="color:#f59e0b;">5.87%</td><td style="color:#ef4444;font-weight:600">19</td><td style="color:#ef4444;">3.19%</td></tr>
+        <tr><td>2025-11</td><td>1,097</td><td>52</td><td>33</td><td>25</td><td>21</td><td>966</td><td style="color:#f59e0b;font-weight:600">79</td><td style="color:#f59e0b;">7.2%</td><td style="color:#ef4444;font-weight:600">21</td><td style="color:#ef4444;">1.91%</td></tr>
+        <tr><td>2025-12</td><td>1,068</td><td>38</td><td>22</td><td>17</td><td>10</td><td>981</td><td style="color:#f59e0b;font-weight:600">49</td><td style="color:#f59e0b;">4.59%</td><td style="color:#ef4444;font-weight:600">10</td><td style="color:#ef4444;">0.94%</td></tr>
+        <tr><td>2026-01</td><td>726</td><td>32</td><td>9</td><td>4</td><td>0</td><td>681</td><td style="color:#f59e0b;font-weight:600">13</td><td style="color:#f59e0b;">1.79%</td><td style="color:#ef4444;font-weight:600">0</td><td style="color:#ef4444;">0.0%</td></tr>
+        <tr><td>2026-02</td><td>473</td><td>5</td><td>1</td><td>0</td><td>0</td><td>467</td><td style="color:#f59e0b;font-weight:600">1</td><td style="color:#f59e0b;">0.21%</td><td style="color:#ef4444;font-weight:600">0</td><td style="color:#ef4444;">0.0%</td></tr>
+      </tbody>
+    </table>
+    <div style="color:#999;font-size:.82rem;margin-top:6px;">DPD30+ ≈ M2+M3+M3+；DPD90+ ≈ M3+；M0 为正常未显示。</div>
+  </div>
+</div>
+
+<!-- ==================== DPD月度趋势 - 箭头店铺（新增） ==================== -->
+<div class="section">
+  <div class="section-title">七、DPD月度趋势 — 箭头店铺（新增）</div>
+  <div class="card">
+    <table class="rst">
+      <thead><tr><th>年</th><th>下单月份</th><th>M1</th><th>M2</th><th>M3</th><th>M3+</th><th>正常</th><th>DPD30+</th><th>DPD90+</th></tr></thead>
+      <tbody>
+        <tr><td>2025年</td><td>1月</td><td>1</td><td>3</td><td>0</td><td>1</td><td>109</td><td style="color:#f59e0b;font-weight:600">114</td><td style="color:#ef4444;font-weight:600">4</td></tr>
+        <tr><td></td><td>2月</td><td>2</td><td>0</td><td>2</td><td>7</td><td>233</td><td style="color:#f59e0b;font-weight:600">244</td><td style="color:#ef4444;font-weight:600">9</td></tr>
+        <tr><td></td><td>3月</td><td>2</td><td>1</td><td>2</td><td>10</td><td>274</td><td style="color:#f59e0b;font-weight:600">289</td><td style="color:#ef4444;font-weight:600">13</td></tr>
+        <tr><td></td><td>4月</td><td>6</td><td>1</td><td>2</td><td>14</td><td>226</td><td style="color:#f59e0b;font-weight:600">249</td><td style="color:#ef4444;font-weight:600">17</td></tr>
+        <tr><td></td><td>5月</td><td>2</td><td>2</td><td>0</td><td>7</td><td>209</td><td style="color:#f59e0b;font-weight:600">220</td><td style="color:#ef4444;font-weight:600">9</td></tr>
+        <tr><td></td><td>6月</td><td>3</td><td>2</td><td>3</td><td>26</td><td>410</td><td style="color:#f59e0b;font-weight:600">444</td><td style="color:#ef4444;font-weight:600">31</td></tr>
+        <tr><td></td><td>7月</td><td>23</td><td>10</td><td>8</td><td>46</td><td>774</td><td style="color:#f59e0b;font-weight:600">861</td><td style="color:#ef4444;font-weight:600">64</td></tr>
+        <tr><td></td><td>8月</td><td>18</td><td>16</td><td>15</td><td>27</td><td>686</td><td style="color:#f59e0b;font-weight:600">762</td><td style="color:#ef4444;font-weight:600">58</td></tr>
+        <tr><td></td><td>9月</td><td>26</td><td>10</td><td>8</td><td>22</td><td>685</td><td style="color:#f59e0b;font-weight:600">751</td><td style="color:#ef4444;font-weight:600">40</td></tr>
+        <tr><td></td><td>10月</td><td>29</td><td>10</td><td>6</td><td>19</td><td>532</td><td style="color:#f59e0b;font-weight:600">596</td><td style="color:#ef4444;font-weight:600">35</td></tr>
+        <tr><td></td><td>11月</td><td>52</td><td>33</td><td>25</td><td>21</td><td>966</td><td style="color:#f59e0b;font-weight:600">1,097</td><td style="color:#ef4444;font-weight:600">79</td></tr>
+        <tr><td></td><td>12月</td><td>38</td><td>22</td><td>17</td><td>10</td><td>981</td><td style="color:#f59e0b;font-weight:600">1,068</td><td style="color:#ef4444;font-weight:600">49</td></tr>
+        <tr><td>2026年</td><td>1月</td><td>32</td><td>9</td><td>4</td><td>0</td><td>681</td><td style="color:#f59e0b;font-weight:600">726</td><td style="color:#ef4444;font-weight:600">13</td></tr>
+        <tr><td></td><td>2月</td><td>5</td><td>1</td><td>0</td><td>0</td><td>467</td><td style="color:#f59e0b;font-weight:600">473</td><td style="color:#ef4444;font-weight:600">1</td></tr>
+      </tbody>
+    </table>
+    <div style="color:#999;font-size:.82rem;margin-top:6px;">箭头店铺 DPD 月度趋势（数据来源：完整报告）</div>
+  </div>
+</div>
+
+<!-- ==================== DPD月度趋势 - 驴上+雷猴（新增） ==================== -->
+<div class="section">
+  <div class="section-title">八、DPD月度趋势 — 驴上+雷猴（新增）</div>
+  <div class="card">
+    <table class="rst">
+      <thead><tr><th>店铺</th><th>年</th><th>下单月份</th><th>M1</th><th>M2</th><th>M3</th><th>M3+</th><th>正常</th><th>DPD30+</th><th>DPD90+</th></tr></thead>
+      <tbody>
+        <tr><td>箭头</td><td colspan="9" style="text-align:center;color:#64748b;">— 见上方箭头店铺明细 —</td></tr>
+        <tr><td rowspan="3">驴上</td><td>2025年</td><td>6月</td><td>1</td><td>0</td><td>1</td><td>4</td><td>94</td><td style="color:#f59e0b;font-weight:600">100</td><td style="color:#ef4444;font-weight:600">5</td></tr>
+        <tr><td>2026年</td><td>1月</td><td>13</td><td>6</td><td>2</td><td>0</td><td>215</td><td style="color:#f59e0b;font-weight:600">236</td><td style="color:#ef4444;font-weight:600">8</td></tr>
+        <tr><td colspan="2">驴上 总计</td><td>112</td><td>58</td><td>42</td><td>82</td><td>2,493</td><td style="color:#f59e0b;font-weight:600"><b>2,787</b></td><td style="color:#ef4444;font-weight:600"><b>294</b></td></tr>
+        <tr><td rowspan="3">雷猴</td><td>2025年</td><td>6月</td><td>1</td><td>0</td><td>1</td><td>7</td><td>55</td><td style="color:#f59e0b;font-weight:600">64</td><td style="color:#ef4444;font-weight:600">9</td></tr>
+        <tr><td>2026年</td><td>1月</td><td>5</td><td>0</td><td>1</td><td>0</td><td>114</td><td style="color:#f59e0b;font-weight:600">120</td><td style="color:#ef4444;font-weight:600">6</td></tr>
+        <tr><td colspan="2">雷猴 总计</td><td>52</td><td>25</td><td>17</td><td>31</td><td>1,294</td><td style="color:#f59e0b;font-weight:600"><b>1,419</b></td><td style="color:#ef4444;font-weight:600"><b>125</b></td></tr>
+      </tbody>
+    </table>
+    <div style="color:#999;font-size:.82rem;margin-top:6px;">驴上+雷猴 DPD 月度趋势（数据来源：完整报告）</div>
+  </div>
+</div>
+
+<!-- ==================== 风控标签 vs 逾期率（修复） ==================== -->
+<div class="section">
+  <div class="section-title">九、风控标签 vs 逾期率</div>
   <div class="grid2">
     <div class="card">
       <h3>风控定性 vs 逾期率</h3>
@@ -215,9 +343,42 @@ footer {
   </div>
 </div>
 
-<!-- 评分卡数据覆盖诊断 -->
+<!-- ==================== 省份逾期率 Top20（新增） ==================== -->
 <div class="section">
-  <div class="section-title">评分卡数据覆盖诊断</div>
+  <div class="section-title">十、省份逾期率 Top20（新增）</div>
+  <div class="card">
+    <table class="rst">
+      <thead><tr><th>#</th><th>省份</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>江苏省</td><td>323</td><td>53</td><td style="color:#ef4444;font-weight:700">16.41%</td></tr>
+        <tr><td>2</td><td>青海省</td><td>13</td><td>2</td><td style="color:#ef4444;font-weight:700">15.38%</td></tr>
+        <tr><td>3</td><td>重庆市</td><td>260</td><td>37</td><td style="color:#ef4444;font-weight:700">14.23%</td></tr>
+        <tr><td>4</td><td>山东省</td><td>405</td><td>57</td><td style="color:#ef4444;font-weight:700">14.07%</td></tr>
+        <tr><td>5</td><td>天津市</td><td>63</td><td>8</td><td style="color:#ef4444;font-weight:700">12.7%</td></tr>
+        <tr><td>6</td><td>贵州省</td><td>326</td><td>40</td><td style="color:#ef4444;font-weight:700">12.27%</td></tr>
+        <tr><td>7</td><td>四川省</td><td>362</td><td>44</td><td style="color:#ef4444;font-weight:700">12.15%</td></tr>
+        <tr><td>8</td><td>云南省</td><td>192</td><td>23</td><td style="color:#ef4444;font-weight:700">11.98%</td></tr>
+        <tr><td>9</td><td>辽宁省</td><td>138</td><td>16</td><td style="color:#ef4444;font-weight:700">11.59%</td></tr>
+        <tr><td>10</td><td>浙江省</td><td>387</td><td>40</td><td style="color:#ef4444;font-weight:700">10.34%</td></tr>
+        <tr><td>11</td><td>福建省</td><td>256</td><td>25</td><td style="color:#f59e0b;font-weight:700">9.77%</td></tr>
+        <tr><td>12</td><td>山西省</td><td>139</td><td>13</td><td style="color:#f59e0b;font-weight:700">9.35%</td></tr>
+        <tr><td>13</td><td>北京</td><td>81</td><td>7</td><td style="color:#f59e0b;font-weight:700">8.64%</td></tr>
+        <tr><td>14</td><td>河北省</td><td>368</td><td>30</td><td style="color:#f59e0b;font-weight:700">8.15%</td></tr>
+        <tr><td>15</td><td>广西</td><td>155</td><td>12</td><td style="color:#16a34a;font-weight:700">7.74%</td></tr>
+        <tr><td>16</td><td>江西省</td><td>194</td><td>15</td><td style="color:#16a34a;font-weight:700">7.73%</td></tr>
+        <tr><td>17</td><td>陕西省</td><td>131</td><td>10</td><td style="color:#16a34a;font-weight:700">7.63%</td></tr>
+        <tr><td>18</td><td>河南省</td><td>333</td><td>24</td><td style="color:#16a34a;font-weight:700">7.21%</td></tr>
+        <tr><td>19</td><td>内蒙古</td><td>90</td><td>6</td><td style="color:#16a34a;font-weight:700">6.67%</td></tr>
+        <tr><td>20</td><td>湖南省</td><td>241</td><td>16</td><td style="color:#16a34a;font-weight:700">6.64%</td></tr>
+      </tbody>
+    </table>
+    <div style="color:#999;font-size:.82rem;margin-top:6px;">已排除非正常省份名称（None/空值等）。</div>
+  </div>
+</div>
+
+<!-- ==================== 评分卡数据覆盖诊断 ==================== -->
+<div class="section">
+  <div class="section-title">十一、评分卡数据覆盖诊断</div>
   <div class="card">
     <p style="font-size:.88rem;color:#475569;margin-bottom:1rem">
       对比评分卡 26 个核心字段，评估当前数据中可直接使用、
@@ -240,174 +401,44 @@ footer {
     <table class="rst">
       <thead><tr><th>评分卡字段</th><th>数据现状</th><th>重要性</th><th>建议</th></tr></thead>
       <tbody>
-        <tr>
-          <td><b>年龄</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>性别</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#2563eb;font-weight:600">低</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>学历</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>城市等级</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"省份"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>月收入</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>工作类型</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>在职月数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>社保缴纳</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>本次租赁金额</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"总租金"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>租赁期限</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"租期"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>设备品类</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"商品类目"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>历史租赁次数</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"续租次数"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>历史逾期次数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>30天逾期次数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>90天逾期次数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>信用评分</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>贷款账户数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>信用卡额度使用率</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>近6月征信查询次数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>本次是否购买</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#2563eb;font-weight:600">低</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"是否购买"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>平台注册天数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>近30日登录次数</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#2563eb;font-weight:600">低</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>实名认证状态</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>人脸核验状态</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
-        <tr>
-          <td><b>风控审核结果</b></td>
-          <td>直接可用</td>
-          <td><span style="color:#d97706;font-weight:600">中</span></td>
-          <td style="font-size:.82rem;color:#64748b">字段"风控定性"已有数据，可直接接入评分卡</td>
-        </tr>
-        <tr>
-          <td><b>外部信用分</b></td>
-          <td>完全缺失</td>
-          <td><span style="color:#dc2626;font-weight:600">高</span></td>
-          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
-        </tr>
+        <tr><td><b>年龄</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>性别</b></td><td>完全缺失</td><td><span style="color:#2563eb;font-weight:600">低</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>学历</b></td><td>完全缺失</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>城市等级</b></td><td>直接可用</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">字段"省份"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>月收入</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>工作类型</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>在职月数</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>社保缴纳</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>本次租赁金额</b></td><td>直接可用</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">字段"总租金"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>租赁期限</b></td><td>直接可用</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">字段"租期"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>设备品类</b></td><td>直接可用</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">字段"商品类目"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>历史租赁次数</b></td><td>直接可用</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">字段"续租次数"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>历史逾期次数</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>30天逾期次数</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>90天逾期次数</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>信用评分</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>贷款账户数</b></td><td>完全缺失</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>信用卡额度使用率</b></td><td>完全缺失</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>近6月征信查询次数</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>本次是否购买</b></td><td>直接可用</td><td><span style="color:#2563eb;font-weight:600">低</span></td><td style="font-size:.82rem;color:#64748b">字段"是否购买"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>平台注册天数</b></td><td>完全缺失</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>近30日登录次数</b></td><td>完全缺失</td><td><span style="color:#2563eb;font-weight:600">低</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>实名认证状态</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>人脸核验状态</b></td><td>完全缺失</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
+        <tr><td><b>风控审核结果</b></td><td>直接可用</td><td><span style="color:#d97706;font-weight:600">中</span></td><td style="font-size:.82rem;color:#64748b">字段"风控定性"已有数据，可直接接入评分卡</td></tr>
+        <tr><td><b>外部信用分</b></td><td>完全缺失</td><td><span style="color:#dc2626;font-weight:600">高</span></td><td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- 优化建议 -->
+<!-- ==================== 优化建议 ==================== -->
 <div class="section">
-  <div class="section-title">优化建议（落地优先级排序）</div>
+  <div class="section-title">十二、优化建议（落地优先级排序）</div>
 
   <div class="rec-card">
     <b>[高优] 接入征信/信用分数据</b><br/>
-    当前缺失：信用评分、贷款账户数、负债收入比、近6月查询次数等核心征信字段。
+    当前缺失：信用评分、贷款账户数、近6月查询次数等核心征信字段。
     建议对接芝麻信用、百行征信或央行征信，覆盖 <b>5个高重要性字段</b>，
     预计可将评分卡区分度（AUC）提升 15%-25%。
   </div>
@@ -442,9 +473,21 @@ footer {
     <b>[发现] 高租金订单逾期率明显更高</b><br/>
     建议对高租金订单（≥10000元）提高风控审核等级，或要求额外担保/押金。
   </div>
+
+  <div class="rec-card warn">
+    <b>[新增发现] 台数与逾期率正相关</b><br/>
+    5台以上订单逾期率（12.91%）是1台订单（6.42%）的 2 倍。
+    建议对多台订单增加人工审核节点，或要求更高的信用门槛。
+  </div>
+
+  <div class="rec-card danger">
+    <b>[新增发现] 首逾高峰在 M2~M4</b><br/>
+    首逾月份集中在第2~4个月，说明早期催收介入非常关键。
+    建议在 M1 账单日增加自动提醒，M2 升级为人工催收，降低首逾率。
+  </div>
 </div>
 
-<!-- 附录：维度明细表 -->
+<!-- ==================== 附录：维度明细表 ==================== -->
 <div class="section">
   <div class="section-title">附录：维度逾期明细表</div>
   <div class="card">
@@ -452,136 +495,49 @@ footer {
     <table class="rst">
       <thead><tr><th>店铺</th><th>订单数</th><th>逾期数</th><th>逾期率</th><th>总租金均值</th></tr></thead>
       <tbody>
-        <tr>
-          <td>驴上</td>
-          <td>2,787</td>
-          <td style="color:var(--red)">294</td>
-          <td><b>10.55%</b></td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <td>雷猴</td>
-          <td>1,419</td>
-          <td style="color:var(--red)">125</td>
-          <td><b>8.81%</b></td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <td>箭头</td>
-          <td>3,688</td>
-          <td style="color:var(--red)">242</td>
-          <td><b>6.56%</b></td>
-          <td>0</td>
-        </tr>      </tbody></table></div>
+        <tr><td>驴上</td><td>2,787</td><td style="color:var(--red)">294</td><td><b>10.55%</b></td><td>0</td></tr>
+        <tr><td>雷猴</td><td>1,419</td><td style="color:var(--red)">125</td><td><b>8.81%</b></td><td>0</td></tr>
+        <tr><td>箭头</td><td>3,688</td><td style="color:var(--red)">242</td><td><b>6.56%</b></td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
   <div class="card" style="margin-top:1rem">
     <h3>商品类目维度（全量）</h3>
     <table class="rst">
       <thead><tr><th>商品类目</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
       <tbody>
-        <tr>
-          <td>显示器</td>
-          <td>20</td>
-          <td>4</td>
-          <td style="color:var(--red);font-weight:600">20.0%</td>
-        </tr>
-        <tr>
-          <td>影棚器材</td>
-          <td>47</td>
-          <td>6</td>
-          <td style="color:var(--yellow);font-weight:600">12.77%</td>
-        </tr>
-        <tr>
-          <td>笔记本</td>
-          <td>127</td>
-          <td>12</td>
-          <td style="color:var(--green);font-weight:600">9.45%</td>
-        </tr>
-        <tr>
-          <td>微单</td>
-          <td>1,361</td>
-          <td>119</td>
-          <td style="color:var(--green);font-weight:600">8.74%</td>
-        </tr>
-        <tr>
-          <td>组装机</td>
-          <td>5,232</td>
-          <td>446</td>
-          <td style="color:var(--green);font-weight:600">8.52%</td>
-        </tr>
-        <tr>
-          <td>一体机</td>
-          <td>376</td>
-          <td>30</td>
-          <td style="color:var(--green);font-weight:600">7.98%</td>
-        </tr>
-        <tr>
-          <td>游戏台式机</td>
-          <td>611</td>
-          <td>39</td>
-          <td style="color:var(--green);font-weight:600">6.38%</td>
-        </tr>
-        <tr>
-          <td>办公台式机</td>
-          <td>101</td>
-          <td>5</td>
-          <td style="color:var(--green);font-weight:600">4.95%</td>
-        </tr>
-        <tr>
-          <td>电脑</td>
-          <td>1</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>
-        <tr>
-          <td>机器人</td>
-          <td>7</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>
-        <tr>
-          <td>直播设备专用屏幕</td>
-          <td>3</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>
-        <tr>
-          <td>镜头</td>
-          <td>8</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>      </tbody></table></div>
+        <tr><td>显示器</td><td>20</td><td>4</td><td style="color:var(--red);font-weight:600">20.0%</td></tr>
+        <tr><td>影棚器材</td><td>47</td><td>6</td><td style="color:var(--yellow);font-weight:600">12.77%</td></tr>
+        <tr><td>笔记本</td><td>127</td><td>12</td><td style="color:var(--green);font-weight:600">9.45%</td></tr>
+        <tr><td>微单</td><td>1,361</td><td>119</td><td style="color:var(--green);font-weight:600">8.74%</td></tr>
+        <tr><td>组装机</td><td>5,232</td><td>446</td><td style="color:var(--green);font-weight:600">8.52%</td></tr>
+        <tr><td>一体机</td><td>376</td><td>30</td><td style="color:var(--green);font-weight:600">7.98%</td></tr>
+        <tr><td>游戏台式机</td><td>611</td><td>39</td><td style="color:var(--green);font-weight:600">6.38%</td></tr>
+        <tr><td>办公台式机</td><td>101</td><td>5</td><td style="color:var(--green);font-weight:600">4.95%</td></tr>
+        <tr><td>电脑</td><td>1</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+        <tr><td>机器人</td><td>7</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+        <tr><td>直播设备专用屏幕</td><td>3</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+        <tr><td>镜头</td><td>8</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
   <div class="card" style="margin-top:1rem">
     <h3>订单来源维度</h3>
     <table class="rst">
       <thead><tr><th>订单来源</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
       <tbody>
-        <tr>
-          <td>企业小程序(含渠道商)</td>
-          <td>4,836</td>
-          <td>425</td>
-          <td style="color:var(--green);font-weight:600">8.79%</td>
-        </tr>
-        <tr>
-          <td>人人租-生活号</td>
-          <td>3,053</td>
-          <td>236</td>
-          <td style="color:var(--green);font-weight:600">7.73%</td>
-        </tr>
-        <tr>
-          <td>人人租-微信小程序</td>
-          <td>1</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>
-        <tr>
-          <td>个人小程序(含渠道商)</td>
-          <td>4</td>
-          <td>0</td>
-          <td style="color:var(--green);font-weight:600">0.0%</td>
-        </tr>      </tbody></table></div></div>
+        <tr><td>企业小程序(含渠道商)</td><td>4,836</td><td>425</td><td style="color:var(--green);font-weight:600">8.79%</td></tr>
+        <tr><td>人人租-生活号</td><td>3,053</td><td>236</td><td style="color:var(--green);font-weight:600">7.73%</td></tr>
+        <tr><td>人人租-微信小程序</td><td>1</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+        <tr><td>个人小程序(含渠道商)</td><td>4</td><td>0</td><td style="color:var(--green);font-weight:600">0.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 </div><!-- /container -->
 
-<!-- Charts JS -->
+<!-- ==================== Charts JS ==================== -->
 <script>
 (function() {
   const colors = {
@@ -624,25 +580,6 @@ footer {
       indexAxis: 'y',
       plugins: { legend: { display: false } },
       scales:  { x: { title: { display: true, text: '逾期率%' } } }
-    }
-  });
-
-  // ---- 省份 Top15 ----
-  new Chart(document.getElementById('provChart'), {
-    type: 'bar',
-    data: {
-      labels: ["   ", "江苏省", "青海省", "重庆市", "山东省", "天津市", "贵州省", "四川省", "云南省", "辽宁省", "浙江省", "福建省", "山西省", "北京", "河北省"],
-      datasets: [{
-        label: '逾期率%',
-        data: [25.0, 16.41, 15.38, 14.23, 14.07, 12.7, 12.27, 12.15, 11.98, 11.59, 10.34, 9.77, 9.35, 8.64, 8.15],
-        backgroundColor: colors.red,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      plugins: { legend: { display: false } },
-      scales: { x: { title: { display: true, text: '逾期率%' } } }
     }
   });
 
@@ -700,6 +637,44 @@ footer {
     }
   });
 
+  // ===== 台数分析 柱状图（新增）=====
+  new Chart(document.getElementById('chartTai'), {
+    type: 'bar',
+    data: {
+      labels: ["1台", "2台", "3台", "4台", "5台+"],
+      datasets: [{
+        label: '逾期率(%)',
+        data: [6.42, 10.26, 9.91, 13.16, 12.91],
+        backgroundColor: [6.42, 10.26, 9.91, 13.16, 12.91].map(v => v > 12 ? colors.red : v > 9 ? colors.yellow : colors.green),
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '逾期率(%)' } } }
+    }
+  });
+
+  // ===== 首逾月份 柱状图（新增）=====
+  new Chart(document.getElementById('chartShou'), {
+    type: 'bar',
+    data: {
+      labels: ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11"],
+      datasets: [{
+        label: '订单数',
+        data: [60, 117, 118, 102, 73, 69, 50, 24, 20, 12, 6],
+        backgroundColor: 'rgba(139,92,246,.7)',
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '订单数' } } }
+    }
+  });
+
   // ===== 逾期天数直方图 =====
   new Chart(document.getElementById('ovdChart'), {
     type: 'bar',
@@ -736,6 +711,37 @@ footer {
         legend: { position: 'bottom' },
         title:  { display: true, text: '逾期天数分档' }
       }
+    }
+  });
+
+  // ===== 年度-月份 DPD趋势折线图（新增）=====
+  new Chart(document.getElementById('chartYM'), {
+    type: 'line',
+    data: {
+      labels: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02"],
+      datasets: [
+        {
+          label: 'DPD30+率(%)',
+          data: [3.51, 3.69, 4.5, 6.83, 4.09, 6.98, 7.43, 7.61, 5.33, 5.87, 7.2, 4.59, 1.79, 0.21],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.1)',
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: 'DPD90+率(%)',
+          data: [0.88, 2.87, 3.46, 5.62, 3.18, 5.86, 5.34, 3.54, 2.93, 3.19, 1.91, 0.94, 0.0, 0.0],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.1)',
+          fill: true,
+          tension: 0.3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '比率(%)' } } }
     }
   });
 
@@ -793,7 +799,7 @@ footer {
 </script>
 
 <footer>
-  人人租逾期分析 + 评分卡诊断报告 &nbsp;|&nbsp; 基于评分卡框架 &nbsp;|&nbsp; 仅供业务参考
+  人人租逾期分析 + 评分卡诊断报告 v3 &nbsp;|&nbsp; 基于评分卡框架 &nbsp;|&nbsp; 仅供业务参考 &nbsp;|&nbsp; 2025-2026 数据
 </footer>
 
 </body>
