@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人人租逾期分析 + 评分卡诊断报告</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #1e40af; --accent: #0ea5e9; --green: #16a34a;
+  --yellow: #d97706; --red: #dc2626; --bg: #f1f5f9;
+  --card: #ffffff; --border: #e2e8f0; --text: #1e293b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.7;
+}
+nav {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8, #0ea5e9);
+  padding: .8rem 2rem; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0;
+  z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,.3);
+}
+nav .brand { color: #fff; font-size: 1.2rem; font-weight: 700; }
+nav .tag {
+  background: rgba(255,255,255,.2); color: #fff;
+  padding: .2rem .7rem; border-radius: 20px; font-size: .78rem;
+  margin-left: .5rem;
+}
+.hero {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8, #0ea5e9);
+  padding: 2.5rem 2rem 2rem; text-align: center; color: #fff;
+}
+.hero h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
+.hero p  { opacity: .9; font-size: .95rem; max-width: 700px; margin: 0 auto; }
+.container { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+
+.metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+.metric {
+  background: var(--card); border-radius: 12px; padding: 1.2rem;
+  text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  border: 1px solid var(--border);
+}
+.metric .val { font-size: 1.8rem; font-weight: 800; display: block; }
+.metric .lbl { font-size: .78rem; color: #64748b; margin-top: .2rem; }
+.metric .val.green { color: var(--green); }
+.metric .val.red   { color: var(--red); }
+.metric .val.blue  { color: var(--primary); }
+
+.section { margin-bottom: 2.5rem; }
+.section-title {
+  font-size: 1.15rem; font-weight: 700; color: var(--primary);
+  border-left: 4px solid var(--accent); padding-left: .8rem;
+  margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem;
+}
+.card {
+  background: var(--card); border-radius: 12px; padding: 1.3rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid var(--border); margin-bottom: 1rem;
+}
+.card h3 { font-size: .95rem; font-weight: 600; color: var(--primary);
+           margin-bottom: .8rem; }
+
+table.rst {
+  width: 100%; border-collapse: collapse; font-size: .82rem;
+}
+table.rst th {
+  background: var(--primary); color: #fff; padding: .35rem .6rem;
+  text-align: left; font-weight: 600;
+}
+table.rst td {
+  padding: .3rem .6rem; border-bottom: 1px solid #f1f5f9;
+}
+table.rst tr:hover td { background: #f8fafc; }
+
+.cov-wrap { margin: 1rem 0; }
+.cov-bar  { height: 18px; border-radius: 9px; background: #e2e8f0; overflow: hidden; }
+.cov-fill { height: 100%; border-radius: 9px;
+            background: linear-gradient(90deg, var(--accent), var(--green)); }
+.cov-label { font-size: .82rem; color: #475569; margin-top: .3rem; }
+
+.rec-card {
+  background: #f0fdf4; border-left: 4px solid var(--green);
+  border-radius: 0 8px 8px 0; padding: 1rem; margin: .5rem 0;
+  font-size: .88rem; line-height: 1.8;
+}
+.rec-card.warn { background: #fffbeb; border-left-color: var(--yellow); }
+.rec-card.danger { background: #fef2f2; border-left-color: var(--red); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media(max-width: 900px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+footer {
+  background: #1e293b; color: #94a3b8; text-align: center;
+  padding: 1.5rem; font-size: .85rem; margin-top: 2rem;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">人人租 逾期分析 + 评分卡诊断报告</div>
+  <div>
+    <span class="tag">数据周期 2025-2026</span>
+    <span class="tag">覆盖度 27%</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>人人租逾期数据分析<br/>× 信用评分卡诊断报告</h1>
+  <p>基于全店铺 7,894 条订单数据，结合评分卡框架，
+     识别风险维度、诊断数据缺口、输出可落地优化建议</p>
+</div>
+
+<div class="container">
+
+<!-- KPI -->
+<div class="section">
+  <div class="section-title">核心指标概览</div>
+  <div class="metrics">
+    <div class="metric">
+      <span class="val blue">7,894</span>
+      <span class="lbl">订单总数</span>
+    </div>
+    <div class="metric">
+      <span class="val red">661</span>
+      <span class="lbl">逾期订单数</span>
+    </div>
+    <div class="metric">
+      <span class="val red">8.37%</span>
+      <span class="lbl">整体逾期率</span>
+    </div>
+    <div class="metric">
+      <span class="val green">7,233</span>
+      <span class="lbl">正常订单数</span>
+    </div>
+    <div class="metric">
+      <span class="val" style="color:var(--yellow)">27%</span>
+      <span class="lbl">评分卡数据覆盖度</span>
+    </div>
+    <div class="metric">
+      <span class="val blue">12</span>
+      <span class="lbl">商品类目数</span>
+    </div>
+  </div>
+</div>
+
+<!-- 多维度逾期分析 -->
+<div class="section">
+  <div class="section-title">多维度逾期分析</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>店铺逾期分布</h3>
+      <canvas id="shopChart" height="260"></canvas>
+    </div>
+    <div class="card">
+      <h3>商品类目逾期率</h3>
+      <canvas id="catChart" height="260"></canvas>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card">
+      <h3>省份逾期率 Top15</h3>
+      <canvas id="provChart" height="300"></canvas>
+    </div>
+    <div class="card">
+      <h3>订单来源逾期分布</h3>
+      <canvas id="srcChart" height="260"></canvas>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card">
+      <h3>总租金分档逾期率</h3>
+      <canvas id="rentbinChart" height="260"></canvas>
+    </div>
+    <div class="card">
+      <h3>品牌逾期率 Top12（≥10单）</h3>
+      <canvas id="brandChart" height="260"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 逾期天数分布（修复） -->
+<div class="section">
+  <div class="section-title">逾期天数分布分析</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>逾期天数直方图（逾期订单共 661 单）</h3>
+      <canvas id="ovdChart" height="280"></canvas>
+    </div>
+    <div class="card">
+      <h3>逾期天数分档统计</h3>
+      <canvas id="ovdPieChart" height="280"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 风控标签 vs 逾期率（修复） -->
+<div class="section">
+  <div class="section-title">风控标签 vs 逾期率</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>风控定性 vs 逾期率</h3>
+      <canvas id="rqChart" height="280"></canvas>
+    </div>
+    <div class="card">
+      <h3>新旧标签 vs 逾期率</h3>
+      <canvas id="noChart" height="280"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 评分卡数据覆盖诊断 -->
+<div class="section">
+  <div class="section-title">评分卡数据覆盖诊断</div>
+  <div class="card">
+    <p style="font-size:.88rem;color:#475569;margin-bottom:1rem">
+      对比评分卡 26 个核心字段，评估当前数据中可直接使用、
+      可推导、完全缺失的字段数量，计算覆盖度。
+    </p>
+    <div class="cov-wrap">
+      <div class="cov-bar">
+        <div class="cov-fill" style="width:27%"></div>
+      </div>
+      <div class="cov-label">
+        直接可用 <b style="color:var(--green)">7</b> &nbsp;|&nbsp;
+        可推导 <b style="color:var(--accent)">0</b> &nbsp;|&nbsp;
+        缺失 <b style="color:var(--red)">19</b> &nbsp;|&nbsp;
+        覆盖度 <b>27%</b> / 26字段
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem">
+    <h3>字段级覆盖详情</h3>
+    <table class="rst">
+      <thead><tr><th>评分卡字段</th><th>数据现状</th><th>重要性</th><th>建议</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>年龄</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>性别</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#2563eb;font-weight:600">低</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>学历</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>城市等级</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"省份"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>月收入</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>工作类型</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>在职月数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>社保缴纳</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>本次租赁金额</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"总租金"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>租赁期限</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"租期"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>设备品类</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"商品类目"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>历史租赁次数</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"续租次数"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>历史逾期次数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>30天逾期次数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>90天逾期次数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>信用评分</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>贷款账户数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>信用卡额度使用率</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>近6月征信查询次数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>本次是否购买</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#2563eb;font-weight:600">低</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"是否购买"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>平台注册天数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>近30日登录次数</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#2563eb;font-weight:600">低</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>实名认证状态</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>人脸核验状态</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+        <tr>
+          <td><b>风控审核结果</b></td>
+          <td>直接可用</td>
+          <td><span style="color:#d97706;font-weight:600">中</span></td>
+          <td style="font-size:.82rem;color:#64748b">字段"风控定性"已有数据，可直接接入评分卡</td>
+        </tr>
+        <tr>
+          <td><b>外部信用分</b></td>
+          <td>完全缺失</td>
+          <td><span style="color:#dc2626;font-weight:600">高</span></td>
+          <td style="font-size:.82rem;color:#64748b">需对接外部数据源或新增采集字段</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 优化建议 -->
+<div class="section">
+  <div class="section-title">优化建议（落地优先级排序）</div>
+
+  <div class="rec-card">
+    <b>[高优] 接入征信/信用分数据</b><br/>
+    当前缺失：信用评分、贷款账户数、负债收入比、近6月查询次数等核心征信字段。
+    建议对接芝麻信用、百行征信或央行征信，覆盖 <b>5个高重要性字段</b>，
+    预计可将评分卡区分度（AUC）提升 15%-25%。
+  </div>
+
+  <div class="rec-card warn">
+    <b>[高优] 补充收入与职业信息</b><br/>
+    当前缺失：月收入、工作类型、在职月数、社保缴纳。
+    建议在订单流程中增加职业信息选填项，或对接社保/公积金数据，
+    覆盖 <b>4个高重要性字段</b>。
+  </div>
+
+  <div class="rec-card">
+    <b>[中优] 完善平台行为数据</b><br/>
+    当前缺失：平台注册天数、近30日登录次数、人脸核验状态。
+    这些数据平台侧可直接提取，无需用户填写，
+    覆盖 <b>3个中重要性字段</b>，实施成本最低。
+  </div>
+
+  <div class="rec-card warn">
+    <b>[中优] 积累历史租赁行为</b><br/>
+    当前可部分推导：历史租赁次数、历史逾期次数、30/90天逾期次数。
+    需要至少 3-6 个月的订单积累才能计算稳定，
+    建议尽快启动历史数据回溯。
+  </div>
+
+  <div class="rec-card danger">
+    <b>[发现] 风控定性字段已有一定区分度</b><br/>
+    建议在风控流程中保留并强化该字段，并将其作为评分卡输入变量。
+  </div>
+
+  <div class="rec-card">
+    <b>[发现] 高租金订单逾期率明显更高</b><br/>
+    建议对高租金订单（≥10000元）提高风控审核等级，或要求额外担保/押金。
+  </div>
+</div>
+
+<!-- 附录：维度明细表 -->
+<div class="section">
+  <div class="section-title">附录：维度逾期明细表</div>
+  <div class="card">
+    <h3>店铺维度</h3>
+    <table class="rst">
+      <thead><tr><th>店铺</th><th>订单数</th><th>逾期数</th><th>逾期率</th><th>总租金均值</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>驴上</td>
+          <td>2,787</td>
+          <td style="color:var(--red)">294</td>
+          <td><b>10.55%</b></td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>雷猴</td>
+          <td>1,419</td>
+          <td style="color:var(--red)">125</td>
+          <td><b>8.81%</b></td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>箭头</td>
+          <td>3,688</td>
+          <td style="color:var(--red)">242</td>
+          <td><b>6.56%</b></td>
+          <td>0</td>
+        </tr>      </tbody></table></div>
+  <div class="card" style="margin-top:1rem">
+    <h3>商品类目维度（全量）</h3>
+    <table class="rst">
+      <thead><tr><th>商品类目</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>显示器</td>
+          <td>20</td>
+          <td>4</td>
+          <td style="color:var(--red);font-weight:600">20.0%</td>
+        </tr>
+        <tr>
+          <td>影棚器材</td>
+          <td>47</td>
+          <td>6</td>
+          <td style="color:var(--yellow);font-weight:600">12.77%</td>
+        </tr>
+        <tr>
+          <td>笔记本</td>
+          <td>127</td>
+          <td>12</td>
+          <td style="color:var(--green);font-weight:600">9.45%</td>
+        </tr>
+        <tr>
+          <td>微单</td>
+          <td>1,361</td>
+          <td>119</td>
+          <td style="color:var(--green);font-weight:600">8.74%</td>
+        </tr>
+        <tr>
+          <td>组装机</td>
+          <td>5,232</td>
+          <td>446</td>
+          <td style="color:var(--green);font-weight:600">8.52%</td>
+        </tr>
+        <tr>
+          <td>一体机</td>
+          <td>376</td>
+          <td>30</td>
+          <td style="color:var(--green);font-weight:600">7.98%</td>
+        </tr>
+        <tr>
+          <td>游戏台式机</td>
+          <td>611</td>
+          <td>39</td>
+          <td style="color:var(--green);font-weight:600">6.38%</td>
+        </tr>
+        <tr>
+          <td>办公台式机</td>
+          <td>101</td>
+          <td>5</td>
+          <td style="color:var(--green);font-weight:600">4.95%</td>
+        </tr>
+        <tr>
+          <td>电脑</td>
+          <td>1</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>
+        <tr>
+          <td>机器人</td>
+          <td>7</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>
+        <tr>
+          <td>直播设备专用屏幕</td>
+          <td>3</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>
+        <tr>
+          <td>镜头</td>
+          <td>8</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>      </tbody></table></div>
+  <div class="card" style="margin-top:1rem">
+    <h3>订单来源维度</h3>
+    <table class="rst">
+      <thead><tr><th>订单来源</th><th>订单数</th><th>逾期数</th><th>逾期率</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>企业小程序(含渠道商)</td>
+          <td>4,836</td>
+          <td>425</td>
+          <td style="color:var(--green);font-weight:600">8.79%</td>
+        </tr>
+        <tr>
+          <td>人人租-生活号</td>
+          <td>3,053</td>
+          <td>236</td>
+          <td style="color:var(--green);font-weight:600">7.73%</td>
+        </tr>
+        <tr>
+          <td>人人租-微信小程序</td>
+          <td>1</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>
+        <tr>
+          <td>个人小程序(含渠道商)</td>
+          <td>4</td>
+          <td>0</td>
+          <td style="color:var(--green);font-weight:600">0.0%</td>
+        </tr>      </tbody></table></div></div>
+</div><!-- /container -->
+
+<!-- Charts JS -->
+<script>
+(function() {
+  const colors = {
+    blue:   'rgba(37,99,235,.7)',
+    green:  'rgba(22,163,74,.7)',
+    red:    'rgba(220,38,38,.7)',
+    yellow: 'rgba(217,119,6,.7)',
+    teal:   'rgba(14,165,233,.7)',
+  };
+
+  // ---- 店铺柱状图 ----
+  new Chart(document.getElementById('shopChart'), {
+    type: 'bar',
+    data: {
+      labels: ["驴上", "雷猴", "箭头"],
+      datasets: [
+        { label: '逾期数',   data: [294, 125, 242], backgroundColor: colors.red,   borderRadius: 4 },
+        { label: '总订单数', data: [2787, 1419, 3688],  backgroundColor: colors.blue,  borderRadius: 4 },
+      ]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      scales:  { y: { beginAtZero: true } }
+    }
+  });
+
+  // ---- 类目逾期率 横向 ----
+  new Chart(document.getElementById('catChart'), {
+    type: 'bar',
+    data: {
+      labels: ["显示器", "影棚器材", "笔记本", "微单", "组装机", "一体机", "游戏台式机", "办公台式机", "电脑", "机器人", "直播设备专用屏幕", "镜头"],
+      datasets: [{
+        label: '逾期率%',
+        data: [20.0, 12.77, 9.45, 8.74, 8.52, 7.98, 6.38, 4.95, 0.0, 0.0, 0.0, 0.0],
+        backgroundColor: [20.0, 12.77, 9.45, 8.74, 8.52, 7.98, 6.38, 4.95, 0.0, 0.0, 0.0, 0.0].map(v => v > 15 ? colors.red : v > 8 ? colors.yellow : colors.green),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales:  { x: { title: { display: true, text: '逾期率%' } } }
+    }
+  });
+
+  // ---- 省份 Top15 ----
+  new Chart(document.getElementById('provChart'), {
+    type: 'bar',
+    data: {
+      labels: ["   ", "江苏省", "青海省", "重庆市", "山东省", "天津市", "贵州省", "四川省", "云南省", "辽宁省", "浙江省", "福建省", "山西省", "北京", "河北省"],
+      datasets: [{
+        label: '逾期率%',
+        data: [25.0, 16.41, 15.38, 14.23, 14.07, 12.7, 12.27, 12.15, 11.98, 11.59, 10.34, 9.77, 9.35, 8.64, 8.15],
+        backgroundColor: colors.red,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { title: { display: true, text: '逾期率%' } } }
+    }
+  });
+
+  // ---- 订单来源 ----
+  new Chart(document.getElementById('srcChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["企业小程序(含渠道商)", "人人租-生活号", "人人租-微信小程序", "个人小程序(含渠道商)"],
+      datasets: [{
+        data: [425, 236, 0, 0],
+        backgroundColor: [colors.red, colors.yellow, colors.green, colors.teal],
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' },
+        title:  { display: true, text: '逾期数分布' }
+      }
+    }
+  });
+
+  // ---- 总租金分档 ----
+  new Chart(document.getElementById('rentbinChart'), {
+    type: 'bar',
+    data: {
+      labels: [">=15000", "10000-15000", "8000-10000", "5000-8000", "3000-5000", "<3000"],
+      datasets: [{
+        label: '逾期率%',
+        data: [13.4, 11.08, 9.55, 8.79, 4.94, 4.21],
+        backgroundColor: colors.teal,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales:  { y: { title: { display: true, text: '逾期率%' } } }
+    }
+  });
+
+  // ---- 品牌 ----
+  new Chart(document.getElementById('brandChart'), {
+    type: 'bar',
+    data: {
+      labels: ["爱图仕", "卓威", "英特尔/酷睿", "捷宝", "ThinkPad", "索尼", "TASA", "见商品描述", "惠普", 0, " 神牛", "佳能"],
+      datasets: [{
+        label: '逾期率%',
+        data: [100.0, 50.0, 16.19, 14.29, 9.09, 8.81, 8.51, 8.33, 7.83, 6.74, 4.17, 0.0],
+        backgroundColor: colors.yellow,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales:  { y: { beginAtZero: true, title: { display: true, text: '逾期率%' } } }
+    }
+  });
+
+  // ===== 逾期天数直方图 =====
+  new Chart(document.getElementById('ovdChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-34", "35-69", "70-104", "105-139", "140-174", "175-209", "210-244", "245-279", "280-314", "315-349"],
+      datasets: [{
+        label: '订单数',
+        data: [250, 149, 89, 58, 27, 20, 35, 19, 9, 5],
+        backgroundColor: colors.red,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: '逾期天数' } },
+        y: { beginAtZero: true, title: { display: true, text: '订单数' } }
+      }
+    }
+  });
+
+  // ===== 逾期天数分档饼图 =====
+  new Chart(document.getElementById('ovdPieChart'), {
+    type: 'pie',
+    data: {
+      labels: ["90天以上", "8-30天", "31-60天", "1-7天", "61-90天"],
+      datasets: [{
+        data: [210, 123, 120, 116, 92],
+        backgroundColor: [colors.red, colors.yellow, colors.blue, colors.teal, colors.green],
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' },
+        title:  { display: true, text: '逾期天数分档' }
+      }
+    }
+  });
+
+  // ===== 风控定性 vs 逾期率 =====
+  new Chart(document.getElementById('rqChart'), {
+    type: 'bar',
+    data: {
+      labels: ["跳过", "风险高", "通过", "预收", "关闭"],
+      datasets: [
+        {
+          label: '逾期率%',
+          data: [14.29, 14.09, 6.88, 6.67, 0.0],
+          backgroundColor: [14.29, 14.09, 6.88, 6.67, 0.0].map(v => v > 15 ? colors.red : v > 8 ? colors.yellow : colors.green),
+          borderRadius: 4,
+          yAxisID: 'yRate',
+        },
+        {
+          label: '订单数',
+          data: [21.0, 1717.0, 6036.0, 15.0, 1.0],
+          backgroundColor: colors.blue,
+          borderRadius: 4,
+          yAxisID: 'yOrders',
+        }
+      ]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        x:        { title: { display: true, text: '风控定性' } },
+        yRate:    { beginAtZero: true, position: 'left',  title: { display: true, text: '逾期率%' } },
+        yOrders:  { beginAtZero: true, position: 'right', title: { display: true, text: '订单数' }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+
+  // ===== 新旧标签 vs 逾期率 =====
+  new Chart(document.getElementById('noChart'), {
+    type: 'bar',
+    data: {
+      labels: ["二手", "全新"],
+      datasets: [{
+        label: '逾期率%',
+        data: [8.4, 6.67],
+        backgroundColor: [8.4, 6.67].map(v => v > 10 ? colors.red : colors.green),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '逾期率%' } } }
+    }
+  });
+
+})();
+</script>
+
+<footer>
+  人人租逾期分析 + 评分卡诊断报告 &nbsp;|&nbsp; 基于评分卡框架 &nbsp;|&nbsp; 仅供业务参考
+</footer>
+
+</body>
+</html>
