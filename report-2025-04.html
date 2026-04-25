@@ -507,9 +507,249 @@ footer {
   </div>
 </div>
 
+<!-- ==================== 年龄维度逾期分析（新增） ==================== -->
+<div class="section">
+  <div class="section-title">十三、年龄维度逾期分析（新增）</div>
+
+  <!-- KPI 卡片行 -->
+  <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:1.2rem">
+    <div class="metric">
+      <span class="val blue">3,688</span>
+      <span class="lbl">有效年龄订单合计</span>
+    </div>
+    <div class="metric">
+      <span class="val red">242</span>
+      <span class="lbl">逾期订单合计</span>
+    </div>
+    <div class="metric">
+      <span class="val" style="color:#f59e0b">4.53%</span>
+      <span class="lbl">整体 DPD30+ 率</span>
+    </div>
+    <div class="metric">
+      <span class="val red">55-57岁</span>
+      <span class="lbl">DPD30 最高年龄组<br/>15.63%</span>
+    </div>
+    <div class="metric">
+      <span class="val green">46-48岁</span>
+      <span class="lbl">DPD30 最低年龄组<br/>0.00%</span>
+    </div>
+  </div>
+
+  <!-- 双图：DPD30 柱+DPD90 折线 -->
+  <div class="card">
+    <h3>各年龄段 DPD30+ / DPD90+ 逾期率对比</h3>
+    <div style="position:relative;height:360px;margin-top:12px">
+      <canvas id="chartAge"></canvas>
+    </div>
+    <div style="background:#fff7ed;border-left:4px solid #f59e0b;padding:10px 14px;margin-top:10px;border-radius:0 8px 8px 0;font-size:.86rem;color:#555">
+      <b>关键发现：</b>55-57岁年龄组 DPD30+ 高达 15.63%（远超均值），且 DPD90+ 达 12.50%，属于极高风险群体；
+      22-24岁年轻群体 DPD30+ 6.52% 也明显高于均值；46-48岁、58岁以上群体逾期率为 0%，表现最优。
+      整体呈现"两端高、中间低"的 U 型风险分布特征。
+    </div>
+  </div>
+
+  <!-- 年龄明细总表 -->
+  <div class="card" style="margin-top:1rem">
+    <h3>年龄组逾期率全量明细（按 DPD30+ 率降序）</h3>
+    <div style="overflow-x:auto">
+    <table class="rst" id="ageTable">
+      <thead>
+        <tr>
+          <th style="min-width:70px">年龄组</th>
+          <th style="text-align:center">M1</th>
+          <th style="text-align:center">M2</th>
+          <th style="text-align:center">M3</th>
+          <th style="text-align:center">M3+</th>
+          <th style="text-align:center">正常</th>
+          <th style="text-align:center">总计</th>
+          <th style="text-align:center;min-width:72px">DPD30+</th>
+          <th style="text-align:center;min-width:72px">DPD90+</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>55-57</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">4</td>
+          <td style="text-align:center">27</td><td style="text-align:center">32</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">15.63%</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">12.50%</td>
+        </tr>
+        <tr>
+          <td><b>22-24</b></td>
+          <td style="text-align:center">6</td><td style="text-align:center">3</td>
+          <td style="text-align:center">5</td><td style="text-align:center">13</td>
+          <td style="text-align:center">295</td><td style="text-align:center">322</td>
+          <td style="text-align:center;background:#f97316;color:#fff;font-weight:700;border-radius:4px">6.52%</td>
+          <td style="text-align:center;background:#fca5a5;color:#7f1d1d;font-weight:700;border-radius:4px">4.04%</td>
+        </tr>
+        <tr>
+          <td><b>37-39</b></td>
+          <td style="text-align:center">7</td><td style="text-align:center">9</td>
+          <td style="text-align:center">2</td><td style="text-align:center">13</td>
+          <td style="text-align:center">396</td><td style="text-align:center">427</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.62%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">3.04%</td>
+        </tr>
+        <tr>
+          <td><b>31-33</b></td>
+          <td style="text-align:center">12</td><td style="text-align:center">13</td>
+          <td style="text-align:center">—</td><td style="text-align:center">15</td>
+          <td style="text-align:center">498</td><td style="text-align:center">538</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.20%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">2.79%</td>
+        </tr>
+        <tr>
+          <td><b>40-42</b></td>
+          <td style="text-align:center">10</td><td style="text-align:center">6</td>
+          <td style="text-align:center">2</td><td style="text-align:center">6</td>
+          <td style="text-align:center">275</td><td style="text-align:center">299</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.68%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">2.01%</td>
+        </tr>
+        <tr>
+          <td><b>25-27</b></td>
+          <td style="text-align:center">12</td><td style="text-align:center">1</td>
+          <td style="text-align:center">8</td><td style="text-align:center">10</td>
+          <td style="text-align:center">432</td><td style="text-align:center">463</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.10%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">2.16%</td>
+        </tr>
+        <tr>
+          <td><b>34-36</b></td>
+          <td style="text-align:center">12</td><td style="text-align:center">2</td>
+          <td style="text-align:center">11</td><td style="text-align:center">8</td>
+          <td style="text-align:center">488</td><td style="text-align:center">521</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.03%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.54%</td>
+        </tr>
+        <tr>
+          <td><b>28-30</b></td>
+          <td style="text-align:center">10</td><td style="text-align:center">1</td>
+          <td style="text-align:center">2</td><td style="text-align:center">19</td>
+          <td style="text-align:center">594</td><td style="text-align:center">626</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">3.51%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">3.04%</td>
+        </tr>
+        <tr>
+          <td><b>19-21</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">1</td>
+          <td style="text-align:center">52</td><td style="text-align:center">54</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">3.70%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.85%</td>
+        </tr>
+        <tr>
+          <td><b>43-45</b></td>
+          <td style="text-align:center">4</td><td style="text-align:center">1</td>
+          <td style="text-align:center">—</td><td style="text-align:center">5</td>
+          <td style="text-align:center">178</td><td style="text-align:center">188</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">3.19%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">2.66%</td>
+        </tr>
+        <tr>
+          <td><b>52-54</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">1</td>
+          <td style="text-align:center">—</td><td style="text-align:center">2</td>
+          <td style="text-align:center">37</td><td style="text-align:center">40</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">7.50%</td>
+          <td style="text-align:center;background:#fca5a5;color:#7f1d1d;font-weight:700;border-radius:4px">5.00%</td>
+        </tr>
+        <tr>
+          <td><b>49-51</b></td>
+          <td style="text-align:center">1</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">1</td>
+          <td style="text-align:center">78</td><td style="text-align:center">81</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">2.47%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.23%</td>
+        </tr>
+        <tr>
+          <td><b>46-48</b></td>
+          <td style="text-align:center">1</td><td style="text-align:center">—</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">88</td><td style="text-align:center">89</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr>
+          <td><b>58-60</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">3</td><td style="text-align:center">3</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr>
+          <td><b>61-63</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">4</td><td style="text-align:center">4</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr>
+          <td><b>67-68</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">1</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr style="background:#e2e8f0;font-weight:700">
+          <td><b>总计</b></td>
+          <td style="text-align:center">75</td><td style="text-align:center">37</td>
+          <td style="text-align:center">33</td><td style="text-align:center">97</td>
+          <td style="text-align:center">3,446</td><td style="text-align:center">3,688</td>
+          <td style="text-align:center;color:#dc2626">4.53%</td>
+          <td style="text-align:center;color:#dc2626">2.63%</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="font-size:.8rem;color:#94a3b8;margin-top:6px">
+      颜色说明：<span style="background:#ef4444;color:#fff;padding:1px 6px;border-radius:3px;margin:0 3px">≥10%</span>
+      <span style="background:#f97316;color:#fff;padding:1px 6px;border-radius:3px;margin:0 3px">6~10%</span>
+      <span style="background:#fde68a;color:#78350f;padding:1px 6px;border-radius:3px;margin:0 3px">4~6%</span>
+      <span style="background:#86efac;color:#14532d;padding:1px 6px;border-radius:3px;margin:0 3px">&lt;4%</span>
+      | DPD30+ = (M2+M3+M3+)/总计；DPD90+ ≈ M3+/总计
+    </div>
+  </div>
+
+  <!-- 年龄逾期结构分解 -->
+  <div class="card" style="margin-top:1rem">
+    <h3>年龄组逾期分期结构（M1/M2/M3/M3+ 堆叠占比）</h3>
+    <div style="position:relative;height:320px;margin-top:12px">
+      <canvas id="chartAgeStack"></canvas>
+    </div>
+    <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:10px 14px;margin-top:10px;border-radius:0 8px 8px 0;font-size:.86rem;color:#555">
+      <b>结构洞察：</b>55-57岁年龄组 M3+ 占比极高（4/32 = 12.5%），属于"晚期重度违约"型；
+      22-24岁年轻群体 M1 占比高（6/322 = 1.86%），属于"早期违约"型，催收介入窗口期较早；
+      28-30岁群体订单量最大（626单）且逾期结构均衡，是主力客群。
+    </div>
+  </div>
+
+  <!-- 建议 -->
+  <div class="rec-card danger" style="margin-top:1rem">
+    <b>[极高风险] 55-57岁年龄组 DPD30+ 15.63%，DPD90+ 12.50%</b><br/>
+    该年龄组逾期率是整体均值的 3.4 倍，且 M3+ 占比极高。建议：① 对该年龄组实施更严格的收入证明审核；② 提高首付比例或要求担保人；③ 存量逾期立即升级催收等级。
+  </div>
+  <div class="rec-card warn">
+    <b>[高风险] 22-24岁年轻群体 DPD30+ 6.52%</b><br/>
+    年轻群体收入稳定性差，M1 占比高说明早期违约倾向明显。建议：① 加强职业和收入核实；② 在 M1 阶段增加自动提醒和人工介入；③ 考虑设置更低的租金上限。
+  </div>
+  <div class="rec-card">
+    <b>[低风险] 46-48岁、58岁以上群体逾期率为 0%</b><br/>
+    中年后期及老年群体履约表现优秀，可作为优质客群重点营销，审批流程可适当简化。
+  </div>
+  <div class="rec-card warn">
+    <b>[数据覆盖] 年龄数据覆盖率 46.7%（3,688/7,894）</b><br/>
+    超过半数订单缺失年龄信息，严重影响年龄维度的风控建模。建议：① 在下单流程中强制填写年龄；② 通过身份证信息自动提取；③ 对缺失年龄的订单补充调研。
+  </div>
+</div>
+
 <!-- ==================== 部门维度逾期分析（新增） ==================== -->
 <div class="section">
-  <div class="section-title">十三、部门维度逾期分析（新增）</div>
+  <div class="section-title">十四、部门维度逾期分析（新增）</div>
 
   <!-- KPI 卡片行 -->
   <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:1.2rem">
@@ -854,6 +1094,61 @@ footer {
     yellow: 'rgba(217,119,6,.7)',
     teal:   'rgba(14,165,233,.7)',
   };
+
+  // ---- 年龄组 DPD30/DPD90 双轴图 ----
+  (function() {
+    const ages = ["55-57","22-24","37-39","31-33","40-42","25-27","34-36","28-30","19-21","43-45","49-51","46-48","61-63","67-68","58-60","52-54"];
+    const dpd30 = [15.63,6.52,5.62,5.20,4.68,4.10,4.03,3.51,3.70,3.19,2.47,0.00,0.00,0.00,0.00,7.50];
+    const dpd90 = [12.50,4.04,3.04,2.79,2.01,2.16,1.54,3.04,1.85,2.66,1.23,0.00,0.00,0.00,0.00,5.00];
+    const barColors = dpd30.map(v => v>=10?'rgba(239,68,68,.85)':v>=6?'rgba(249,115,22,.85)':v>=4?'rgba(251,191,36,.85)':'rgba(74,222,128,.85)');
+    new Chart(document.getElementById('chartAge'), {
+      type: 'bar',
+      data: {
+        labels: ages,
+        datasets: [
+          { label: 'DPD30+ 率%', data: dpd30, backgroundColor: barColors, borderRadius: 4, yAxisID: 'y' },
+          { label: 'DPD90+ 率%', data: dpd90, type: 'line', borderColor: 'rgba(220,38,38,.9)', backgroundColor: 'rgba(220,38,38,.12)', borderWidth: 2, pointRadius: 4, fill: false, yAxisID: 'y' }
+        ]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' } } },
+        scales: {
+          x: { ticks: { maxRotation: 45, minRotation: 30 } },
+          y: { beginAtZero: true, title: { display: true, text: '逾期率 (%)' }, ticks: { callback: v => v + '%' } }
+        }
+      }
+    });
+  })();
+
+  // ---- 年龄逾期结构堆叠图 ----
+  (function() {
+    const ages2 = ["55-57","22-24","37-39","31-33","40-42","25-27","34-36","28-30","19-21","43-45","49-51","46-48","52-54","58-60","61-63","67-68"];
+    const m1  = [0,6,7,12,10,12,12,10,0,4,1,1,0,0,0,0];
+    const m2  = [0,3,9,13,6,1,2,1,0,1,0,0,1,0,0,0];
+    const m3  = [1,5,2,0,2,8,11,2,1,0,1,0,0,0,0,0];
+    const m3p = [4,13,13,15,6,10,8,19,1,5,1,0,2,0,0,0];
+    const tots = [32,322,427,538,299,463,521,626,54,188,81,89,40,3,4,1];
+    const pct = (arr, i) => parseFloat((arr[i]/tots[i]*100).toFixed(2));
+    new Chart(document.getElementById('chartAgeStack'), {
+      type: 'bar',
+      data: {
+        labels: ages2,
+        datasets: [
+          { label: 'M1',  data: ages2.map((_,i)=>pct(m1,i)),  backgroundColor: 'rgba(251,191,36,.8)',  borderRadius: 0, stack: 'sA' },
+          { label: 'M2',  data: ages2.map((_,i)=>pct(m2,i)),  backgroundColor: 'rgba(249,115,22,.8)',  borderRadius: 0, stack: 'sA' },
+          { label: 'M3',  data: ages2.map((_,i)=>pct(m3,i)),  backgroundColor: 'rgba(239,68,68,.75)', borderRadius: 0, stack: 'sA' },
+          { label: 'M3+', data: ages2.map((_,i)=>pct(m3p,i)), backgroundColor: 'rgba(127,29,29,.8)',  borderRadius: 0, stack: 'sA' },
+        ]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' } } },
+        scales: {
+          x: { stacked: true, ticks: { maxRotation: 45, minRotation: 30 } },
+          y: { stacked: true, title: { display: true, text: '占订单总数 (%)' }, ticks: { callback: v => v + '%' } }
+        }
+      }
+    });
+  })();
 
   // ---- 部门 DPD30/DPD90 双轴图 ----
   (function() {
