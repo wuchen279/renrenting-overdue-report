@@ -108,7 +108,7 @@ footer {
   <div>
     <span class="tag">数据周期 2025-2026</span>
     <span class="tag">覆盖度 27%</span>
-    <span class="tag">新增：台数/首逾/DPD趋势</span>
+    <span class="tag">新增：台数/首逾/DPD趋势/部门分析</span>
   </div>
 </nav>
 
@@ -487,6 +487,293 @@ footer {
   </div>
 </div>
 
+<!-- ==================== 部门维度逾期分析（新增） ==================== -->
+<div class="section">
+  <div class="section-title">十三、部门维度逾期分析（新增）</div>
+
+  <!-- KPI 卡片行 -->
+  <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:1.2rem">
+    <div class="metric">
+      <span class="val blue">7,894</span>
+      <span class="lbl">全部门订单合计</span>
+    </div>
+    <div class="metric">
+      <span class="val red">661</span>
+      <span class="lbl">逾期订单合计</span>
+    </div>
+    <div class="metric">
+      <span class="val" style="color:#f59e0b">8.37%</span>
+      <span class="lbl">整体 DPD30+ 率</span>
+    </div>
+    <div class="metric">
+      <span class="val red">南京</span>
+      <span class="lbl">DPD30 最高部门<br/>10.68%</span>
+    </div>
+    <div class="metric">
+      <span class="val green">上海</span>
+      <span class="lbl">DPD30 最低部门<br/>0.00%</span>
+    </div>
+  </div>
+
+  <!-- 双图：DPD30 柱+DPD90 折线 -->
+  <div class="card">
+    <h3>各部门 DPD30+ / DPD90+ 逾期率对比</h3>
+    <div style="position:relative;height:360px;margin-top:12px">
+      <canvas id="chartDept"></canvas>
+    </div>
+    <div style="background:#fff7ed;border-left:4px solid #f59e0b;padding:10px 14px;margin-top:10px;border-radius:0 8px 8px 0;font-size:.86rem;color:#555">
+      <b>关键发现：</b>南京（10.68%）、东莞（10.09%）、贵阳（10.08%）DPD30 率位居前三，均超过 10%，需重点关注；
+      上海（0%）、郑州（2.38%）、深圳（1.95%）表现最优。DPD90 率方面，东莞（6.42%）和佛山（4.76%）明显偏高，存在严重坏账风险。
+    </div>
+  </div>
+
+  <!-- 部门明细总表 -->
+  <div class="card" style="margin-top:1rem">
+    <h3>部门逾期率全量明细（按 DPD30+ 率降序）</h3>
+    <div style="overflow-x:auto">
+    <table class="rst" id="deptTable">
+      <thead>
+        <tr>
+          <th style="min-width:80px">部门</th>
+          <th style="text-align:center">M1</th>
+          <th style="text-align:center">M2</th>
+          <th style="text-align:center">M3</th>
+          <th style="text-align:center">M3+</th>
+          <th style="text-align:center">正常</th>
+          <th style="text-align:center">总计</th>
+          <th style="text-align:center;min-width:72px">DPD30+</th>
+          <th style="text-align:center;min-width:72px">DPD90+</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 按 DPD30 降序排列 -->
+        <tr>
+          <td><b>南京</b></td>
+          <td style="text-align:center">3</td><td style="text-align:center">2</td>
+          <td style="text-align:center">6</td><td style="text-align:center">3</td>
+          <td style="text-align:center">89</td><td style="text-align:center">103</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">10.68%</td>
+          <td style="text-align:center;background:#fca5a5;color:#7f1d1d;font-weight:700;border-radius:4px">2.91%</td>
+        </tr>
+        <tr>
+          <td><b>东莞</b></td>
+          <td style="text-align:center">8</td><td style="text-align:center">3</td>
+          <td style="text-align:center">1</td><td style="text-align:center">7</td>
+          <td style="text-align:center">90</td><td style="text-align:center">109</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">10.09%</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">6.42%</td>
+        </tr>
+        <tr>
+          <td><b>贵阳</b></td>
+          <td style="text-align:center">9</td><td style="text-align:center">10</td>
+          <td style="text-align:center">5</td><td style="text-align:center">9</td>
+          <td style="text-align:center">205</td><td style="text-align:center">238</td>
+          <td style="text-align:center;background:#ef4444;color:#fff;font-weight:700;border-radius:4px">10.08%</td>
+          <td style="text-align:center;background:#fca5a5;color:#7f1d1d;font-weight:700;border-radius:4px">3.78%</td>
+        </tr>
+        <tr>
+          <td><b>佛山</b></td>
+          <td style="text-align:center">1</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">2</td>
+          <td style="text-align:center">38</td><td style="text-align:center">42</td>
+          <td style="text-align:center;background:#f97316;color:#fff;font-weight:700;border-radius:4px">7.14%</td>
+          <td style="text-align:center;background:#fca5a5;color:#7f1d1d;font-weight:700;border-radius:4px">4.76%</td>
+        </tr>
+        <tr>
+          <td><b>武汉</b></td>
+          <td style="text-align:center">20</td><td style="text-align:center">16</td>
+          <td style="text-align:center">13</td><td style="text-align:center">14</td>
+          <td style="text-align:center">584</td><td style="text-align:center">647</td>
+          <td style="text-align:center;background:#f97316;color:#fff;font-weight:700;border-radius:4px">6.65%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">2.16%</td>
+        </tr>
+        <tr>
+          <td><b>三部</b></td>
+          <td style="text-align:center">10</td><td style="text-align:center">4</td>
+          <td style="text-align:center">2</td><td style="text-align:center">9</td>
+          <td style="text-align:center">224</td><td style="text-align:center">249</td>
+          <td style="text-align:center;background:#f97316;color:#fff;font-weight:700;border-radius:4px">6.02%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">3.61%</td>
+        </tr>
+        <tr>
+          <td><b>重庆</b></td>
+          <td style="text-align:center">17</td><td style="text-align:center">7</td>
+          <td style="text-align:center">9</td><td style="text-align:center">18</td>
+          <td style="text-align:center">526</td><td style="text-align:center">577</td>
+          <td style="text-align:center;background:#f97316;color:#fff;font-weight:700;border-radius:4px">5.89%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">3.12%</td>
+        </tr>
+        <tr style="background:#fafafa">
+          <td><i style="color:#94a3b8">暂无法匹配</i></td>
+          <td style="text-align:center">65</td><td style="text-align:center">41</td>
+          <td style="text-align:center">23</td><td style="text-align:center">90</td>
+          <td style="text-align:center">2,654</td><td style="text-align:center">2,873</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.36%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">3.13%</td>
+        </tr>
+        <tr style="background:#fafafa">
+          <td><i style="color:#94a3b8">对接群</i></td>
+          <td style="text-align:center">—</td><td style="text-align:center">1</td>
+          <td style="text-align:center">—</td><td style="text-align:center">2</td>
+          <td style="text-align:center">53</td><td style="text-align:center">56</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.36%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">3.57%</td>
+        </tr>
+        <tr>
+          <td><b>五部</b></td>
+          <td style="text-align:center">29</td><td style="text-align:center">11</td>
+          <td style="text-align:center">9</td><td style="text-align:center">16</td>
+          <td style="text-align:center">608</td><td style="text-align:center">673</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.35%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">2.38%</td>
+        </tr>
+        <tr>
+          <td><b>二部</b></td>
+          <td style="text-align:center">14</td><td style="text-align:center">5</td>
+          <td style="text-align:center">4</td><td style="text-align:center">8</td>
+          <td style="text-align:center">297</td><td style="text-align:center">328</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.18%</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">2.44%</td>
+        </tr>
+        <tr>
+          <td><b>长沙</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">2</td><td style="text-align:center">—</td>
+          <td style="text-align:center">38</td><td style="text-align:center">40</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">5.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr>
+          <td><b>杭州</b></td>
+          <td style="text-align:center">4</td><td style="text-align:center">3</td>
+          <td style="text-align:center">1</td><td style="text-align:center">2</td>
+          <td style="text-align:center">118</td><td style="text-align:center">128</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.69%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">1.56%</td>
+        </tr>
+        <tr>
+          <td><b>合肥</b></td>
+          <td style="text-align:center">17</td><td style="text-align:center">5</td>
+          <td style="text-align:center">5</td><td style="text-align:center">8</td>
+          <td style="text-align:center">349</td><td style="text-align:center">384</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.69%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">2.08%</td>
+        </tr>
+        <tr>
+          <td><b>一部</b></td>
+          <td style="text-align:center">6</td><td style="text-align:center">5</td>
+          <td style="text-align:center">1</td><td style="text-align:center">2</td>
+          <td style="text-align:center">163</td><td style="text-align:center">177</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.52%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.13%</td>
+        </tr>
+        <tr>
+          <td><b>成都</b></td>
+          <td style="text-align:center">16</td><td style="text-align:center">2</td>
+          <td style="text-align:center">—</td><td style="text-align:center">9</td>
+          <td style="text-align:center">247</td><td style="text-align:center">274</td>
+          <td style="text-align:center;background:#fde68a;color:#78350f;font-weight:700;border-radius:4px">4.01%</td>
+          <td style="text-align:center;background:#fed7aa;color:#7c2d12;font-weight:700;border-radius:4px">3.28%</td>
+        </tr>
+        <tr>
+          <td><b>西安</b></td>
+          <td style="text-align:center">1</td><td style="text-align:center">1</td>
+          <td style="text-align:center">1</td><td style="text-align:center">1</td>
+          <td style="text-align:center">82</td><td style="text-align:center">86</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">3.49%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.16%</td>
+        </tr>
+        <tr>
+          <td><b>厦门</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">4</td>
+          <td style="text-align:center">—</td><td style="text-align:center">2</td>
+          <td style="text-align:center">136</td><td style="text-align:center">145</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">3.45%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">2.07%</td>
+        </tr>
+        <tr>
+          <td><b>四部</b></td>
+          <td style="text-align:center">11</td><td style="text-align:center">2</td>
+          <td style="text-align:center">5</td><td style="text-align:center">4</td>
+          <td style="text-align:center">400</td><td style="text-align:center">422</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">2.61%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.95%</td>
+        </tr>
+        <tr>
+          <td><b>郑州</b></td>
+          <td style="text-align:center">2</td><td style="text-align:center">3</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">121</td><td style="text-align:center">126</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">2.38%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr>
+          <td><b>深圳</b></td>
+          <td style="text-align:center">2</td><td style="text-align:center">—</td>
+          <td style="text-align:center">1</td><td style="text-align:center">3</td>
+          <td style="text-align:center">199</td><td style="text-align:center">205</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.95%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">1.46%</td>
+        </tr>
+        <tr>
+          <td><b>上海</b></td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">—</td><td style="text-align:center">—</td>
+          <td style="text-align:center">12</td><td style="text-align:center">12</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+          <td style="text-align:center;background:#86efac;color:#14532d;font-weight:700;border-radius:4px">0.00%</td>
+        </tr>
+        <tr style="background:#e2e8f0;font-weight:700">
+          <td><b>总计</b></td>
+          <td style="text-align:center">239</td><td style="text-align:center">120</td>
+          <td style="text-align:center">92</td><td style="text-align:center">210</td>
+          <td style="text-align:center">7,233</td><td style="text-align:center">7,894</td>
+          <td style="text-align:center;color:#dc2626">—</td>
+          <td style="text-align:center;color:#dc2626">—</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="font-size:.8rem;color:#94a3b8;margin-top:6px">
+      颜色说明：<span style="background:#ef4444;color:#fff;padding:1px 6px;border-radius:3px;margin:0 3px">≥10%</span>
+      <span style="background:#f97316;color:#fff;padding:1px 6px;border-radius:3px;margin:0 3px">7~10%</span>
+      <span style="background:#fde68a;color:#78350f;padding:1px 6px;border-radius:3px;margin:0 3px">4~7%</span>
+      <span style="background:#86efac;color:#14532d;padding:1px 6px;border-radius:3px;margin:0 3px">&lt;4%</span>
+      | DPD30+ = (M2+M3+M3+)/总计；DPD90+ ≈ M3+/总计
+    </div>
+  </div>
+
+  <!-- 部门逾期结构分解 -->
+  <div class="card" style="margin-top:1rem">
+    <h3>部门逾期分期结构（M1/M2/M3/M3+ 堆叠占比）</h3>
+    <div style="position:relative;height:320px;margin-top:12px">
+      <canvas id="chartDeptStack"></canvas>
+    </div>
+    <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:10px 14px;margin-top:10px;border-radius:0 8px 8px 0;font-size:.86rem;color:#555">
+      <b>结构洞察：</b>贵阳 M2 占比异常高（10/238 = 4.2%），属于"中期逃逸"型；东莞 M1 占比高（8/109）属于"早期违约"型；
+      成都 M3+ 占比偏高（9/274 = 3.3%）存在长期坏账风险。各部门呈现不同的违约时序特征，催收策略需差异化配置。
+    </div>
+  </div>
+
+  <!-- 建议 -->
+  <div class="rec-card danger" style="margin-top:1rem">
+    <b>[高风险] 南京 / 东莞 / 贵阳 DPD30+ 超 10%</b><br/>
+    这三个部门逾期率明显高于全局均值（5.36%），建议：① 收紧审批标准；② 增加人工复核环节；③ 对存量逾期账户立即升级催收等级。
+  </div>
+  <div class="rec-card warn">
+    <b>[注意] 东莞 DPD90+ 高达 6.42%，佛山 4.76%</b><br/>
+    DPD90+ 意味着严重坏账风险，建议对东莞和佛山进行专项不良资产排查，评估坏账拨备是否充足。
+  </div>
+  <div class="rec-card">
+    <b>[优秀] 上海 / 深圳 / 郑州 DPD30+ &lt; 2.5%</b><br/>
+    这三个部门风控表现优秀，可提取其审批流程作为最佳实践，推广至高风险部门参考。
+  </div>
+  <div class="rec-card warn">
+    <b>[数据质量] "暂无法匹配" 占比 36.4%（2,873/7,894）</b><br/>
+    超过三分之一的订单无法归属部门，严重影响部门绩效考核准确性。建议排查系统对接问题，完善部门字段的数据填写规范。
+  </div>
+</div>
+
 <!-- ==================== 附录：维度明细表 ==================== -->
 <div class="section">
   <div class="section-title">附录：维度逾期明细表</div>
@@ -547,6 +834,61 @@ footer {
     yellow: 'rgba(217,119,6,.7)',
     teal:   'rgba(14,165,233,.7)',
   };
+
+  // ---- 部门 DPD30/DPD90 双轴图 ----
+  (function() {
+    const depts = ["南京","东莞","贵阳","佛山","武汉","三部","重庆","五部","二部","长沙","杭州","合肥","一部","成都","西安","厦门","四部","郑州","深圳","上海"];
+    const dpd30 = [10.68,10.09,10.08,7.14,6.65,6.02,5.89,5.35,5.18,5.00,4.69,4.69,4.52,4.01,3.49,3.45,2.61,2.38,1.95,0.00];
+    const dpd90 = [2.91,6.42,3.78,4.76,2.16,3.61,3.12,2.38,2.44,0.00,1.56,2.08,1.13,3.28,1.16,2.07,0.95,0.00,1.46,0.00];
+    const bar30Colors = dpd30.map(v => v>=10?'rgba(239,68,68,.85)':v>=7?'rgba(249,115,22,.85)':v>=4?'rgba(251,191,36,.85)':'rgba(74,222,128,.85)');
+    new Chart(document.getElementById('chartDept'), {
+      type: 'bar',
+      data: {
+        labels: depts,
+        datasets: [
+          { label: 'DPD30+ 率%', data: dpd30, backgroundColor: bar30Colors, borderRadius: 4, yAxisID: 'y' },
+          { label: 'DPD90+ 率%', data: dpd90, type: 'line', borderColor: 'rgba(220,38,38,.9)', backgroundColor: 'rgba(220,38,38,.15)', borderWidth: 2, pointRadius: 4, fill: false, yAxisID: 'y' }
+        ]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' } } },
+        scales: {
+          x: { ticks: { maxRotation: 45, minRotation: 30 } },
+          y: { beginAtZero: true, title: { display: true, text: '逾期率 (%)' }, ticks: { callback: v => v + '%' } }
+        }
+      }
+    });
+  })();
+
+  // ---- 部门逾期结构堆叠图 ----
+  (function() {
+    const depts2 = ["南京","东莞","贵阳","佛山","武汉","三部","重庆","五部","二部","长沙","杭州","合肥","一部","成都","西安","厦门","四部","郑州","深圳","上海"];
+    const m1 =  [3,8,9,1,20,10,17,29,14,0,4,17,6,16,1,0,11,2,2,0];
+    const m2 =  [2,3,10,0,16,4,7,11,5,0,3,5,5,2,1,4,2,3,0,0];
+    const m3 =  [6,1,5,1,13,2,9,9,4,2,1,5,1,0,1,0,5,0,1,0];
+    const m3p = [3,7,9,2,14,9,18,16,8,0,2,8,2,9,1,2,4,0,3,0];
+    const totals2 = [103,109,238,42,647,249,577,673,328,40,128,384,177,274,86,145,422,126,205,12];
+    const pct = (arr, i) => parseFloat((arr[i]/totals2[i]*100).toFixed(2));
+    new Chart(document.getElementById('chartDeptStack'), {
+      type: 'bar',
+      data: {
+        labels: depts2,
+        datasets: [
+          { label: 'M1',  data: depts2.map((_,i)=>pct(m1,i)),  backgroundColor: 'rgba(251,191,36,.8)',  borderRadius: 0, stack: 's1' },
+          { label: 'M2',  data: depts2.map((_,i)=>pct(m2,i)),  backgroundColor: 'rgba(249,115,22,.8)',  borderRadius: 0, stack: 's1' },
+          { label: 'M3',  data: depts2.map((_,i)=>pct(m3,i)),  backgroundColor: 'rgba(239,68,68,.75)',  borderRadius: 0, stack: 's1' },
+          { label: 'M3+', data: depts2.map((_,i)=>pct(m3p,i)), backgroundColor: 'rgba(127,29,29,.8)',   borderRadius: 0, stack: 's1' },
+        ]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' } } },
+        scales: {
+          x: { stacked: true, ticks: { maxRotation: 45, minRotation: 30 } },
+          y: { stacked: true, title: { display: true, text: '占订单总数 (%)' }, ticks: { callback: v => v + '%' } }
+        }
+      }
+    });
+  })();
 
   // ---- 店铺柱状图 ----
   new Chart(document.getElementById('shopChart'), {
