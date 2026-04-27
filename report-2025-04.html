@@ -8,57 +8,143 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",Arial,sans-serif; background:#f0f2f5; color:#333; }
-  .page { max-width:1300px; margin:0 auto; padding:20px; }
-  h1 { color:#1a1a2e; border-bottom:3px solid #667eea; padding-bottom:10px; margin-bottom:4px; }
-  .subtitle { color:#666; font-size:14px; margin-bottom:20px; }
+  .page { max-width:1300px; margin:0 auto; padding:0 20px 20px; }
+
+  /* ===== Hero Header ===== */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a1a2e 100%);
+    color:#fff; padding:36px 40px 28px; margin:0 -20px 28px;
+    border-radius:0 0 20px 20px; position:relative; overflow:hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; top:-60px; right:-60px;
+    width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(102,126,234,0.25), transparent 70%);
+  }
+  .hero::after {
+    content:''; position:absolute; bottom:-40px; left:10%;
+    width:180px; height:180px; border-radius:50%;
+    background:radial-gradient(circle, rgba(67,233,123,0.15), transparent 70%);
+  }
+  .hero-badge {
+    display:inline-block; background:rgba(102,126,234,0.25); border:1px solid rgba(102,126,234,0.5);
+    color:#a5b4fc; font-size:11px; padding:3px 12px; border-radius:20px; letter-spacing:1px; margin-bottom:14px;
+  }
+  .hero h1 {
+    font-size:26px; font-weight:700; margin:0 0 8px; letter-spacing:0.5px;
+    background:linear-gradient(90deg,#e0e7ff,#a5b4fc,#67e8f9); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; background-clip:text; position:relative; z-index:1;
+  }
+  .hero-meta {
+    display:flex; gap:24px; flex-wrap:wrap; font-size:13px; color:rgba(255,255,255,0.65); position:relative; z-index:1;
+  }
+  .hero-meta span { display:flex; align-items:center; gap:5px; }
+  .hero-meta .dot { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.3); display:inline-block; }
+
+  /* ===== KPI Cards ===== */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin:0 0 20px; }
+  .kpi-card {
+    background:#fff; border-radius:14px; padding:20px 18px 16px; position:relative; overflow:hidden;
+    box-shadow:0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+  .kpi-card .kpi-icon {
+    width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; margin-bottom:10px;
+  }
+  .kpi-card .kpi-label { font-size:12px; color:#6b7280; margin-bottom:4px; font-weight:500; }
+  .kpi-card .kpi-value { font-size:26px; font-weight:700; line-height:1.1; }
+  .kpi-card .kpi-sub { font-size:11px; color:#9ca3af; margin-top:4px; }
+
+  /* KPI color variants */
+  .kpi-purple .kpi-icon { background:linear-gradient(135deg,#ede9fe,#ddd6fe); color:#7c3aed; }
+  .kpi-purple .kpi-value { color:#6d28d9; }
+  .kpi-pink .kpi-icon { background:linear-gradient(135deg,#fce7f3,#fbcfe8); color:#db2777; }
+  .kpi-pink .kpi-value { color:#be185d; }
+  .kpi-red .kpi-icon { background:linear-gradient(135deg,#fee2e2,#fecaca); color:#dc2626; }
+  .kpi-red .kpi-value { color:#b91c1c; }
+  .kpi-blue .kpi-icon { background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#2563eb; }
+  .kpi-blue .kpi-value { color:#1d4ed8; }
+  .kpi-green .kpi-icon { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#059669; }
+  .kpi-green .kpi-value { color:#047857; }
+  .kpi-amber .kpi-icon { background:linear-gradient(135deg,#fef3c7,#fde68a); color:#d97706; }
+  .kpi-amber .kpi-value { color:#b45309; }
+
   h2 { color:#16213e; margin:28px 0 12px; border-left:4px solid #667eea; padding-left:12px; font-size:17px; }
   h3 { color:#1e3a5f; margin:18px 0 8px; font-size:14px; padding-left:8px; border-left:3px solid #93c5fd; }
-  .card { background:#fff; border-radius:12px; padding:24px; margin:16px 0; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+  .card { background:#fff; border-radius:12px; padding:24px; margin:16px 0; box-shadow:0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
   table { width:100%; border-collapse:collapse; }
   .footer { text-align:center; color:#999; font-size:12px; margin:40px 0 20px; }
   .tabs { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
-  .tab { padding:6px 16px; border-radius:20px; border:1px solid #d1d5db; cursor:pointer; font-size:13px; background:#f9fafb; }
+  .tab { padding:6px 16px; border-radius:20px; border:1px solid #d1d5db; cursor:pointer; font-size:13px; background:#f9fafb; transition:all 0.2s; }
+  .tab:hover { background:#e8eaed; }
   .tab.active { background:#667eea; color:#fff; border-color:#667eea; }
   .tab-content { display:none; }
   .tab-content.active { display:block; }
-  @media(max-width:700px){ h2{font-size:15px;} .card{padding:14px;} }
+  .insight-box { background:#f8fafc; border-left:4px solid #667eea; padding:12px 16px; margin:12px 0; border-radius:0 8px 8px 0; font-size:13px; color:#334155; line-height:1.7; }
+  @media(max-width:700px){
+    .hero { padding:24px 16px 20px; }
+    .hero h1 { font-size:18px; }
+    .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    .card { padding:14px; }
+  }
 </style>
 </head>
 <body>
 <div class="page">
-  <h1>人人租平台箭头相应店铺逾期分析报告</h1>
-  <div class="subtitle">统计周期：2025年1月 ~ 2026年2月 &nbsp;|&nbsp; 数据范围：箭头+驴上+雷猴 全店铺</div>
+  <!-- Hero Header -->
+  <div class="hero">
+    <div class="hero-badge">风控分析报告</div>
+    <h1>人人租平台箭头相应店铺逾期分析报告</h1>
+    <div class="hero-meta">
+      <span>📅 统计周期：2025年1月 ~ 2026年2月</span><span class="dot"></span>
+      <span>🏪 数据范围：箭头 + 驴上 + 雷猴 全店铺</span><span class="dot"></span>
+      <span>📊 报告生成：2026年04月27日</span>
+    </div>
+  </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin:24px 0;">
-  <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">总订单数</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">7,894</div>
+  <div class="kpi-grid">
+  <div class="kpi-card kpi-purple">
+    <div class="kpi-icon">📋</div>
+    <div class="kpi-label">总订单数</div>
+    <div class="kpi-value">7,894</div>
+    <div class="kpi-sub">统计周期内全部订单</div>
   </div>
-  <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">逾期订单数（M1~M3+）</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">586</div>
+  <div class="kpi-card kpi-pink">
+    <div class="kpi-icon">⚠️</div>
+    <div class="kpi-label">逾期订单（M1~M3+）</div>
+    <div class="kpi-value">586</div>
+    <div class="kpi-sub">占比 7.42%</div>
   </div>
-  <div style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">综合逾期率（逾期/总单）</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">7.42%</div>
+  <div class="kpi-card kpi-red">
+    <div class="kpi-icon">🔴</div>
+    <div class="kpi-label">综合逾期率（逾期/总单）</div>
+    <div class="kpi-value">7.42%</div>
+    <div class="kpi-sub">586 / 7,894</div>
   </div>
-  <div style="background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">DPD30+ 逾期率</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">4.42%</div>
+  <div class="kpi-card kpi-blue">
+    <div class="kpi-icon">📈</div>
+    <div class="kpi-label">DPD30+ 逾期率</div>
+    <div class="kpi-value">4.42%</div>
+    <div class="kpi-sub">逾期超30天订单占比</div>
   </div>
-  <div style="background:linear-gradient(135deg,#43e97b,#38f9d7);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">DPD90+ 逾期率</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">1.85%</div>
+  <div class="kpi-card kpi-green">
+    <div class="kpi-icon">🟢</div>
+    <div class="kpi-label">DPD90+ 逾期率</div>
+    <div class="kpi-value">1.85%</div>
+    <div class="kpi-sub">严重逾期（重度风险）</div>
   </div>
-  <div style="background:linear-gradient(135deg,#f7971e,#ffd200);color:#fff;padding:20px;border-radius:12px;text-align:center;">
-    <div style="font-size:13px;opacity:0.85;">正常订单数</div>
-    <div style="font-size:30px;font-weight:700;margin-top:6px;">7,233</div>
+  <div class="kpi-card kpi-amber">
+    <div class="kpi-icon">✅</div>
+    <div class="kpi-label">正常订单数</div>
+    <div class="kpi-value">7,233</div>
+    <div class="kpi-sub">正常履约或已退回</div>
   </div>
 </div>
-<div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin:0 0 8px;font-size:13px;color:#92400e;">
+<div class="insight-box" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-left-color:#f59e0b;border-radius:10px;padding:16px 20px;margin:0 0 8px;font-size:13.5px;color:#78350f;">
   💡 <strong>总览解读：</strong>统计周期内（2025.01~2026.02）共产生 <strong>7,894</strong> 笔订单，其中逾期订单（M1及以上）共 <strong>586</strong> 笔，<strong>综合逾期率 7.42%</strong>。
-  若剔除已正常退回的 75 笔，净逾期订单 <strong>586</strong> 笔，DPD30+（逾期超30天）率 <strong>4.42%</strong>，DPD90+（严重逾期）率 <strong>1.85%</strong>。
-  整体风险处于可管控范围，但部分店铺及地区风险偏高，需重点关注。
+  DPD30+（逾期超30天）率 <strong>4.42%</strong>，DPD90+（严重逾期）率 <strong>1.85%</strong>。整体风险处于可管控范围，但部分店铺及地区风险偏高需重点关注。
 </div>
 
   <h2 style="color:#16213e;margin:28px 0 12px;border-left:4px solid #667eea;padding-left:12px;font-size:17px;">一、各店铺汇总对比</h2>
