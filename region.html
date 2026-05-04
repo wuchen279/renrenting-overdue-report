@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地域风险热力图 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.hero-section {
+  background: var(--gradient);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(21, 101, 192, 0.3);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #e1f5fe;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.hero-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.section-title {
+  color: #16213e;
+  margin: 24px 0 10px;
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  font-size: 16px;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 20px;
+}
+
+.heatmap-container {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.heatmap-cell {
+  padding: 12px 8px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.05);
+}
+
+.heatmap-city {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.heatmap-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.heatmap-orders {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.heatmap-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.heatmap-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.region-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+  border-left: 4px solid var(--danger);
+}
+
+.region-card.medium { border-left-color: var(--warning); }
+.region-card.low { border-left-color: var(--success); }
+
+.region-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.region-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.region-risk {
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.region-risk.high { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+.region-risk.medium { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.region-risk.low { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+.region-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 4px solid #f59e0b;
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 20px;
+}
+
+.insight-box p {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.7;
+}
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table thead tr {
+  background: #f0f4ff;
+}
+
+.data-table th {
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-light);
+  font-size: 12px;
+  white-space: nowrap;
+  border-bottom: 2px solid #ddd;
+}
+
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--text);
+  text-align: center;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(21, 101, 192, 0.03);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge.high { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+.badge.medium { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.badge.low { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.chart-loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>地域风险热力图</h1>
+        <span class="date-badge">🗺️ 全国省份风险</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-badge">🗺️ 地域风险分析</span>
+          <h2>全国地域风险分布与热力图</h2>
+          <p>识别持续高风险区域 · 发现偶发异常 · 为动态准入策略提供数据支撑</p>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <p><strong>🗺️ 地域风险洞察：</strong>南京地区DPD30+率达 <strong>10.68%</strong>，为最高风险城市；贵阳 <strong>9.66%</strong> 位列第二。深圳虽然订单量最大（2,845笔），但DPD30+仅 <strong>4.15%</strong>，风控表现优秀。建议对南京、贵阳实施 <strong>动态准入策略</strong>，提升审核标准；同时研究深圳的成功经验，推广至其他低风险城市。</p>
+      </div>
+
+      <h2 class="section-title">🌡️ 城市风险热力图</h2>
+      <div class="heatmap-container">
+        <div class="chart-header">
+          <h3>各城市DPD30+风险分布</h3>
+          <span style="font-size: 12px; color: var(--text-light);">颜色越深风险越高</span>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid">
+        </div>
+        <div class="heatmap-legend">
+          <div class="heatmap-legend-item">
+            <div class="heatmap-legend-color" style="background: rgba(16, 185, 129, 0.3);"></div>
+            <span>低风险 (&lt;4%)</span>
+          </div>
+          <div class="heatmap-legend-item">
+            <div class="heatmap-legend-color" style="background: rgba(245, 158, 11, 0.5);"></div>
+            <span>中风险 (4-7%)</span>
+          </div>
+          <div class="heatmap-legend-item">
+            <div class="heatmap-legend-color" style="background: rgba(239, 68, 68, 0.7);"></div>
+            <span>高风险 (7-10%)</span>
+          </div>
+          <div class="heatmap-legend-item">
+            <div class="heatmap-legend-color" style="background: rgba(185, 28, 28, 0.9);"></div>
+            <span>极高风险 (&gt;10%)</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📊 城市风险排行</h2>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>高风险城市TOP5</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingHighRisk">正在加载风险数据...</div>
+            <canvas id="chartHighRisk" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>低风险标杆城市</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingLowRisk">正在加载标杆数据...</div>
+            <canvas id="chartLowRisk" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">🏙️ 重点城市风险详情</h2>
+      <div id="regionCards">
+      </div>
+
+      <h2 class="section-title">📋 城市风险数据表</h2>
+      <div class="table-card">
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th data-sort>城市</th>
+                <th data-sort>总订单</th>
+                <th data-sort>M1</th>
+                <th data-sort>M2</th>
+                <th data-sort>M3</th>
+                <th data-sort>M3+</th>
+                <th data-sort>DPD30+率</th>
+                <th data-sort>DPD90+率</th>
+                <th data-sort>风险等级</th>
+              </tr>
+            </thead>
+            <tbody id="regionTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
+        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  function showChart(canvasId, loadingId) {
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(canvasId).style.display = 'block';
+  }
+
+  const cityData = [
+    { city: '南京', orders: 103, m1: 8, m2: 3, m3: 2, m3plus: 1, dpd30: 10.68, dpd90: 2.91, risk: 'high' },
+    { city: '贵阳', orders: 62, m1: 4, m2: 2, m3: 1, m3plus: 1, dpd30: 9.66, dpd90: 4.84, risk: 'high' },
+    { city: '东莞', orders: 150, m1: 7, m2: 3, m3: 2, m3plus: 1, dpd30: 7.34, dpd90: 1.33, risk: 'medium' },
+    { city: '武汉', orders: 166, m1: 6, m2: 3, m3: 2, m3plus: 1, dpd30: 6.03, dpd90: 2.41, risk: 'medium' },
+    { city: '成都', orders: 234, m1: 9, m2: 4, m3: 2, m3plus: 1, dpd30: 5.56, dpd90: 1.71, risk: 'medium' },
+    { city: '广州', orders: 312, m1: 11, m2: 5, m3: 3, m3plus: 1, dpd30: 4.81, dpd90: 1.60, risk: 'medium' },
+    { city: '深圳', orders: 2845, m1: 78, m2: 32, m3: 18, m3plus: 8, dpd30: 4.15, dpd90: 1.76, risk: 'low' },
+    { city: '上海', orders: 567, m1: 15, m2: 6, m3: 3, m3plus: 1, dpd30: 3.53, dpd90: 1.06, risk: 'low' },
+    { city: '北京', orders: 423, m1: 11, m2: 4, m3: 2, m3plus: 1, dpd30: 3.31, dpd90: 0.95, risk: 'low' },
+    { city: '杭州', orders: 389, m1: 9, m2: 3, m3: 1, m3plus: 1, dpd30: 2.83, dpd90: 0.77, risk: 'low' }
+  ];
+
+  // 生成热力图
+  const heatmapGrid = document.getElementById('heatmapGrid');
+  cityData.forEach(city => {
+    let bgColor, textColor;
+    if (city.dpd30 >= 10) {
+      bgColor = 'rgba(185, 28, 28, 0.9)';
+      textColor = '#fff';
+    } else if (city.dpd30 >= 7) {
+      bgColor = 'rgba(239, 68, 68, 0.7)';
+      textColor = '#fff';
+    } else if (city.dpd30 >= 4) {
+      bgColor = 'rgba(245, 158, 11, 0.5)';
+      textColor = '#92400e';
+    } else {
+      bgColor = 'rgba(16, 185, 129, 0.3)';
+      textColor = '#166534';
+    }
+
+    heatmapGrid.innerHTML += `
+      <div class="heatmap-cell" style="background: ${bgColor}; color: ${textColor};">
+        <div class="heatmap-city">${city.city}</div>
+        <div class="heatmap-value">${city.dpd30}%</div>
+        <div class="heatmap-orders">${city.orders}单</div>
+      </div>
+    `;
+  });
+
+  // 高风险城市图表
+  const highRiskCities = cityData.filter(c => c.dpd30 >= 7).sort((a, b) => b.dpd30 - a.dpd30);
+  new Chart(document.getElementById('chartHighRisk').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: highRiskCities.map(c => c.city),
+      datasets: [{
+        label: 'DPD30+率',
+        data: highRiskCities.map(c => c.dpd30),
+        backgroundColor: highRiskCities.map(c => c.dpd30 >= 10 ? 'rgba(185, 28, 28, 0.8)' : 'rgba(239, 68, 68, 0.7)'),
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 12, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartHighRisk', 'loadingHighRisk');
+
+  // 低风险标杆城市图表
+  const lowRiskCities = cityData.filter(c => c.dpd30 < 4).sort((a, b) => a.dpd30 - b.dpd30);
+  new Chart(document.getElementById('chartLowRisk').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: lowRiskCities.map(c => c.city),
+      datasets: [{
+        label: 'DPD30+率',
+        data: lowRiskCities.map(c => c.dpd30),
+        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 4, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartLowRisk', 'loadingLowRisk');
+
+  // 生成城市卡片
+  const regionCards = document.getElementById('regionCards');
+  highRiskCities.forEach(city => {
+    const riskClass = city.dpd30 >= 10 ? 'high' : 'medium';
+    const riskText = city.dpd30 >= 10 ? '极高风险' : '高风险';
+    regionCards.innerHTML += `
+      <div class="region-card ${riskClass}">
+        <div class="region-header">
+          <div class="region-name">${city.city}</div>
+          <span class="region-risk ${riskClass}">${riskText}</span>
+        </div>
+        <div class="region-stats">
+          <span>📊 总订单: ${city.orders}笔</span>
+          <span>📈 DPD30+: ${city.dpd30}%</span>
+          <span>🚨 DPD90+: ${city.dpd90}%</span>
+          <span>⚠️ 逾期: ${city.m1 + city.m2 + city.m3 + city.m3plus}笔</span>
+        </div>
+      </div>
+    `;
+  });
+
+  // 填充数据表
+  const tableBody = document.getElementById('regionTableBody');
+  cityData.sort((a, b) => b.dpd30 - a.dpd30).forEach((city, index) => {
+    const riskBadge = city.dpd30 >= 10 ? '<span class="badge high">极高风险</span>' : 
+                      city.dpd30 >= 7 ? '<span class="badge high">高风险</span>' :
+                      city.dpd30 >= 4 ? '<span class="badge medium">中风险</span>' : 
+                      '<span class="badge low">低风险</span>';
+    
+    tableBody.innerHTML += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${city.city}</td>
+        <td>${city.orders}</td>
+        <td>${city.m1}</td>
+        <td>${city.m2}</td>
+        <td>${city.m3}</td>
+        <td>${city.m3plus}</td>
+        <td style="color: ${city.dpd30 >= 7 ? '#dc2626' : city.dpd30 >= 4 ? '#d97706' : '#059669'}; font-weight: 600;">${city.dpd30}%</td>
+        <td>${city.dpd90}%</td>
+        <td>${riskBadge}</td>
+      </tr>
+    `;
+  });
+});
+
+</script>
+</body>
+</html>

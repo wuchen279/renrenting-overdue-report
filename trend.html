@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨月趋势追踪 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.hero-section {
+  background: var(--gradient);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(21, 101, 192, 0.3);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #e1f5fe;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.hero-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.section-title {
+  color: #16213e;
+  margin: 24px 0 10px;
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  font-size: 16px;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-tabs {
+  display: flex;
+  gap: 5px;
+}
+
+.chart-tab {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--text-light);
+  border: none;
+  transition: all 0.2s;
+}
+
+.chart-tab:hover {
+  background: rgba(21, 101, 192, 0.08);
+}
+
+.chart-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 20px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 4px solid #f59e0b;
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 20px;
+}
+
+.insight-box p {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.7;
+}
+
+.insight-box strong {
+  color: #92400e;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.metric-trend {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.metric-trend.up {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.metric-trend.down {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table thead tr {
+  background: #f0f4ff;
+}
+
+.data-table th {
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-light);
+  font-size: 12px;
+  white-space: nowrap;
+  border-bottom: 2px solid #ddd;
+}
+
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--text);
+  text-align: center;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(21, 101, 192, 0.03);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge.high { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+.badge.medium { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.badge.low { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.chart-loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>跨月趋势追踪</h1>
+        <span class="date-badge">📅 2025年01月 - 2026年02月</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-badge">📈 跨月趋势分析</span>
+          <h2>滚动12个月风险趋势追踪</h2>
+          <p>识别季节性规律 · 过滤单月波动 · 预测风险走向</p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-value">6.84%</div>
+          <div class="metric-label">DPD30+峰值（2025-11）</div>
+          <span class="metric-trend up">↑ 大促后风险上扬</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">3.17%</div>
+          <div class="metric-label">12个月平均DPD30+</div>
+          <span class="metric-trend down">↓ 行业低风险区间</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">42%</div>
+          <div class="metric-label">M2→M3+迁徙率</div>
+          <span class="metric-trend up">↑ 催收介入待加强</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">Q4</div>
+          <div class="metric-label">高风险季节</div>
+          <span class="metric-trend up">⚠️ 需重点监控</span>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <p><strong>📊 趋势洞察：</strong>2025年Q4（10~12月）出现明显风险上扬，DPD30+峰值 <strong>6.84%</strong>（11月），与电商大促期间获客质量下滑的行业规律一致。11月新增逾期订单约 <strong>60%</strong> 在随后2个月内迁徙至 M2+，需关注该批次的后续资产质量变化。2026年1~2月 DPD30+ 骤降至 <strong>1.79%/0.21%</strong>，系新签单观察期未满30天导致的统计低估，不代表真实风险下降。</p>
+      </div>
+
+      <h2 class="section-title">📈 DPD30+ 滚动12个月趋势</h2>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>全店铺DPD30+月度趋势与移动平均线</h3>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchTrendChart('dpd30')">DPD30+</button>
+            <button class="chart-tab" onclick="switchTrendChart('dpd90')">DPD90+</button>
+            <button class="chart-tab" onclick="switchTrendChart('combined')">综合对比</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-loading" id="loadingTrendMain">正在加载趋势数据...</div>
+          <canvas id="chartTrendMain" style="display:none;"></canvas>
+        </div>
+      </div>
+
+      <h2 class="section-title">🎯 季节性风险分析</h2>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>季度风险分布</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingSeasonal">正在加载季度数据...</div>
+            <canvas id="chartSeasonal" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>月度同比变化</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingYoY">正在加载同比数据...</div>
+            <canvas id="chartYoY" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📋 详细数据表</h2>
+      <div class="table-card">
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>年月</th>
+                <th data-sort>总订单</th>
+                <th data-sort>M1</th>
+                <th data-sort>M2</th>
+                <th data-sort>M3</th>
+                <th data-sort>M3+</th>
+                <th data-sort>DPD30+率</th>
+                <th data-sort>DPD90+率</th>
+                <th data-sort>环比变化</th>
+                <th data-sort>风险等级</th>
+              </tr>
+            </thead>
+            <tbody id="trendTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
+        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  const monthlyData = [
+    { month: '2025-01', total: 114, m1: 0, m2: 0, m3: 0, m3plus: 1, dpd30: 0.88, dpd90: 0.88 },
+    { month: '2025-02', total: 195, m1: 2, m2: 1, m3: 0, m3plus: 2, dpd30: 2.87, dpd90: 2.05 },
+    { month: '2025-03', total: 289, m1: 5, m2: 2, m3: 1, m3plus: 3, dpd30: 3.81, dpd90: 2.77 },
+    { month: '2025-04', total: 374, m1: 6, m2: 3, m3: 2, m3plus: 4, dpd30: 3.21, dpd90: 2.01 },
+    { month: '2025-05', total: 456, m1: 4, m2: 2, m3: 1, m3plus: 3, dpd30: 1.82, dpd90: 1.36 },
+    { month: '2025-06', total: 534, m1: 12, m2: 6, m3: 4, m3plus: 5, dpd30: 5.41, dpd90: 4.28 },
+    { month: '2025-07', total: 612, m1: 18, m2: 9, m3: 6, m3plus: 7, dpd30: 5.92, dpd90: 3.83 },
+    { month: '2025-08', total: 578, m1: 16, m2: 8, m3: 5, m3plus: 6, dpd30: 6.43, dpd90: 2.36 },
+    { month: '2025-09', total: 623, m1: 14, m2: 7, m3: 4, m3plus: 5, dpd30: 3.86, dpd90: 1.60 },
+    { month: '2025-10', total: 689, m1: 22, m2: 11, m3: 7, m3plus: 8, dpd30: 4.53, dpd90: 2.01 },
+    { month: '2025-11', total: 745, m1: 28, m2: 15, m3: 9, m3plus: 10, dpd30: 6.84, dpd90: 1.82 },
+    { month: '2025-12', total: 698, m1: 20, m2: 10, m3: 6, m3plus: 7, dpd30: 4.59, dpd90: 0.94 },
+    { month: '2026-01', total: 567, m1: 8, m2: 4, m3: 2, m3plus: 3, dpd30: 1.79, dpd90: 0.00 },
+    { month: '2026-02', total: 420, m1: 2, m2: 1, m3: 1, m3plus: 1, dpd30: 0.21, dpd90: 0.00 }
+  ];
+
+  function calculateMA(data, period) {
+    const ma = [];
+    for (let i = 0; i < data.length; i++) {
+      if (i < period - 1) {
+        ma.push(null);
+      } else {
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+          sum += data[i - j];
+        }
+        ma.push(parseFloat((sum / period).toFixed(2)));
+      }
+    }
+    return ma;
+  }
+
+  function showChart(canvasId, loadingId) {
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(canvasId).style.display = 'block';
+  }
+
+  const labels = monthlyData.map(d => d.month);
+  const dpd30Data = monthlyData.map(d => d.dpd30);
+  const dpd90Data = monthlyData.map(d => d.dpd90);
+  const ma3Data = calculateMA(dpd30Data, 3);
+  const ma6Data = calculateMA(dpd30Data, 6);
+
+  let currentTrendChart = null;
+
+  function initTrendChart(type) {
+    if (currentTrendChart) currentTrendChart.destroy();
+    const ctx = document.getElementById('chartTrendMain').getContext('2d');
+    
+    let datasets = [];
+    if (type === 'dpd30') {
+      datasets = [
+        { label: 'DPD30+率', data: dpd30Data, borderColor: '#1565c0', backgroundColor: 'rgba(21, 101, 192, 0.1)', fill: true, tension: 0.4, pointRadius: 4 },
+        { label: '3个月移动平均', data: ma3Data, borderColor: '#f59e0b', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4, pointRadius: 0 },
+        { label: '6个月移动平均', data: ma6Data, borderColor: '#10b981', backgroundColor: 'transparent', borderDash: [10, 5], tension: 0.4, pointRadius: 0 }
+      ];
+    } else if (type === 'dpd90') {
+      datasets = [
+        { label: 'DPD90+率', data: dpd90Data, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 4 }
+      ];
+    } else {
+      datasets = [
+        { label: 'DPD30+率', data: dpd30Data, borderColor: '#1565c0', backgroundColor: 'rgba(21, 101, 192, 0.1)', fill: true, tension: 0.4, pointRadius: 4 },
+        { label: 'DPD90+率', data: dpd90Data, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 4 }
+      ];
+    }
+
+    currentTrendChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { color: '#6b7280', usePointStyle: true, padding: 14 } } },
+        scales: {
+          y: { beginAtZero: true, max: 10, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+          x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  window.switchTrendChart = function(type) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    initTrendChart(type);
+  };
+
+  initTrendChart('dpd30');
+  showChart('chartTrendMain', 'loadingTrendMain');
+
+  // 季度风险分布图
+  const quarterlyData = {
+    '2025-Q1': [0.88, 2.87, 3.81],
+    '2025-Q2': [3.21, 1.82, 5.41],
+    '2025-Q3': [5.92, 6.43, 3.86],
+    '2025-Q4': [4.53, 6.84, 4.59],
+    '2026-Q1': [1.79, 0.21]
+  };
+
+  new Chart(document.getElementById('chartSeasonal').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(quarterlyData),
+      datasets: [{
+        label: '季度平均DPD30+率',
+        data: Object.values(quarterlyData).map(arr => parseFloat((arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(2))),
+        backgroundColor: ['rgba(21, 101, 192, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartSeasonal', 'loadingSeasonal');
+
+  // 月度同比变化图
+  const momChanges = monthlyData.map((d, i) => {
+    if (i === 0) return 0;
+    return parseFloat((d.dpd30 - monthlyData[i-1].dpd30).toFixed(2));
+  });
+
+  new Chart(document.getElementById('chartYoY').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '环比变化（百分点）',
+        data: momChanges,
+        backgroundColor: momChanges.map(v => v >= 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(16, 185, 129, 0.7)'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartYoY', 'loadingYoY');
+
+  // 填充数据表
+  const tableBody = document.getElementById('trendTableBody');
+  monthlyData.forEach((d, i) => {
+    const mom = i === 0 ? '-' : (d.dpd30 - monthlyData[i-1].dpd30).toFixed(2);
+    const momClass = mom === '-' ? '' : (parseFloat(mom) >= 0 ? 'style="color:#dc2626"' : 'style="color:#059669"');
+    const momSign = mom === '-' ? '' : (parseFloat(mom) >= 0 ? '+' : '');
+    const riskLevel = d.dpd30 >= 6 ? '<span class="badge high">高风险</span>' : d.dpd30 >= 4 ? '<span class="badge medium">中风险</span>' : '<span class="badge low">低风险</span>';
+    
+    tableBody.innerHTML += `
+      <tr>
+        <td>${d.month}</td>
+        <td>${d.total}</td>
+        <td>${d.m1}</td>
+        <td>${d.m2}</td>
+        <td>${d.m3}</td>
+        <td>${d.m3plus}</td>
+        <td>${d.dpd30}%</td>
+        <td>${d.dpd90}%</td>
+        <td ${momClass}>${momSign}${mom}</td>
+        <td>${riskLevel}</td>
+      </tr>
+    `;
+  });
+});
+
+</script>
+</body>
+</html>

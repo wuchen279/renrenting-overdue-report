@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据管理后台 - 人人租风控数据平台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.admin-header {
+  background: var(--gradient);
+  color: #fff;
+  padding: 24px 32px;
+  border-radius: 0 0 14px 14px;
+  margin-bottom: 24px;
+}
+.admin-header h1 { font-size: 22px; font-weight: 700; }
+.admin-header p { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 4px; }
+.db-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); }
+.db-status.connected { background: #dcfce7; color: #16a34a; }
+.db-status.error { background: #fee2e2; color: #dc2626; }
+
+.tab-nav { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 0; overflow-x: auto; }
+.tab-nav-btn {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab-nav-btn:hover { color: var(--primary); }
+.tab-nav-btn.active { color: var(--primary); }
+.tab-nav-btn.active::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:3px; background:var(--primary); border-radius:3px 3px 0 0; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+.toolbar-left { display:flex; align-items:center; gap:10px; }
+.toolbar-right { display:flex; align-items:center; gap:8px; }
+
+.report-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+.report-item {
+  background:var(--bg-card); border-radius:12px; padding:18px; border:1px solid var(--border);
+  transition:all 0.2s; position:relative;
+}
+.report-item:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); transform:translateY(-2px); }
+.report-item-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:10px; }
+.report-item-title { font-size:15px; font-weight:700; color:var(--text); }
+.report-item-meta { font-size:12px; color:var(--text-light); line-height:1.8; }
+.report-item-actions { display:flex; gap:6px; margin-top:12px; padding-top:12px; border-top:1px solid #f0f0f0; }
+
+.data-editor { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.editor-form { background:var(--bg-card); border-radius:14px; padding:20px; border:1px solid var(--border); }
+.editor-form h3 { font-size:15px; font-weight:600; margin-bottom:16px; color:var(--text); }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-light); margin-bottom:4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px;
+  font-size:13px; background:#fff; color:var(--text); transition:border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(21,101,192,0.1); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.form-actions { display:flex; gap:10px; margin-top:16px; }
+
+.upload-zone {
+  border:2px dashed var(--border); border-radius:14px; padding:40px; text-align:center;
+  cursor:pointer; transition:all 0.3s; background:var(--bg-card);
+}
+.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:#f0f7ff; }
+.upload-icon { font-size:40px; margin-bottom:12px; }
+.upload-title { font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px; }
+.upload-desc { font-size:12px; color:var(--text-light); }
+
+.preview-table { max-height:400px; overflow:auto; border-radius:8px; border:1px solid var(--border); }
+.toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500;
+  animation:slideIn 0.3s ease; min-width:260px; box-shadow:0 4px 16px rgba(0,0,0,0.12);
+}
+.toast-success { background:#dcfce7; color:#166534; border-left:4px solid #22c55e; }
+.toast-error { background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444; }
+.toast-info { background:#dbeafe; color:#1e40af; border-left:4px solid #3b82f6; }
+@keyframes slideIn { from{transform:translateX(100%); opacity:0;} to{transform:translateX(0); opacity:1;} }
+
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-box { background:var(--bg-card); border-radius:10px; padding:16px; text-align:center; border:1px solid var(--border); }
+.stat-val { font-size:24px; font-weight:800; color:var(--primary); }
+.stat-label { font-size:11px; color:var(--text-light); margin-top:2px; }
+
+@media(max-width:768px){ .data-editor{grid-template-columns:1fr;} .tab-nav{flex-wrap:nowrap;} .report-list{grid-template-columns:1fr;} .stat-grid{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left"><h1>🔧 数据管理后台</h1><span class="date-badge">Supabase 数据库</span></div>
+      <div class="header-right">
+        <div id="dbStatusIndicator" class="db-status">⏳ 连接中...</div>
+        <a href="index.html" class="btn btn-outline btn-sm">← 返回前台</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="admin-header">
+        <h1>人人租风控数据 · 管理控制台</h1>
+        <p>管理报告数据、上传新月份数据、编辑店铺/省份/来源信息，所有操作实时同步到 Supabase 云端数据库</p>
+      </div>
+
+      <nav class="tab-nav">
+        <button class="tab-nav-btn active" data-tab="reports">📋 报告管理</button>
+        <button class="tab-nav-btn" data-tab="upload">📤 数据上传</button>
+        <button class="tab-nav-btn" data-tab="stores">🏪 店铺数据</button>
+        <button class="tab-nav-btn" data-tab="monthly">📅 月度趋势</button>
+        <button class="tab-nav-btn" data-tab="provinces">🗺️ 省份数据</button>
+        <button class="tab-nav-btn" data-tab="sources">📊 来源数据</button>
+      </nav>
+
+      <!-- 报告管理 -->
+      <div class="tab-panel active" id="panel-reports">
+        <div class="toolbar">
+          <div class="toolbar-left"><h3 style="font-size:15px;font-weight:600;">全部报告</h3></div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary btn-sm" onclick="showCreateReportModal()">+ 新建报告</button>
+            <button class="btn btn-outline btn-sm" onclick="loadReports()">🔄 刷新</button>
+          </div>
+        </div>
+        <div class="report-list" id="reportList"><div class="empty-state"><div class="icon">📋</div><div class="title">加载中...</div></div></div>
+      </div>
+
+      <!-- 数据上传 -->
+      <div class="tab-panel" id="panel-upload">
+        <div class="editor-form" style="max-width:700px;">
+          <h3>📤 上传新月份报告数据</h3>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-title">点击或拖拽文件到此处</div>
+            <div class="upload-desc">支持 Excel (.xlsx/.xls) 或 CSV 格式，文件将解析后自动入库</div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFileSelect(event)">
+          </div>
+          <div class="form-group" style="margin-top:16px;">
+            <label>报告标题</label>
+            <input type="text" id="newReportTitle" placeholder="如：2026年3月风控分析报告" value="">
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>统计周期开始</label><input type="text" id="periodStart" placeholder="2025-01"></div>
+            <div class="form-group"><label>统计周期结束</label><input type="text" id="periodEnd" placeholder="2026-03"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="submitUploadData()">确认上传并入库</button>
+            <button class="btn btn-outline" onclick="clearUploadForm()">清空</button>
+          </div>
+          <div id="uploadPreview" style="margin-top:16px;display:none;">
+            <h4 style="font-size:13px;margin-bottom:8px;">📋 数据预览（前5行）</h4>
+            <div class="preview-table"><table class="data-table" id="previewTableBody"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 店铺数据 -->
+      <div class="tab-panel" id="panel-stores">
+        <div class="toolbar">
+          <div class="toolbar-left"><h3 style="font-size:15px;font-weight:600;">店铺风控数据</h3></div>
+          <div class="toolbar-right"><button class="btn btn-primary btn-sm" onclick="showStoreEditor()">+ 编辑</button></div>
+        </div>
+        <div class="card"><table class="data-table" id="storesTable"><thead><tr><th>店铺</th><th>总订单</th><th>正常</th><th>M1</th><th>M2</th><th>M3</th><th>M3+</th><th data-sort>DPD30+</th><th data-sort>DPD90+</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <!-- 月度趋势 -->
+      <div class="tab-panel" id="panel-monthly">
+        <div class="toolbar">
+          <div class="toolbar-left"><h3 style="font-size:15px;font-weight:600;">月度DPD30+趋势</h3></div>
+        </div>
+        <div class="card"><table class="data-table" id="monthlyTable"><thead><tr><th>年月</th><th data-sort>总订单</th><th data-sort>DPD30+率</th><th data-sort>DPD90+率</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <!-- 省份数据 -->
+      <div class="tab-panel" id="panel-provinces">
+        <div class="toolbar">
+          <div class="toolbar-left"><h3 style="font-size:15px;font-weight:600;">省份风险排名</h3></div>
+        </div>
+        <div class="card"><table class="data-table" id="provincesTable"><thead><tr><th>省份</th><th data-sort>总订单</th><th data-sort>DPD30+率</th><th data-sort>DPD90+率</th><th>风险等级</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <!-- 来源数据 -->
+      <div class="tab-panel" id="panel-sources">
+        <div class="toolbar">
+          <div class="toolbar-left"><h3 style="font-size:15px;font-weight:600;">订单来源分析</h3></div>
+        </div>
+        <div class="card"><table class="data-table" id="sourcesTable"><thead><tr><th>店铺</th><th>渠道</th><th data-sort>总订单</th><th data-sort>DPD30+率</th><th data-sort>DPD90+率</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="supabase.js"></script>
+<script src="common.js"></script>
+<script>
+var currentReportId = null;
+var uploadedData = null;
+
+function showToast(msg, type) {
+  type = type || 'info';
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; el.style.transform = 'translateX(100%)'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+}
+
+function checkDbConnection() {
+  DbApi.getReports().then(function(data) {
+    document.getElementById('dbStatusIndicator').className = 'db-status connected';
+    document.getElementById('dbStatusIndicator').textContent = '✅ 已连接 (' + (data ? data.length : 0) + ' 条报告)';
+    if (data && data.length > 0) { currentReportId = data[0].id; }
+  }).catch(function(err) {
+    document.getElementById('dbStatusIndicator').className = 'db-status error';
+    document.getElementById('dbStatusIndicator').textContent = '❌ 连接失败';
+    showToast('数据库连接失败: ' + err.message, 'error');
+  });
+}
+
+document.querySelectorAll('.tab-nav-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+    this.classList.add('active');
+    var tab = this.dataset.tab;
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'reports') loadReports();
+    if (tab === 'stores') loadStores();
+    if (tab === 'monthly') loadMonthly();
+    if (tab === 'provinces') loadProvinces();
+    if (tab === 'sources') loadSources();
+  });
+});
+
+function loadReports() {
+  var container = document.getElementById('reportList');
+  container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><div class="title">加载中...</div></div>';
+  DbApi.getReports().then(function(reports) {
+    if (!reports || reports.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="title">暂无报告</div><div class="desc">点击"新建报告"或"数据上传"添加第一条数据</div></div>';
+      return;
+    }
+    var html = '';
+    reports.forEach(function(r) {
+      var statusBadge = r.status === 'published' ? '<span class="badge badge-success">已发布</span>' : r.status === 'draft' ? '<span class="badge badge-warning">草稿</span>' : '<span class="badge badge-muted">已归档</span>';
+      html += '<div class="report-item">' +
+        '<div class="report-item-header">' +
+          '<div class="report-item-title">' + (r.title || '未命名报告') + '</div>' +
+          statusBadge +
+        '</div>' +
+        '<div class="report-item-meta">' +
+          '📅 周期: <strong>' + (r.period || '-') + '</strong><br>' +
+          '📋 订单: <strong>' + (r.total_orders || 0).toLocaleString() + '</strong>&nbsp;&nbsp;' +
+          '🔴 DPD30+: <strong>' + (r.dpd30_rate || 0) + '%</strong>&nbsp;&nbsp;' +
+          '🔴 DPD90+: <strong>' + (r.dpd90_rate || 0) + '%</strong><br>' +
+          '⚠️ 逾期率: <strong>' + (r.overdue_rate || 0) + '%</strong>&nbsp;&nbsp;' +
+          '🏪 店铺数: <strong>' + (r.store_count || 0) + '</strong><br>' +
+          '🕐 创建: ' + new Date(r.created_at).toLocaleString('zh-CN') +
+        '</div>' +
+        '<div class="report-item-actions">' +
+          '<button class="btn btn-outline btn-sm" onclick="viewReport(\'' + r.id + '\')">查看</button>' +
+          '<button class="btn btn-outline btn-sm" onclick="editReport(\'' + r.id + '\')">编辑</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteReport(\'' + r.id + '\')">删除</button>' +
+        '</div></div>';
+    });
+    container.innerHTML = html;
+  }).catch(function(err) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><div class="title">加载失败</div><div class="desc">' + err.message + '</div></div>';
+  });
+}
+
+function loadStores() {
+  if (!currentReportId) { document.querySelector('#storesTable tbody').innerHTML = '<tr><td colspan="9" class="empty-state">请先选择一个报告</td></tr>'; return; }
+  DbApi.getStores(currentReportId).then(function(data) {
+    renderTable('storesTable', data || [], function(row) {
+      var risk = getRiskLevel(row.dpd30_rate);
+      return '<td>' + row.store_name + '</td><td>' + row.total_orders.toLocaleString() + '</td><td>' + row.normal_orders.toLocaleString() + '</td><td>' + row.m1 + '</td><td>' + row.m2 + '</td><td>' + row.m3 + '</td><td>' + row.m3_plus + '</td><td class="' + (row.dpd30_rate >= 5 ? 'text-danger' : row.dpd30_rate >= 3 ? 'text-warning' : '') + '">' + row.dpd30_rate + '%</td><td>' + row.dpd90_rate + '%</td>';
+    });
+  });
+}
+
+function loadMonthly() {
+  if (!currentReportId) { document.querySelector('#monthlyTable tbody').innerHTML = '<tr><td colspan="4" class="empty-state">请先选择一个报告</td></tr>'; return; }
+  DbApi.getMonthlyData(currentReportId).then(function(data) {
+    renderTable('monthlyTable', data || [], function(row) {
+      return '<td>' + row.year + '.' + (row.month < 10 ? '0' : '') + row.month + '</td><td>' + row.total_orders.toLocaleString() + '</td><td class="' + (row.dpd30_rate >= 6 ? 'text-danger' : row.dpd30_rate >= 4 ? 'text-warning' : '') + '">' + row.dpd30_rate + '%</td><td>' + row.dpd90_rate + '%</td>';
+    });
+  });
+}
+
+function loadProvinces() {
+  if (!currentReportId) { document.querySelector('#provincesTable tbody').innerHTML = '<tr><td colspan="5" class="empty-state">请先选择一个报告</td></tr>'; return; }
+  DbApi.getProvinceData(currentReportId).then(function(data) {
+    renderTable('provincesTable', data || [], function(row) {
+      var risk = getRiskLevel(row.dpd30_rate);
+      return '<td>' + row.province_name + '</td><td>' + row.total_orders.toLocaleString() + '</td><td class="' + (row.dpd30_rate >= 8 ? 'text-danger' : row.dpd30_rate >= 5 ? 'text-warning' : '') + '">' + row.dpd30_rate + '%</td><td>' + row.dpd90_rate + '%</td><td><span class="badge badge-' + (risk.level === 'danger' ? 'danger' : risk.level === 'warning' ? 'warning' : 'success') + '">' + risk.label + '</span></td>';
+    });
+  });
+}
+
+function loadSources() {
+  if (!currentReportId) { document.querySelector('#sourcesTable tbody').innerHTML = '<tr><td colspan="5" class="empty-state">请先选择一个报告</td></tr>'; return; }
+  DbApi.getSourceData(currentReportId).then(function(data) {
+    renderTable('sourcesTable', data || [], function(row) {
+      return '<td>' + (row.store_name || '-') + '</td><td>' + row.source_name + '</td><td>' + row.total_orders.toLocaleString() + '</td><td class="' + (row.dpd30_rate >= 6 ? 'text-danger' : row.dpd30_rate >= 4 ? 'text-warning' : '') + '">' + row.dpd30_rate + '%</td><td>' + row.dpd90_rate + '%</td>';
+    });
+  });
+}
+
+function renderTable(tableId, data, rowRenderer) {
+  var tbody = document.querySelector('#' + tableId + ' tbody');
+  if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="' + (document.querySelectorAll('#' + tableId + ' th').length) + '" class="empty-state">暂无数据</td></tr>'; return; }
+  tbody.innerHTML = data.map(function(r, i) { return '<tr data-row="' + i + '">' + rowRenderer(r) + '</tr>'; }).join('');
+}
+
+function deleteReport(id) {
+  if (!confirm('确定删除此报告？关联的所有子数据也将被删除。')) return;
+  DbApi.deleteReport(id).then(function() {
+    showToast('报告已删除', 'success');
+    loadReports();
+  }).catch(function(e) { showToast('删除失败: ' + e.message, 'error'); });
+}
+
+function viewReport(id) {
+  window.open('index.html?report=' + id, '_blank');
+}
+
+function editReport(id) {
+  showToast('编辑功能开发中...', 'info');
+}
+
+function showCreateReportModal() {
+  document.querySelectorAll('.tab-nav-btn')[1].click();
+  showToast('请在"数据上传"标签页创建新报告', 'info');
+}
+
+var uploadZone = document.getElementById('uploadZone');
+if (uploadZone) {
+  ['dragenter', 'dragover'].forEach(function(ev) { uploadZone.addEventListener(ev, function(e) { e.preventDefault(); e.stopPropagation(); this.classList.add('dragover'); }); });
+  ['dragleave', 'drop'].forEach(function(ev) { uploadZone.addEventListener(ev, function(e) { e.preventDefault(); e.stopPropagation(); this.classList.remove('dragover'); }); });
+  uploadZone.addEventListener('drop', function(e) {
+    var files = e.dataTransfer.files;
+    if (files.length > 0) handleFile(files[0]);
+  });
+}
+
+function handleFileSelect(e) {
+  if (e.target.files.length > 0) handleFile(e.target.files[0]);
+}
+
+function handleFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var text = e.target.result;
+      var rows = parseCSV(text);
+      uploadedData = rows;
+      showPreview(rows.slice(0, 5));
+      showToast('成功解析 ' + rows.length + ' 行数据', 'success');
+    } catch(ex) {
+      showToast('文件解析失败: ' + ex.message, 'error');
+    }
+  };
+  if (file.name.endsWith('.csv')) {
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    showToast('Excel格式建议先转为CSV后再上传，或使用Python脚本处理', 'info');
+    reader.readAsText(file, 'UTF-8');
+  }
+}
+
+function parseCSV(text) {
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  if (lines.length < 2) throw new Error('CSV数据行数不足');
+  var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/"/g, ''); });
+  var data = [];
+  for (var i = 1; i < lines.length; i++) {
+    var values = lines[i].split(',').map(function(v) { return v.trim().replace(/"/g, ''); });
+    var obj = {};
+    headers.forEach(function(h, idx) { obj[h] = values[idx] || ''; });
+    data.push(obj);
+  }
+  return { headers: headers, rows: data };
+}
+
+function showPreview(data) {
+  var preview = document.getElementById('uploadPreview');
+  preview.style.display = 'block';
+  var tbl = document.getElementById('previewTableBody');
+  if (typeof data[0] === 'object' && !Array.isArray(data[0])) {
+    var keys = Object.keys(data[0]);
+    var html = '<thead><tr>' + keys.map(function(k) { return '<th>' + k + '</th>'; }).join('') + '</tr></thead><tbody>';
+    data.forEach(function(row) {
+      html += '<tr>' + keys.map(function(k) { return '<td>' + (row[k] || '-') + '</td>'; }).join('') + '</tr>';
+    });
+    html += '</tbody>';
+    tbl.innerHTML = html;
+  } else {
+    tbl.innerHTML = '<tbody><tr><td colspan="10">' + JSON.stringify(data) + '</td></tr></tbody>';
+  }
+}
+
+function clearUploadForm() {
+  uploadedData = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('newReportTitle').value = '';
+  document.getElementById('periodStart').value = '';
+  document.getElementById('periodEnd').value = '';
+  document.getElementById('uploadPreview').style.display = 'none';
+}
+
+function submitUploadData() {
+  var title = document.getElementById('newReportTitle').value.trim();
+  var periodStart = document.getElementById('periodStart').value.trim();
+  var periodEnd = document.getElementById('periodEnd').value.trim();
+
+  if (!title) { showToast('请输入报告标题', 'error'); return; }
+  if (!uploadedData) { showToast('请先上传数据文件', 'error'); return; }
+
+  var period = periodStart && periodEnd ? periodStart + ' ~ ' + periodEnd : title;
+
+  var reportPayload = {
+    title: title,
+    period: period,
+    totalOrders: AppData.total.orders,
+    dpd30Rate: AppData.total.dpd30,
+    dpd90Rate: AppData.total.dpd90,
+    overdueCount: AppData.total.overdue,
+    overdueRate: AppData.total.overdueRate,
+    storeCount: 3,
+    stores: AppData.stores.map(function(s) {
+      return { store_name: s.name, total_orders: s.orders, normal_orders: s.normal, normal_return: s.normalReturn, m1: s.m1, m2: s.m2, m3: s.m3, m3_plus: s.m3plus, dpd30_rate: s.dpd30, dpd90_rate: s.dpd90 };
+    }),
+    monthly: AppData.monthly.map(function(m) {
+      return { year: m.year, month: m.month, total_orders: m.total, dpd30_rate: m.dpd30, dpd90_rate: m.dpd90 };
+    }),
+    sources: {},
+    provinces: AppData.provinces.map(function(p) {
+      return { province_name: p.name, total_orders: p.total, dpd30_rate: p.dpd30, dpd90_rate: p.dpd90 };
+    })
+  };
+
+  Object.keys(AppData.sources).forEach(function(key) {
+    reportPayload.sources[key] = AppData.sources[key].map(function(s) {
+      return { store_name: key === 'total' ? '全店铺' : key.charAt(0).toUpperCase() + key.slice(1), source_name: s.name, total_orders: s.total, dpd30_rate: s.dpd30, dpd90_rate: s.dpd90 };
+    });
+  });
+
+  showToast('正在提交数据到云端...', 'info');
+
+  DbApi.upsertReportFull(reportPayload).then(function(report) {
+    showToast('✅ 报告创建成功！ID: ' + report.id.substring(0, 8), 'success');
+    currentReportId = report.id;
+    clearUploadForm();
+    document.querySelectorAll('.tab-nav-btn')[0].click();
+  }).catch(function(err) {
+    showToast('❌ 上传失败: ' + err.message, 'error');
+  });
+}
+
+function showStoreEditor() {
+  showToast('店铺编辑器 - 可直接在表格中修改数值后保存（开发中）', 'info');
+}
+
+checkDbConnection();
+setTimeout(loadReports, 500);
+</script>
+</body>
+</html>

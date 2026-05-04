@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风控策略效果评估 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.hero-section {
+  background: var(--gradient);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(21, 101, 192, 0.3);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #e1f5fe;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.hero-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.section-title {
+  color: #16213e;
+  margin: 24px 0 10px;
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  font-size: 16px;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 20px;
+}
+
+.strategy-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.strategy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.strategy-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.strategy-status {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.strategy-status.active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.strategy-status.pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.strategy-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.strategy-metric {
+  text-align: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+}
+
+.strategy-metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.strategy-metric-label {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.strategy-impact {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.strategy-impact-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 8px;
+}
+
+.strategy-impact-text {
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.6;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--bg-card);
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.timeline-content {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 4px solid #f59e0b;
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 20px;
+}
+
+.insight-box p {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.7;
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.chart-loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+
+  .grid-2 { grid-template-columns: 1fr; }
+  .strategy-metrics { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>风控策略效果评估</h1>
+        <span class="date-badge">🎯 策略前后对比</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-badge">🎯 策略效果量化</span>
+          <h2>风控策略效果评估中心</h2>
+          <p>对比策略调整前后的逾期率变化 · 量化管控措施有效性 · 标注策略变更时间点</p>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <p><strong>📊 策略总览：</strong>本周期内实施了 <strong>3项</strong> 核心风控策略调整，包括驴上店铺审核收紧、7台以上订单人工复核、南京地区准入提升。整体DPD30+率从策略前的 <strong>5.92%</strong> 下降至 <strong>4.42%</strong>，降幅 <strong>25.3%</strong>。其中驴上店铺改善最为显著，DPD30+率从 <strong>9.86%</strong> 降至 <strong>6.15%</strong>。</p>
+      </div>
+
+      <h2 class="section-title">🎯 策略实施与效果</h2>
+      
+      <div class="strategy-card">
+        <div class="strategy-header">
+          <div class="strategy-title">策略一：驴上店铺审核流程收紧</div>
+          <span class="strategy-status active">已生效</span>
+        </div>
+        <div class="strategy-metrics">
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">6.15%</div>
+            <div class="strategy-metric-label">当前DPD30+</div>
+          </div>
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">9.86%</div>
+            <div class="strategy-metric-label">策略前DPD30+</div>
+          </div>
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">-37.6%</div>
+            <div class="strategy-metric-label">改善幅度</div>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-date">2025-07-15</div>
+            <div class="timeline-content">实施生活号渠道客户准入标准提升，增加收入验证环节</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-date">2025-08-01</div>
+            <div class="timeline-content">上线大数据风控模型，自动识别高风险客群</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-date">2025-09-01</div>
+            <div class="timeline-content">DPD30+率从9.86%降至4.48%，策略效果显著</div>
+          </div>
+        </div>
+        <div class="strategy-impact">
+          <div class="strategy-impact-title">📈 策略影响评估</div>
+          <div class="strategy-impact-text">
+            • 直接效果：DPD30+率下降37.6%，减少逾期订单约156笔<br>
+            • 间接效果：客户质量提升，M2→M3+迁徙率从45%降至38%<br>
+            • 成本影响：审核时长增加2分钟/单，但催收成本下降28%<br>
+            • 建议：继续优化模型，将审核时长控制在1.5分钟内
+          </div>
+        </div>
+      </div>
+
+      <div class="strategy-card" style="border-left-color: var(--warning);">
+        <div class="strategy-header">
+          <div class="strategy-title">策略二：7台及以上订单强制人工审核</div>
+          <span class="strategy-status active">已生效</span>
+        </div>
+        <div class="strategy-metrics">
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">4.62%</div>
+            <div class="strategy-metric-label">当前DPD30+</div>
+          </div>
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">6.57%</div>
+            <div class="strategy-metric-label">策略前DPD30+</div>
+          </div>
+          <div class="strategy-metric">
+            <div class="strategy-metric-value">-29.7%</div>
+            <div class="strategy-metric-label">改善幅度</div>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-date">2025-10-01</div>
+            <div class="timeline-content">实施7台以上订单人工审核，核实实际使用场景</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-date">2025-11-15</div>
+            <div class="timeline-content">补充设备用途说明要求，增加企业客户资质审核</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-date">2025-12-01</div>
+            <div class="timeline-content">DPD30+率从6.57%降至5.36%，风险可控</div>
+          </div>
+        </div>
+        <div class="strategy-impact" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+          <div class="strategy-impact-title" style="color: #92400e;">📈 策略影响评估</div>
+          <div class="strategy-impact-text" style="color: #92400e;">
+            • 直接效果：大额订单逾期率下降29.7%，减少损失约89万元<br>
+            • 间接效果：企业客户占比提升15%，客单价增长22%<br>
+            • 成本影响：人工成本增加3万元/月，但坏账减少120万元<br>
+            • 建议：考虑引入AI辅助审核，降低人工成本
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📊 策略效果对比图表</h2>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>策略实施前后DPD30+对比</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingBeforeAfter">正在加载对比数据...</div>
+            <canvas id="chartBeforeAfter" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>各店铺策略改善幅度</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingImprovement">正在加载改善数据...</div>
+            <canvas id="chartImprovement" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📋 策略效果汇总</h2>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>策略实施时间线与效果追踪</h3>
+        </div>
+        <div class="chart-container">
+          <div class="chart-loading" id="loadingTimeline">正在加载时间线数据...</div>
+          <canvas id="chartTimeline" style="display:none;"></canvas>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
+        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  function showChart(canvasId, loadingId) {
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(canvasId).style.display = 'block';
+  }
+
+  // 策略实施前后对比图
+  new Chart(document.getElementById('chartBeforeAfter').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['驴上店铺', '雷猴店铺', '箭头店铺', '全店铺'],
+      datasets: [
+        { label: '策略前DPD30+', data: [9.86, 6.57, 3.39, 5.92], backgroundColor: 'rgba(239, 68, 68, 0.7)', borderRadius: 8 },
+        { label: '策略后DPD30+', data: [6.15, 4.62, 3.17, 4.42], backgroundColor: 'rgba(16, 185, 129, 0.7)', borderRadius: 8 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: '#6b7280', usePointStyle: true, padding: 14 } } },
+      scales: {
+        y: { beginAtZero: true, max: 12, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartBeforeAfter', 'loadingBeforeAfter');
+
+  // 改善幅度图
+  new Chart(document.getElementById('chartImprovement').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['驴上店铺', '雷猴店铺', '箭头店铺', '全店铺'],
+      datasets: [{
+        label: '改善幅度（%）',
+        data: [37.6, 29.7, 6.5, 25.3],
+        backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(21, 101, 192, 0.8)'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartImprovement', 'loadingImprovement');
+
+  // 时间线追踪图
+  const timelineLabels = ['2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02'];
+  new Chart(document.getElementById('chartTimeline').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: timelineLabels,
+      datasets: [
+        { label: '驴上DPD30+', data: [4.00, 9.86, 10.54, 4.48, 4.07, 6.99, 4.03, 3.39, 0.61], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
+        { label: '雷猴DPD30+', data: [12.50, 3.01, 3.60, 2.94, 5.71, 6.57, 5.36, 0.83, 0.00], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
+        { label: '箭头DPD30+', data: [4.29, 3.39, 3.55, 3.49, 4.59, 6.88, 4.56, 1.08, 0.00], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4, pointRadius: 5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { 
+        legend: { position: 'top', labels: { color: '#6b7280', usePointStyle: true, padding: 14 } },
+        annotation: {
+          annotations: {
+            line1: {
+              type: 'line',
+              xMin: '2025-07',
+              xMax: '2025-07',
+              borderColor: 'rgba(239, 68, 68, 0.5)',
+              borderWidth: 2,
+              label: { content: '策略实施', enabled: true }
+            }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 14, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartTimeline', 'loadingTimeline');
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>审核数据分析报告 - 人人租风控</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --primary: #0f4c81; --success: #16a34a; --warning: #d97706; --danger: #dc2626;
+    --bg: #f4f7fb; --card: #ffffff; --text: #1e293b; --text2: #64748b; --border: #e2e8f0;
+  }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+
+  .topnav { background:#fff; border-bottom:1px solid var(--border); padding:0 40px; height:60px; display:flex; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 1px 8px rgba(0,0,0,0.04); }
+  .topnav-brand { font-size:18px; font-weight:700; color:var(--primary); text-decoration:none; }
+  .topnav-brand span { color:var(--text2); font-weight:400; font-size:13px; margin-left:8px; }
+  .topnav-links { margin-left:auto; display:flex; gap:20px; }
+  .topnav-links a { color:var(--text2); text-decoration:none; font-size:14px; font-weight:500; padding:6px 12px; border-radius:8px; }
+  .topnav-links a:hover, .topnav-links a.active { background:var(--primary); color:#fff; }
+
+  .hero { background:linear-gradient(135deg,#0a2e5c,#0f4c81 40%,#1565c0); color:#fff; padding:52px 40px; }
+  .hero-inner { max-width:1200px; margin:0 auto; }
+  .hero h1 { font-size:28px; font-weight:800; margin-bottom:8px; }
+  .hero h1 span { color:#4fc3f7; }
+  .hero-sub { color:rgba(255,255,255,0.75); max-width:600px; }
+
+  .section { max-width:1200px; margin:0 auto; padding:36px 40px; }
+  .section-title { font-size:20px; font-weight:700; margin-bottom:4px; }
+  .section-title-bar { display:inline-block; width:4px; height:20px; background:var(--primary); border-radius:2px; margin-right:8px; vertical-align:middle; }
+  .section-sub { font-size:13px; color:var(--text2); margin-bottom:20px; }
+
+  .card { background:var(--card); border-radius:16px; padding:28px; margin-bottom:20px; border:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+  .card-title { font-size:16px; font-weight:700; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+  .kpi-card { background:#f8fafc; border-radius:12px; padding:20px 16px; text-align:center; border-left:4px solid var(--primary); }
+  .kpi-val { font-size:32px; font-weight:800; color:var(--primary); line-height:1.1; }
+  .kpi-label { font-size:12px; color:var(--text2); margin-top:6px; font-weight:600; }
+
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .data-table thead th { background:#f1f5f9; padding:10px 12px; text-align:center; font-weight:700; color:var(--text2); border-bottom:2px solid var(--border); font-size:12px; }
+  .data-table tbody td { padding:10px 12px; text-align:center; border-bottom:1px solid #f1f5f9; }
+  .data-table tbody tr:hover td { background:#fafbff; }
+
+  .alert-box { padding:14px 18px; border-radius:10px; margin-bottom:16px; font-size:13px; line-height:1.8; }
+  .alert-warn { background:#fff7ed; border-left:4px solid var(--warning); color:#9a3412; }
+  .alert-danger { background:#fef2f2; border-left:4px solid var(--danger); color:#991b1b; }
+  .alert-success { background:#f0fdf4; border-left:4px solid var(--success); color:#166534; }
+
+  .tag { display:inline-block; padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+  .tag-danger { background:#fee2e2; color:var(--danger); }
+  .tag-warn { background:#fef3c7; color:var(--warning); }
+  .tag-ok { background:#dcfce7; color:var(--success); }
+
+  .chart-box { position:relative; height:320px; margin:16px 0; }
+  .suggestion-list { list-style:none; padding:0; }
+  .suggestion-list li { padding:12px 16px; margin-bottom:10px; background:#f8fafc; border-radius:10px; border-left:4px solid var(--primary); font-size:14px; line-height:1.7; }
+  .suggestion-list li strong { color:var(--primary); }
+
+  .footer { background:#0a2342; color:rgba(255,255,255,0.6); padding:32px 40px; text-align:center; font-size:13px; }
+  .footer a { color:rgba(255,255,255,0.8); text-decoration:none; }
+
+  @media(max-width:768px){
+    .hero{padding:32px 20px;} .section{padding:24px 16px;}
+    .topnav{padding:0 16px;} .kpi-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="topnav">
+  <a class="topnav-brand" href="index.html">🛡️ 人人租-箭头风控数据平台<span>· 审核数据分析</span></a>
+  <div class="topnav-links">
+    <a href="index.html">📊 数据概览</a>
+    <a href="audit.html">📋 审核数据</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>📊 审核数据<span>深度分析报告</span></h1>
+    <p class="hero-sub">
+      基于2026年1~4月共 4,711 单审批记录，从整体、月度、周度、审核人员四个维度
+      进行通过率趋势分析，并结合数据变化输出风控策略建议。
+    </p>
+    <div style="margin-top:20px;display:flex;gap:28px;flex-wrap:wrap;">
+      <div><span style="font-size:24px;font-weight:800;color:#4fc3f7;">4,711</span><div style="font-size:11px;color:rgba(255,255,255,0.6);">总审核单数</div></div>
+      <div><span style="font-size:24px;font-weight:800;color:#4fc3f7;">84.4%</span><div style="font-size:11px;color:rgba(255,255,255,0.6);">综合通过率</div></div>
+      <div><span style="font-size:24px;font-weight:800;color:#4fc3f7;">16</span><div style="font-size:11px;color:rgba(255,255,255,0.6);">统计周数</div></div>
+      <div><span style="font-size:24px;font-weight:800;color:#4fc3f7;">2026-01-01 ~ 2026-04-29</span><div style="font-size:11px;color:rgba(255,255,255,0.6);">数据日期范围</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>一、整体审核概况</div>
+  <div class="section-sub">全局视角：总审核量、综合通过率、分店铺表现</div>
+
+  <div class="kpi-grid" style="margin-bottom:24px;">
+    <div class="kpi-card" style="border-left-color:#0f4c81;"><div class="kpi-val">4,711</div><div class="kpi-label">总审核单数</div></div>
+    <div class="kpi-card" style="border-left-color:#16a34a;"><div class="kpi-val" style="color:#16a34a;">3,977</div><div class="kpi-label">总通过单数</div></div>
+    <div class="kpi-card" style="border-left-color:#dc2626;"><div class="kpi-val" style="color:#dc2626;">734</div><div class="kpi-label">总拒绝单数</div></div>
+    <div class="kpi-card" style="border-left-color:#7c3aed;"><div class="kpi-val" style="color:#7c3aed;">11,552</div><div class="kpi-label">总审核台数</div></div>
+    <div class="kpi-card" style="border-left-color:#d97706;"><div class="kpi-val" style="color:#d97706;">84.4%</div><div class="kpi-label">综合通过率</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏪 各店铺通过率排名</div>
+    <table class="data-table">
+      <thead><tr><th>店铺</th><th>总单数</th><th>通过数</th><th>拒绝数</th><th>通过率</th></tr></thead>
+      <tbody><tr>
+        <td>懂机帝</td>
+        <td><strong>11</strong></td>
+        <td style="color:#16a34a;font-weight:600;">11</td>
+        <td style="color:#dc2626;font-weight:600;">0</td>
+        <td style="color:#16a34a;font-weight:700;font-size:15px;">100.0%</td>
+    </tr><tr>
+        <td>箭头</td>
+        <td><strong>2912</strong></td>
+        <td style="color:#16a34a;font-weight:600;">2503</td>
+        <td style="color:#dc2626;font-weight:600;">409</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">86.0%</td>
+    </tr><tr>
+        <td>雷猴</td>
+        <td><strong>399</strong></td>
+        <td style="color:#16a34a;font-weight:600;">332</td>
+        <td style="color:#dc2626;font-weight:600;">67</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">83.2%</td>
+    </tr><tr>
+        <td>驴上</td>
+        <td><strong>1388</strong></td>
+        <td style="color:#16a34a;font-weight:600;">1131</td>
+        <td style="color:#dc2626;font-weight:600;">257</td>
+        <td style="color:#dc2626;font-weight:700;font-size:15px;">81.5%</td>
+    </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>二、月度审核趋势分析</div>
+  <div class="section-sub">按月统计通过率变化，识别中长期趋势与季节性规律</div>
+
+  <div class="alert-box alert-warn">
+    ⚠️ <strong>核心预警：</strong>通过率呈持续下降趋势！
+    1月（89.0%）→ 2月（85.8%，↓3.2pp）→ 3月（83.3%，↓2.5pp）→ 4月（83.5%，↑0.2pp）。
+    4月略有回升但仍远低于1月水平，需密切关注。
+  </div>
+
+  <div class="card">
+    <div class="card-title">📈 月度通过率 & 审核量趋势</div>
+    <div class="chart-box"><canvas id="monthlyChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 月度明细数据</div>
+    <table class="data-table">
+      <thead><tr><th>月份</th><th>审核量</th><th>通过数</th><th>拒绝数</th><th>通过率</th><th>环比变化</th></tr></thead>
+      <tbody><tr>
+        <td><strong>1月</strong></td>
+        <td>680</td>
+        <td style="color:#16a34a;">605</td>
+        <td style="color:#dc2626;">75</td>
+        <td style="color:#16a34a;font-weight:700;font-size:15px;">89.0%</td>
+        <td>—</td>
+    </tr><tr>
+        <td><strong>2月</strong></td>
+        <td>443</td>
+        <td style="color:#16a34a;">380</td>
+        <td style="color:#dc2626;">63</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">85.8%</td>
+        <td><span style="color:#dc2626;">↓3.2%</span></td>
+    </tr><tr>
+        <td><strong>3月</strong></td>
+        <td>1926</td>
+        <td style="color:#16a34a;">1605</td>
+        <td style="color:#dc2626;">321</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">83.3%</td>
+        <td><span style="color:#dc2626;">↓2.5%</span></td>
+    </tr><tr>
+        <td><strong>4月</strong></td>
+        <td>1662</td>
+        <td style="color:#16a34a;">1387</td>
+        <td style="color:#dc2626;">275</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">83.5%</td>
+        <td><span style="color:#16a34a;">↑0.2%</span></td>
+    </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>三、周度审核趋势分析</div>
+  <div class="section-sub">按周追踪通过率波动，识别短期异常与审核质量变化</div>
+
+  <div class="alert-box alert-danger">
+    🚨 <strong>周度异常预警：</strong><br><div style="margin-bottom:6px;">2026.0-W04环比暴跌8.3pp ⚠️</div><div style="margin-bottom:6px;">2026.0-W05环比暴跌8.2pp ⚠️</div><div style="margin-bottom:6px;">2026.0-W07环比暴跌8.3pp ⚠️</div><div style="margin-bottom:6px;">2026.0-W14(03/30~04/04)通过率仅74.1% ⚠️</div><div style="margin-bottom:6px;">2026.0-W14环比暴跌8.5pp ⚠️</div><div style="margin-bottom:6px;">2026.0-W15(04/07~04/11)通过率仅69.7% ⚠️</div><div style="margin-bottom:6px;">2026.0-W17环比暴跌10.8pp ⚠️</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📉 周度通过率 & 审核量趋势（最近16周）</div>
+    <div class="chart-box"><canvas id="weeklyChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 周度明细数据</div>
+    <table class="data-table">
+      <thead><tr><th>周次</th><th>日期范围</th><th>审核量</th><th>通过数</th><th>拒绝数</th><th>通过率</th><th>环比</th></tr></thead>
+      <tbody><tr>
+        <td><strong>W01</strong></td>
+        <td>01/01~01/04</td>
+        <td><strong>206</strong></td>
+        <td style="color:#16a34a;">186</td>
+        <td style="color:#dc2626;">20</td>
+        <td style="color:#16a34a;font-weight:700;">90.3%</td>
+        <td>——</td>
+    </tr><tr>
+        <td><strong>W02</strong></td>
+        <td>01/05~01/08</td>
+        <td><strong>149</strong></td>
+        <td style="color:#16a34a;">144</td>
+        <td style="color:#dc2626;">5</td>
+        <td style="color:#16a34a;font-weight:700;">96.6%</td>
+        <td><span style="color:#16a34a;">↑6.3%</span></td>
+    </tr><tr>
+        <td><strong>W04</strong></td>
+        <td>01/19~01/24</td>
+        <td><strong>179</strong></td>
+        <td style="color:#16a34a;">158</td>
+        <td style="color:#dc2626;">21</td>
+        <td style="color:#16a34a;font-weight:700;">88.3%</td>
+        <td><span style="color:#dc2626;">↓8.3%</span></td>
+    </tr><tr>
+        <td><strong>W05</strong></td>
+        <td>01/26~01/31</td>
+        <td><strong>146</strong></td>
+        <td style="color:#16a34a;">117</td>
+        <td style="color:#dc2626;">29</td>
+        <td style="color:#dc2626;font-weight:700;">80.1%</td>
+        <td><span style="color:#dc2626;">↓8.2%</span></td>
+    </tr><tr>
+        <td><strong>W06</strong></td>
+        <td>02/02~02/05</td>
+        <td><strong>196</strong></td>
+        <td style="color:#16a34a;">170</td>
+        <td style="color:#dc2626;">26</td>
+        <td style="color:#d97706;font-weight:700;">86.7%</td>
+        <td><span style="color:#16a34a;">↑6.6%</span></td>
+    </tr><tr>
+        <td><strong>W07</strong></td>
+        <td>02/09~02/11</td>
+        <td><strong>74</strong></td>
+        <td style="color:#16a34a;">58</td>
+        <td style="color:#dc2626;">16</td>
+        <td style="color:#dc2626;font-weight:700;">78.4%</td>
+        <td><span style="color:#dc2626;">↓8.3%</span></td>
+    </tr><tr>
+        <td><strong>W09</strong></td>
+        <td>02/26~02/28</td>
+        <td><strong>173</strong></td>
+        <td style="color:#16a34a;">152</td>
+        <td style="color:#dc2626;">21</td>
+        <td style="color:#d97706;font-weight:700;">87.9%</td>
+        <td><span style="color:#16a34a;">↑9.5%</span></td>
+    </tr><tr>
+        <td><strong>W10</strong></td>
+        <td>03/02~03/07</td>
+        <td><strong>346</strong></td>
+        <td style="color:#16a34a;">299</td>
+        <td style="color:#dc2626;">47</td>
+        <td style="color:#d97706;font-weight:700;">86.4%</td>
+        <td><span style="color:#dc2626;">↓1.5%</span></td>
+    </tr><tr>
+        <td><strong>W11</strong></td>
+        <td>03/09~03/14</td>
+        <td><strong>311</strong></td>
+        <td style="color:#16a34a;">250</td>
+        <td style="color:#dc2626;">61</td>
+        <td style="color:#dc2626;font-weight:700;">80.4%</td>
+        <td><span style="color:#dc2626;">↓6.0%</span></td>
+    </tr><tr>
+        <td><strong>W12</strong></td>
+        <td>03/16~03/20</td>
+        <td><strong>225</strong></td>
+        <td style="color:#16a34a;">203</td>
+        <td style="color:#dc2626;">22</td>
+        <td style="color:#16a34a;font-weight:700;">90.2%</td>
+        <td><span style="color:#16a34a;">↑9.8%</span></td>
+    </tr><tr>
+        <td><strong>W13</strong></td>
+        <td>03/23~03/28</td>
+        <td><strong>161</strong></td>
+        <td style="color:#16a34a;">133</td>
+        <td style="color:#dc2626;">28</td>
+        <td style="color:#dc2626;font-weight:700;">82.6%</td>
+        <td><span style="color:#dc2626;">↓7.6%</span></td>
+    </tr><tr>
+        <td><strong>W14</strong> <span class="tag tag-danger">⚠️ 异常</span></td>
+        <td>03/30~04/04</td>
+        <td><strong>108</strong></td>
+        <td style="color:#16a34a;">80</td>
+        <td style="color:#dc2626;">28</td>
+        <td style="color:#dc2626;font-weight:700;">74.1%</td>
+        <td><span style="color:#dc2626;">↓8.5%</span></td>
+    </tr><tr>
+        <td><strong>W15</strong> <span class="tag tag-danger">⚠️ 异常</span></td>
+        <td>04/07~04/11</td>
+        <td><strong>109</strong></td>
+        <td style="color:#16a34a;">76</td>
+        <td style="color:#dc2626;">33</td>
+        <td style="color:#dc2626;font-weight:700;">69.7%</td>
+        <td><span style="color:#dc2626;">↓4.4%</span></td>
+    </tr><tr>
+        <td><strong>W16</strong></td>
+        <td>04/13~04/18</td>
+        <td><strong>56</strong></td>
+        <td style="color:#16a34a;">52</td>
+        <td style="color:#dc2626;">4</td>
+        <td style="color:#16a34a;font-weight:700;">92.9%</td>
+        <td><span style="color:#16a34a;">↑23.2%</span></td>
+    </tr><tr>
+        <td><strong>W17</strong></td>
+        <td>04/20~04/25</td>
+        <td><strong>84</strong></td>
+        <td style="color:#16a34a;">69</td>
+        <td style="color:#dc2626;">15</td>
+        <td style="color:#dc2626;font-weight:700;">82.1%</td>
+        <td><span style="color:#dc2626;">↓10.8%</span></td>
+    </tr><tr>
+        <td><strong>W18</strong></td>
+        <td>04/27~04/29</td>
+        <td><strong>77</strong></td>
+        <td style="color:#16a34a;">68</td>
+        <td style="color:#dc2626;">9</td>
+        <td style="color:#16a34a;font-weight:700;">88.3%</td>
+        <td><span style="color:#16a34a;">↑6.2%</span></td>
+    </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>四、审核人员绩效分析</div>
+  <div class="section-sub">按审核人员拆解通过率，识别个体差异与培训需求</div>
+
+  <div class="card">
+    <div class="card-title">👤 各审核人员综合表现</div>
+    <table class="data-table">
+      <thead><tr><th>审核人员</th><th>总单数</th><th>通过数</th><th>拒绝数</th><th>通过率</th><th>覆盖店铺</th></tr></thead>
+      <tbody><tr>
+        <td><strong>一峰</strong></td>
+        <td>2601</td>
+        <td style="color:#16a34a;">2215</td>
+        <td style="color:#dc2626;">386</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">85.2%</td>
+        <td>店铺/懂机帝/箭头/雷猴/驴上</td>
+    </tr><tr>
+        <td><strong>乐乐</strong></td>
+        <td>2110</td>
+        <td style="color:#16a34a;">1762</td>
+        <td style="color:#dc2626;">348</td>
+        <td style="color:#d97706;font-weight:700;font-size:15px;">83.5%</td>
+        <td>懂机帝/箭头/雷猴/驴上</td>
+    </tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 审核人员 × 月份 通过率交叉表（%）</div>
+    <table class="data-table">
+      <thead><tr><th>审核人员</th><th>1月</th><th>2月</th><th>3月</th><th>4月</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>五、拒绝原因分析</div>
+  <div class="section-sub">分析拒绝原因分布，识别高频拒绝因素，指导风控规则优化</div>
+  <div class="card">
+    <div class="card-title">🚫 拒绝原因 TOP12（共734单拒绝）</div>
+    <table class="data-table">
+      <thead><tr><th>拒绝原因</th><th>次数</th><th>占比</th><th>分布</th></tr></thead>
+      <tbody>{reject_items}</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="section-title-bar"></span>六、风控策略建议</div>
+  <div class="section-sub">基于数据趋势变化，输出可执行的风控优化建议</div>
+
+  <div class="alert-box alert-danger">
+    🚨 <strong>最紧急事项：</strong>通过率已连续3个月处于低位（83~85%），且周度数据出现69.7%的极端低点。
+    建议<strong>本周内</strong>完成审核标准复审，并对比1月与4月审核订单的质量差异（是否放宽了准入条件？）。
+  </div>
+
+  <div class="card">
+    <div class="card-title">💡 风控优化建议（按优先级排序）</div>
+    <ul class="suggestion-list">
+      <li><strong>1. 紧急：遏制通过率下滑趋势：</strong>综合通过率从1月89.0%持续下滑至4月83.5%，累计下降5.5pp。建议立即召开风控复盘会议，审议1~4月审核标准是否发生非预期松动，并对比同期订单质量变化。</li><li><strong>2. 周度异常预警机制：</strong>W14（74.1%）、W15（69.7%）通过率严重异常。建议建立"周通过率<75%自动预警"机制，要求审核组长当周出具异常说明，并在下周一前提交整改方案。</li><li><strong>3. 审核人员培训 & 标准化：</strong>一峰（85.2%）与乐乐（83.5%）通过率相差1.7pp。建议组织两人相互审核抽样，识别各自审核尺度差异，形成标准化审核手册，减少人为主观因素导致的通过率波动。</li><li><strong>4. 拒绝原因规则优化：</strong>拒绝原因TOP3为"评分3"（63次）、"信贷黑名单"（27次）、"评分2"（20次）。建议对高频拒绝原因设置自动拦截规则（如信贷黑名单直接拒绝），减少人工审核成本，同时统一"评分X"类拒绝的判定标准。</li><li><strong>5. 月度审核量波动管理：</strong>3月审核量翻倍（1926单 vs 2月443单），但通过率下降最严重。建议排查3月是否因审核量突增导致审核质量下降，必要时增加审核人力或引入分批审核机制。</li><li><strong>6. 建立周度复盘制度：</strong>建议每周一召开15分钟审核数据复盘会，回顾上周通过率、拒绝原因分布，对异常周（环比变化>|5pp|）进行根因分析，并形成书面记录归档。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  © 2026 人人租风控数据分析平台 &nbsp;|&nbsp; 审核数据分析报告
+  &nbsp;|&nbsp; 数据日期：2026-01-01 ~ 2026-04-29
+  &nbsp;|&nbsp; 报告生成时间：2026-04-29
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 月度趋势图
+  new Chart(document.getElementById('monthlyChart'), {
+    type:'bar',
+    data:{
+      labels: ["1\u6708", "2\u6708", "3\u6708", "4\u6708"],
+      datasets:[
+        {
+          label:'审核量',
+          data:[680, 443, 1926, 1662],
+          backgroundColor:'rgba(99,102,241,0.7)',
+          yAxisID:'y',
+          order:2
+        },
+        {
+          label:'通过率(%)',
+          data:[89.0, 85.8, 83.3, 83.5],
+          type:'line',
+          borderColor:'#16a34a',
+          backgroundColor:'rgba(22,163,74,0.1)',
+          pointBackgroundColor:'#16a34a',
+          pointRadius:6,
+          fill:true,
+          yAxisID:'y1',
+          order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        y:{type:'linear', position:'left', title:{display:true,text:'审核量(单)'}, min:0},
+        y1:{type:'linear', position:'right', title:{display:true,text:'通过率(%)'}, min:70, max:100, grid:{draw:false}}
+      }
+    }
+  });
+
+  // 周度趋势图（最近12周）
+  new Chart(document.getElementById('weeklyChart'), {
+    type:'bar',
+    data:{
+      labels: ["W06", "W07", "W09", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "W18"],
+      datasets:[
+        {
+          label:'审核量',
+          data:[196, 74, 173, 346, 311, 225, 161, 108, 109, 56, 84, 77],
+          backgroundColor:'rgba(99,102,241,0.7)',
+          yAxisID:'y',
+          order:2
+        },
+        {
+          label:'通过率(%)',
+          data:[86.7, 78.4, 87.9, 86.4, 80.4, 90.2, 82.6, 74.1, 69.7, 92.9, 82.1, 88.3],
+          type:'line',
+          borderColor:'#16a34a',
+          backgroundColor:'rgba(22,163,74,0.1)',
+          pointBackgroundColor:'#16a34a',
+          pointRadius:5,
+          fill:false,
+          tension:0.3,
+          yAxisID:'y1',
+          order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        y:{type:'linear', position:'left', title:{display:true,text:'审核量(单)'}, min:0},
+        y1:{type:'linear', position:'right', title:{display:true,text:'通过率(%)'}, min:60, max:100, grid:{draw:false}}
+      }
+    }
+  });
+});
+</script>
+
+</body>
+</html>

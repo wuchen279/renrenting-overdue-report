@@ -1,0 +1,9 @@
+*.py
+*.bak
+node_modules/
+.DS_Store
+Thumbs.db
+.env
+*.log
+
+!deploy.ps1

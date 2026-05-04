@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自动化报告生成 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<style>
+.hero-section {
+  background: var(--gradient);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(21, 101, 192, 0.3);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #e1f5fe;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.hero-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.section-title {
+  color: #16213e;
+  margin: 24px 0 10px;
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  font-size: 16px;
+}
+
+.report-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(21, 101, 192, 0.1);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.report-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.report-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.report-status.completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.report-status.generating {
+  background: rgba(21, 101, 192, 0.12);
+  color: var(--primary);
+}
+
+.report-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.generate-card {
+  background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+  border: 2px dashed var(--primary);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.generate-card:hover {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+}
+
+.generate-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.generate-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.generate-desc {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-light);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: auto;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.report-preview {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.report-preview h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 4px solid #f59e0b;
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 20px;
+}
+
+.insight-box p {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.7;
+}
+
+@media (max-width: 1024px) {
+
+}
+
+@media (max-width: 768px) {
+
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>自动化报告生成</h1>
+        <span class="date-badge">📄 自动生成</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-badge">📄 智能报告</span>
+          <h2>自动化风控报告生成中心</h2>
+          <p>一键生成专业风控分析报告 · 支持多维度数据导出 · 定时自动生成</p>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <p><strong>📊 报告功能：</strong>系统支持自动生成 <strong>月度风控报告</strong>、<strong>季度分析报告</strong>、<strong>策略效果评估报告</strong> 等多种类型。报告包含数据概览、趋势分析、风险预警、策略建议等模块，可直接导出为HTML或PDF格式，方便向上级汇报和团队分享。</p>
+      </div>
+
+      <h2 class="section-title">➕ 生成新报告</h2>
+      <div class="generate-card" onclick="openModal()">
+        <div class="generate-icon">📄</div>
+        <div class="generate-title">生成新报告</div>
+        <div class="generate-desc">选择报告类型、时间范围和数据维度，一键生成专业风控报告</div>
+      </div>
+
+      <h2 class="section-title">📋 历史报告</h2>
+      
+      <div class="report-card">
+        <div class="report-header">
+          <div class="report-title">2026年4月月度风控报告</div>
+          <span class="report-status completed">已完成</span>
+        </div>
+        <div class="report-meta">
+          <span>📅 生成时间：2026-04-28</span>
+          <span>📊 数据周期：2026-04-01 ~ 2026-04-28</span>
+          <span>📄 报告类型：月度报告</span>
+        </div>
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="previewReport('2026-04')">👁️ 预览</button>
+          <button class="btn btn-secondary" onclick="downloadReport('2026-04')">📥 下载HTML</button>
+        </div>
+      </div>
+
+      <div class="report-card">
+        <div class="report-header">
+          <div class="report-title">2026年Q1季度分析报告</div>
+          <span class="report-status completed">已完成</span>
+        </div>
+        <div class="report-meta">
+          <span>📅 生成时间：2026-04-01</span>
+          <span>📊 数据周期：2026-01-01 ~ 2026-03-31</span>
+          <span>📄 报告类型：季度报告</span>
+        </div>
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="previewReport('2026-Q1')">👁️ 预览</button>
+          <button class="btn btn-secondary" onclick="downloadReport('2026-Q1')">📥 下载HTML</button>
+        </div>
+      </div>
+
+      <div class="report-card">
+        <div class="report-header">
+          <div class="report-title">风控策略效果评估报告</div>
+          <span class="report-status completed">已完成</span>
+        </div>
+        <div class="report-meta">
+          <span>📅 生成时间：2026-03-15</span>
+          <span>📊 数据周期：2025-06-01 ~ 2026-02-28</span>
+          <span>📄 报告类型：策略评估</span>
+        </div>
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="previewReport('strategy')">👁️ 预览</button>
+          <button class="btn btn-secondary" onclick="downloadReport('strategy')">📥 下载HTML</button>
+        </div>
+      </div>
+
+      <div class="report-card">
+        <div class="report-header">
+          <div class="report-title">2026年3月月度风控报告</div>
+          <span class="report-status completed">已完成</span>
+        </div>
+        <div class="report-meta">
+          <span>📅 生成时间：2026-03-31</span>
+          <span>📊 数据周期：2026-03-01 ~ 2026-03-31</span>
+          <span>📄 报告类型：月度报告</span>
+        </div>
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="previewReport('2026-03')">👁️ 预览</button>
+          <button class="btn btn-secondary" onclick="downloadReport('2026-03')">📥 下载HTML</button>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
+        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+function openModal() {
+  document.getElementById('generateModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('generateModal').classList.remove('active');
+  resetProgress();
+}
+
+function resetProgress() {
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('previewSection').style.display = 'none';
+  document.getElementById('progressFill').style.width = '0%';
+}
+
+function generateReport() {
+  const progressSection = document.getElementById('progressSection');
+  const previewSection = document.getElementById('previewSection');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  
+  progressSection.style.display = 'block';
+  previewSection.style.display = 'none';
+  
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      progressText.textContent = '报告生成完成！';
+      setTimeout(() => {
+        previewSection.style.display = 'block';
+        document.getElementById('previewTitle').textContent = document.getElementById('reportTitle').value;
+      }, 500);
+    } else {
+      progressText.textContent = `正在生成报告... ${Math.round(progress)}%`;
+    }
+    progressFill.style.width = progress + '%';
+  }, 300);
+}
+
+function previewReport(reportId) {
+  alert(`正在打开 ${reportId} 报告预览...\n\n报告将包含以下模块：\n• 数据概览与KPI指标\n• 月度趋势分析\n• 店铺对比分析\n• 风险预警与建议\n• 策略效果评估`);
+}
+
+function downloadReport(reportId) {
+  alert(`正在下载 ${reportId} 报告...\n\n报告格式：HTML\n文件大小：约 2.5MB\n预计下载时间：3秒`);
+}
+
+// 报告类型切换时更新标题
+document.getElementById('reportType').addEventListener('change', function() {
+  const typeMap = {
+    'monthly': '2026年4月月度风控报告',
+    'quarterly': '2026年Q1季度分析报告',
+    'strategy': '风控策略效果评估报告',
+    'regional': '地域风险分析报告',
+    'custom': '自定义风控报告'
+  };
+  document.getElementById('reportTitle').value = typeMap[this.value];
+});
+
+</script>
+</body>
+</html>

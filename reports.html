@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>历史报告 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<style>
+.sidebar-header .logo i {
+  font-size: 24px;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sidebar-header .logo span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sidebar-menu li a i {
+  width: 18px;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: 12px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--gradient);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.report-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.report-header {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.report-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.report-icon.
+
+.report-icon.xlsx {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+}
+
+.report-icon.csv {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+}
+
+.report-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-meta {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.report-meta span {
+  margin-right: 12px;
+}
+
+.report-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.report-tag {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.report-tag.monthly {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.report-tag.quarterly {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.report-tag.yearly {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.report-tag.special {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.report-tag.all {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.report-tag.jt {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.report-tag.ls {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.report-tag.lh {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.report-action-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-light);
+  transition: all 0.2s;
+}
+
+.report-action-btn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.report-action-btn.download:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.report-action-btn.preview:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.report-stats {
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.page-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.page-btn:hover {
+  background: var(--bg);
+}
+
+.page-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #e3f2fd 0%, #e1e5f2 100%);
+  border-left: 4px solid var(--primary);
+  padding: 16px 20px;
+  border-radius: 0 10px 10px 0;
+  margin-top: 20px;
+}
+
+.insight-box p {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.insight-box strong {
+  color: var(--primary-dark);
+}
+
+@media (max-width: 1024px) {
+
+  .sidebar-menu li a span {
+    display: none;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .filter-bar {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>历史报告</h1>
+        <span class="date-badge">📁 历史归档</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>报告类型</label>
+          <select id="reportType">
+            <option value="all">全部类型</option>
+            <option value="monthly">月度报告</option>
+            <option value="quarterly">季度报告</option>
+            <option value="yearly">年度报告</option>
+            <option value="special">专项报告</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>店铺范围</label>
+          <select id="storeRange">
+            <option value="all">全部店铺</option>
+            <option value="jt">箭头</option>
+            <option value="ls">驴上</option>
+            <option value="lh">雷猴</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>时间范围</label>
+          <select id="timeRange">
+            <option value="all">全部时间</option>
+            <option value="last_month">近一个月</option>
+            <option value="last_quarter">近三个月</option>
+            <option value="last_year">近一年</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="align-self: flex-end;">
+          <i class="fas fa-search"></i> 筛选
+        </button>
+      </div>
+
+      <!-- Report Grid -->
+      <div class="report-grid">
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon html"><i class="fas fa-file-html"></i></div>
+            <div class="report-info">
+              <div class="report-title">人人租2025-04-完整报告</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2026-04-28</span>
+                <span><i class="fas fa-file"></i> 2.1 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag monthly">月度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">7,894</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">0.00%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">4.42%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon xlsx"><i class="fas fa-file-excel"></i></div>
+            <div class="report-info">
+              <div class="report-title">2025年Q4数据分析报告</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2026-01-15</span>
+                <span><i class="fas fa-file"></i> 1.8 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag quarterly">季度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">18,452</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">2.15%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">5.28%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon html"><i class="fas fa-file-html"></i></div>
+            <div class="report-info">
+              <div class="report-title">人人租2025-12-完整报告</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2026-01-05</span>
+                <span><i class="fas fa-file"></i> 1.9 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag monthly">月度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">6,234</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">1.85%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">5.76%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon csv"><i class="fas fa-file-csv"></i></div>
+            <div class="report-info">
+              <div class="report-title">2025年11月数据汇总</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2025-12-01</span>
+                <span><i class="fas fa-file"></i> 856 KB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag monthly">月度报告</span>
+            <span class="report-tag jt">箭头</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">2,845</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">1.25%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">4.76%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon html"><i class="fas fa-file-html"></i></div>
+            <div class="report-info">
+              <div class="report-title">人人租2025-11-完整报告</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2025-12-01</span>
+                <span><i class="fas fa-file"></i> 2.0 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag monthly">月度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">7,123</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">2.35%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">6.84%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon xlsx"><i class="fas fa-file-excel"></i></div>
+            <div class="report-info">
+              <div class="report-title">2025年年度风控分析报告</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2026-01-10</span>
+                <span><i class="fas fa-file"></i> 3.2 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag yearly">年度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">68,452</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">1.82%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">4.25%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon html"><i class="fas fa-file-html"></i></div>
+            <div class="report-info">
+              <div class="report-title">驴上店铺风险专项分析</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2026-03-20</span>
+                <span><i class="fas fa-file"></i> 1.2 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag special">专项报告</span>
+            <span class="report-tag ls">驴上</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">5,382</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">3.15%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">6.15%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-header">
+            <div class="report-icon csv"><i class="fas fa-file-csv"></i></div>
+            <div class="report-info">
+              <div class="report-title">2025年Q3渠道分析数据</div>
+              <div class="report-meta">
+                <span><i class="fas fa-calendar"></i> 2025-10-08</span>
+                <span><i class="fas fa-file"></i> 1.1 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="report-tags">
+            <span class="report-tag quarterly">季度报告</span>
+            <span class="report-tag all">全店铺</span>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <div class="stat-value">15,234</div>
+              <div class="stat-label">订单数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">1.95%</div>
+              <div class="stat-label">逾期率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">4.85%</div>
+              <div class="stat-label">DPD30+</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="report-action-btn preview"><i class="fas fa-eye"></i> 预览</button>
+            <button class="report-action-btn download"><i class="fas fa-download"></i> 下载</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">4</button>
+        <button class="page-btn">5</button>
+        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight-box">
+        <p><strong>📁 报告管理提示：</strong></p>
+        <p style="margin-top: 8px;">1. 月度报告建议在每月5号前上传，便于及时进行风险评估</p>
+        <p>2. 年度报告包含全年趋势分析，是制定次年风控策略的重要依据</p>
+        <p>3. 专项报告针对特定问题深入分析，建议定期回顾并跟踪整改效果</p>
+      </div>
+
+      <div style="text-align: center; color: var(--text-light); font-size: 12px; margin-top: 40px;">
+        © 2026 人人租风控数据后台
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+</script>
+</body>
+</html>

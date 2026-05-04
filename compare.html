@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>对比分析 - 人人租风控数据后台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.chart-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-tabs {
+  display: flex;
+  gap: 5px;
+}
+
+.chart-tab {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--text-light);
+  border: none;
+  transition: all 0.2s;
+}
+
+.chart-tab:hover {
+  background: rgba(21, 101, 192, 0.08);
+}
+
+.chart-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--gradient);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.table-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table thead tr {
+  background: #f0f4ff;
+}
+
+.data-table th {
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-light);
+  font-size: 12px;
+  white-space: nowrap;
+  border-bottom: 2px solid #ddd;
+}
+
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--text);
+  text-align: center;
+}
+
+.data-table tbody tr {
+  transition: background 0.2s;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(21, 101, 192, 0.03);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.data-table tbody tr:nth-child(even):hover {
+  background: rgba(21, 101, 192, 0.05);
+}
+
+.data-table .highlight {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.data-table .success { color: var(--success); font-weight: 600; }
+.data-table .warning { color: var(--warning); font-weight: 600; }
+.data-table .danger { color: var(--danger); font-weight: 600; }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 20px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0e7ff 100%);
+  border-left: 4px solid var(--primary);
+  padding: 16px 20px;
+  border-radius: 0 10px 10px 0;
+  margin-top: 20px;
+}
+
+.insight-box p {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.7;
+}
+
+.insight-box strong {
+  color: var(--primary-dark);
+}
+
+.diff-positive {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.diff-negative {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.section-title {
+  color: #16213e;
+  margin: 24px 0 10px;
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  font-size: 16px;
+}
+
+@media (max-width: 1024px) {
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .filter-bar {
+    flex-direction: column;
+  }
+}
+
+/* ===== Chart Loading ===== */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.chart-loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>对比分析</h1>
+        <span class="date-badge">📅 本期 vs 上期</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜索店铺、城市...">
+        </div>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="name">管理员</span>
+        </div>
+      </div>
+    </header>
+    <div class="content">
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>对比维度</label>
+          <select id="compareDimension">
+            <option value="store">按店铺</option>
+            <option value="city">按城市</option>
+            <option value="source">按渠道</option>
+            <option value="month">按月度</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>时间范围</label>
+          <select id="timeRange">
+            <option value="month">本月对比上月</option>
+            <option value="quarter">本季度对比上季度</option>
+            <option value="year">本年对比上年</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>指标类型</label>
+          <select id="metricType">
+            <option value="all">全部指标</option>
+            <option value="overdue">逾期指标</option>
+            <option value="order">订单指标</option>
+          </select>
+        </div>
+        <button class="btn btn-primary">
+          🔍 查询
+        </button>
+      </div>
+
+      <h2 class="section-title">📈 对比分析图表</h2>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>店铺风险对比</h3>
+            <span style="font-size: 12px; color: var(--text-light);">DPD30+ vs DPD90+</span>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingDpdCompare">正在加载图表数据...</div>
+            <canvas id="chartDpdCompare" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>逾期阶段分布</h3>
+            <span style="font-size: 12px; color: var(--text-light);">M1-M3+逾期数量</span>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingDpd90Compare">正在加载图表数据...</div>
+            <canvas id="chartDpd90Compare" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>订单量对比</h3>
+            <span style="font-size: 12px; color: var(--text-light);">本期 vs 上期</span>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingOrderCompare">正在加载图表数据...</div>
+            <canvas id="chartOrderCompare" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>逾期趋势对比</h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-loading" id="loadingTrendCompare">正在加载图表数据...</div>
+            <canvas id="chartTrendCompare" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📊 店铺详细对比</h2>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-sort>店铺</th>
+                <th>指标</th>
+                <th>本期</th>
+                <th>上期</th>
+                <th data-sort>变化量</th>
+                <th data-sort>变化率</th>
+                <th>趋势</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="highlight" rowspan="4">箭头</td>
+                <td>总订单</td>
+                <td>7,894</td>
+                <td>7,012</td>
+                <td class="diff-positive">+882</td>
+                <td class="diff-positive">+12.6%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td>DPD30+率</td>
+                <td>3.17%</td>
+                <td>3.52%</td>
+                <td class="diff-negative">-0.35%</td>
+                <td class="diff-negative">-9.9%</td>
+                <td>📉</td>
+              </tr>
+              <tr>
+                <td>DPD90+率</td>
+                <td>1.49%</td>
+                <td>1.68%</td>
+                <td class="diff-negative">-0.19%</td>
+                <td class="diff-negative">-11.3%</td>
+                <td>📉</td>
+              </tr>
+              <tr>
+                <td>正常订单率</td>
+                <td>91.6%</td>
+                <td>90.8%</td>
+                <td class="diff-positive">+0.8%</td>
+                <td class="diff-positive">+0.9%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td class="highlight" rowspan="4">驴上</td>
+                <td>总订单</td>
+                <td>5,382</td>
+                <td>4,856</td>
+                <td class="diff-positive">+526</td>
+                <td class="diff-positive">+10.8%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td>DPD30+率</td>
+                <td>6.15%</td>
+                <td>5.82%</td>
+                <td class="diff-positive">+0.33%</td>
+                <td class="diff-positive">+5.7%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td>DPD90+率</td>
+                <td>4.13%</td>
+                <td>3.75%</td>
+                <td class="diff-positive">+0.38%</td>
+                <td class="diff-positive">+10.1%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td>正常订单率</td>
+                <td>89.8%</td>
+                <td>90.5%</td>
+                <td class="diff-negative">-0.7%</td>
+                <td class="diff-negative">-0.8%</td>
+                <td>📉</td>
+              </tr>
+              <tr>
+                <td class="highlight" rowspan="4">雷猴</td>
+                <td>总订单</td>
+                <td>2,512</td>
+                <td>2,289</td>
+                <td class="diff-positive">+223</td>
+                <td class="diff-positive">+9.7%</td>
+                <td>📈</td>
+              </tr>
+              <tr>
+                <td>DPD30+率</td>
+                <td>4.62%</td>
+                <td>5.15%</td>
+                <td class="diff-negative">-0.53%</td>
+                <td class="diff-negative">-10.3%</td>
+                <td>📉</td>
+              </tr>
+              <tr>
+                <td>DPD90+率</td>
+                <td>2.63%</td>
+                <td>2.98%</td>
+                <td class="diff-negative">-0.35%</td>
+                <td class="diff-negative">-11.7%</td>
+                <td>📉</td>
+              </tr>
+              <tr>
+                <td>正常订单率</td>
+                <td>91.6%</td>
+                <td>90.2%</td>
+                <td class="diff-positive">+1.4%</td>
+                <td class="diff-positive">+1.5%</td>
+                <td>📈</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <p><strong>📊 对比分析洞察：</strong></p>
+        <p style="margin-top: 8px;"><strong>箭头店铺：</strong>订单量增长12.6%，逾期率双降（DPD30+下降9.9%，DPD90+下降11.3%），风控表现最优，建议总结其审核经验推广至其他店铺。</p>
+        <p><strong>驴上店铺：</strong>订单量增长10.8%，但逾期率上升（DPD30+上升5.7%，DPD90+上升10.1%），风险持续恶化，需重点关注并介入整改。</p>
+        <p><strong>雷猴店铺：</strong>订单量增长9.7%，逾期率双降（DPD30+下降10.3%，DPD90+下降11.7%），风控改善明显，建议保持当前策略。</p>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
+        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+      </div>
+    </div>
+  
+    </div>
+  </main>
+</div>
+
+<script src="common.js"></script>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  var metricFilter = document.getElementById('metricType');
+  if (metricFilter) {
+    metricFilter.addEventListener('change', function() {
+      var val = this.value;
+      var rows = document.querySelectorAll('.data-table tbody tr');
+      rows.forEach(function(row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length >= 2) {
+          var metric = cells[1].textContent.trim();
+          var isOverdue = metric.indexOf('DPD') !== -1 || metric.indexOf('逾期') !== -1 || metric.indexOf('M1') !== -1;
+          var isOrder = metric.indexOf('订单') !== -1 || metric.indexOf('正常') !== -1;
+          if (val === 'all') {
+            row.style.display = '';
+          } else if (val === 'overdue') {
+            row.style.display = isOverdue ? '' : 'none';
+          } else if (val === 'order') {
+            row.style.display = isOrder ? '' : 'none';
+          }
+        }
+      });
+    });
+  }
+
+  function showChart(canvasId, loadingId) {
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(canvasId).style.display = 'block';
+  }
+
+  new Chart(document.getElementById('chartDpdCompare').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['箭头', '驴上', '雷猴', '全店铺'],
+      datasets: [
+        { label: 'DPD30+率', data: [3.17, 6.15, 4.62, 4.42], backgroundColor: 'rgba(21, 101, 192, 0.8)', borderRadius: 8 },
+        { label: 'DPD90+率', data: [1.49, 4.13, 2.63, 1.85], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 8 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
+      scales: {
+        y: { beginAtZero: true, max: 8, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartDpd90Compare').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['M1', 'M2', 'M3', 'M3+'],
+      datasets: [
+        { label: '逾期数量', data: [474, 226, 180, 292], backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(139, 92, 246, 0.7)'], borderRadius: 8 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartOrderCompare').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['箭头', '驴上', '雷猴'],
+      datasets: [
+        { label: '总订单', data: [7894, 5382, 2512], backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 8 },
+        { label: '正常订单', data: [7233, 4836, 2321], backgroundColor: 'rgba(148, 163, 184, 0.8)', borderRadius: 8 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartTrendCompare').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: ['2025-01', '2025-06', '2025-09', '2025-11', '2026-01', '2026-02'],
+      datasets: [
+        { label: '箭头', data: [0.88, 2.08, 5.00, 4.76, 1.08, 0], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
+        { label: '驴上', data: [0, 5.00, 10.54, 6.98, 2.94, 0.66], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
+        { label: '雷猴', data: [0, 12.50, 3.57, 4.00, 2.38, 1.20], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, pointRadius: 5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
+      scales: {
+        y: { beginAtZero: true, max: 14, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
+      }
+    }
+  });
+  showChart('chartDpdCompare', 'loadingDpdCompare');
+  showChart('chartDpd90Compare', 'loadingDpd90Compare');
+  showChart('chartOrderCompare', 'loadingOrderCompare');
+  showChart('chartTrendCompare', 'loadingTrendCompare');
+});
+
+</script>
+</body>
+</html>
