@@ -3,6 +3,20 @@
    设计理念：与前台保持一致的视觉语言
    ============================================ */
 
+/* ========== 管理后台布局优化（隐藏侧边栏）========== */
+.layout .sidebar {
+  display: none !important;
+}
+
+.layout .main {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+.layout {
+  display: block !important;
+}
+
 /* ========== Hero 区域 ========== */
 .dashboard-hero {
   background: var(--gradient);
