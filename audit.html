@@ -1025,22 +1025,22 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ========== 数据清除/重置功能（全局函数） ==========
   
-  function showToolbar() {
+  window.showToolbar = function() {
     var toolbar = document.getElementById('actionToolbar');
     if (toolbar) {
       toolbar.style.display = 'block';
       toolbar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }
+  };
   
-  function hideToolbar() {
+  window.hideToolbar = function() {
     var toolbar = document.getElementById('actionToolbar');
     if (toolbar) {
       toolbar.style.display = 'none';
     }
-  }
+  };
   
-  function updateDataStatus(status, text) {
+  window.updateDataStatus = function(status, text) {
     var dot = document.getElementById('statusDot');
     var statusText = document.getElementById('statusText');
     var btnClear = document.getElementById('btnClearData');
@@ -1056,9 +1056,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnClear) {
       btnClear.style.display = (status === 'success') ? 'flex' : 'none';
     }
-  }
+  };
   
-  function clearAllAuditData() {
+  window.clearAllAuditData = function() {
     var confirmed = confirm(
       '⚠️ 确定要清除所有审核数据吗？\n\n' +
       '此操作将删除：\n' +
@@ -1104,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('[Audit] ❌ 清除数据失败:', error);
       showToast('❌ 清除失败: ' + error.message, 'error', 5000);
     }
-  }
+  };
 
   showLoading(false);
 
