@@ -1345,18 +1345,44 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    var totalOrders = weeklyData.reduce((sum, w) => sum + (w.total_orders || 0), 0);
-    var avgPassRate = (weeklyData.reduce((sum, w) => sum + parseFloat(w.pass_rate || 0), 0) / weeklyData.length).toFixed(2);
+    var today = new Date();
+    var currentYear = today.getFullYear();
+    var currentMonth = today.getMonth() + 1;
+
+    var filteredWeeklyData = weeklyData.filter(function(w) {
+      if (!w.year || !w.week_number) return true;
+
+      var weekDateRange = getWeekDateRange(w.year, w.week_number);
+      var startDateStr = weekDateRange.split(' ~ ')[0];
+      var startMonth = parseInt(startDateStr.split('/')[0]);
+
+      if (w.year > currentYear || (w.year === currentYear && startMonth > currentMonth)) {
+        console.warn('[Audit] ⚠️ 过滤掉未来周数据:', w.year + 'W' + String(w.week_number).padStart(2, '0'), '(' + weekDateRange + ')');
+        return false;
+      }
+
+      return true;
+    });
+
+    if (filteredWeeklyData.length < weeklyData.length) {
+      console.log('[Audit] 📊 已过滤', weeklyData.length - filteredWeeklyData.length, '条未来周数据（原', weeklyData.length, '条 → 现', filteredWeeklyData.length, '条）');
+      showToast('⚠️ 已自动隐藏 ' + (weeklyData.length - filteredWeeklyData.length) + ' 周未来日期数据', 'warning', 5000);
+    }
+
+    var displayData = filteredWeeklyData.length > 0 ? filteredWeeklyData : weeklyData;
+
+    var totalOrders = displayData.reduce((sum, w) => sum + (w.total_orders || 0), 0);
+    var avgPassRate = (displayData.reduce((sum, w) => sum + parseFloat(w.pass_rate || 0), 0) / displayData.length).toFixed(2);
 
     var html = '<div style="margin-bottom:16px;padding:12px;background:#f0f9ff;border-radius:8px;border-left:4px solid #3b82f6;">';
-    html += '<span style="font-size:13px;color:#1e40af;"><strong>汇总：</strong>共 ' + weeklyData.length + ' 周，总审核量 ' + totalOrders.toLocaleString() + ' 单，平均通过率 ' + avgPassRate + '%</span>';
+    html += '<span style="font-size:13px;color:#1e40af;"><strong>汇总：</strong>共 ' + displayData.length + ' 周，总审核量 ' + totalOrders.toLocaleString() + ' 单，平均通过率 ' + avgPassRate + '%</span>';
     html += '</div>';
 
     html += '<table class="data-table"><thead><tr>';
     html += '<th>周次</th><th>审核量</th><th>通过数</th><th>通过率</th><th>通过率环比<br><span style="font-size:10px;font-weight:400;color:#6b7280;">(本周 vs 上周)</span></th><th>趋势</th>';
     html += '</tr></thead><tbody>';
 
-    weeklyData.forEach((w, index) => {
+    displayData.forEach((w, index) => {
       var weekLabel = w.year + 'W' + String(w.week_number).padStart(2, '0');
       var dateRange = getWeekDateRange(w.year, w.week_number);
       var orders = w.total_orders || 0;

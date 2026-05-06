@@ -965,6 +965,13 @@
     const stores = {};
     const auditors = {};
     
+    var today = new Date();
+    var currentYear = today.getFullYear();
+    var currentMonth = today.getMonth() + 1;
+    
+    console.log('[Analysis] 当前日期:', today.toISOString().split('T')[0]);
+    console.log('[Analysis] 将过滤掉', currentYear, '年', currentMonth, '月之后的未来数据');
+    
     rawData.forEach(function(row) {
       let date;
       if (typeof row['时间'] === 'number') {
@@ -976,6 +983,14 @@
       }
       
       if (isNaN(date.getTime())) return;
+      
+      var recordYear = date.getFullYear();
+      var recordMonth = date.getMonth() + 1;
+      
+      if (recordYear > currentYear || (recordYear === currentYear && recordMonth > currentMonth)) {
+        console.warn('[Analysis] ⚠️ 跳过未来日期:', date.toISOString().split('T')[0], '(属于', recordYear, '年', recordMonth, '月)');
+        return;
+      }
       
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
