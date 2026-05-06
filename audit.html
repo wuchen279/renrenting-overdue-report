@@ -1303,30 +1303,31 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // 渲染每周审核量详细表格
-  // 根据年份和周数获取日期区间
+  // 根据年份和周数获取日期区间（严格按周一到周日）
   function getWeekDateRange(year, weekNumber) {
     var janFirst = new Date(year, 0, 1);
-    
-    var firstDay = janFirst.getDay();
-    var firstMonday;
-    
-    if (firstDay <= 4) {
-      firstMonday = new Date(janFirst);
-      firstMonday.setDate(janFirst.getDate() - (firstDay - 1));
-    } else {
-      firstMonday = new Date(janFirst);
-      firstMonday.setDate(janFirst.getDate() + (8 - firstDay));
+    var firstDayOfWeek = janFirst.getDay();
+    var firstMondayOffset = 0;
+
+    if (firstDayOfWeek === 0) {
+      firstMondayOffset = 1;
+    } else if (firstDayOfWeek > 1) {
+      firstMondayOffset = 8 - firstDayOfWeek;
+    } else if (firstDayOfWeek === 1) {
+      firstMondayOffset = 0;
     }
-    
-    var startDate = new Date(firstMonday);
-    startDate.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
-    
+
+    var firstMondayOfYear = new Date(year, 0, 1 + firstMondayOffset);
+
+    var startDate = new Date(firstMondayOfYear);
+    startDate.setDate(firstMondayOfYear.getDate() + (weekNumber - 1) * 7);
+
     var endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 6);
-    
+
     var formatMonth = function(d) { return String(d.getMonth() + 1).padStart(2, '0'); };
     var formatDay = function(d) { return String(d.getDate()).padStart(2, '0'); };
-    
+
     return formatMonth(startDate) + '/' + formatDay(startDate) + ' ~ ' + formatMonth(endDate) + '/' + formatDay(endDate);
   }
 
