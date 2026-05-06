@@ -206,20 +206,20 @@
         { id: 'settings', icon: '⚙️', label: '系统设置', module: 'settings' }
       ];
       
-      var navHtml = '&lt;nav class="sidebar-nav"&gt;&lt;ul class="nav-list"&gt;';
+      var navHtml = '<nav class="sidebar-nav"><ul class="nav-list">';
       menuItems.forEach(function(item) {
         var activeClass = item.id === 'dashboard' ? ' active' : '';
-        navHtml += '&lt;li class="nav-item" data-module="' + item.id + '"&gt;';
-        navHtml += '&lt;a href="#" class="nav-link' + activeClass + '" data-module="' + item.id + '"&gt;';
-        navHtml += '&lt;span class="nav-icon"&gt;' + item.icon + '&lt;/span&gt;';
-        navHtml += '&lt;span class="nav-label"&gt;' + item.label + '&lt;/span&gt;';
-        navHtml += '&lt;/a&gt;&lt;/li&gt;';
+        navHtml += '<li class="nav-item" data-module="' + item.id + '">';
+        navHtml += '<a href="#" class="nav-link' + activeClass + '" data-module="' + item.id + '">';
+        navHtml += '<span class="nav-icon">' + item.icon + '</span>';
+        navHtml += '<span class="nav-label">' + item.label + '</span>';
+        navHtml += '</a></li>';
       });
-      navHtml += '&lt;/ul&gt;&lt;/nav&gt;';
+      navHtml += '</ul></nav>';
       
       var sidebar = document.getElementById('sidebar');
       if (sidebar) {
-        sidebar.innerHTML = '&lt;div class="sidebar-header"&gt;&lt;h2&gt;🔧 管理后台&lt;/h2&gt;&lt;/div&gt;' + navHtml;
+        sidebar.innerHTML = '<div class="sidebar-header"><h2>🔧 管理后台</h2></div>' + navHtml;
       }
     },
     
