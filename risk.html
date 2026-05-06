@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>风控建议 - 人人租风控数据后台</title>
+<title>风控建议 - 箭头风控智能化分析平台</title>
 <link rel="stylesheet" href="common.css">
 <style>
 .card {
@@ -620,7 +620,7 @@
       </div>
 
       <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
-        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+        © 2026 箭头风控智能化分析平台 | 数据更新时间：2026年04月28日
       </div>
     </div>
   
@@ -628,9 +628,123 @@
   </main>
 </div>
 
+<script src="auth.js"></script>
 <script src="common.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 
+  function showToast(msg, type) {
+    var existing = document.querySelector('.toast-notify');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'toast-notify';
+    var colors = { success: '#16a34a', error: '#dc2626', info: '#2563eb', warn: '#d97706' };
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:slideInRight 0.3s ease;background:' + (colors[type] || colors.info);
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(function() { toast.remove(); }, 300); }, 2500);
+  }
+
+  var styleSheet = document.createElement('style');
+  styleSheet.textContent = '@keyframes slideInRight{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}} .toast-notify{} .rec-status{cursor:pointer;transition:all 0.2s;}.rec-status:hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,0.1);} .detail-panel{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;}.detail-panel.active{display:flex;}.detail-content{background:#fff;border-radius:16px;padding:28px;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);}.detail-title{font-size:18px;font-weight:700;color:#16213e;margin-bottom:16px;}.detail-body{font-size:14px;color:#334155;line-height:1.8;}.detail-close{margin-top:20px;padding:10px 24px;border:none;background:var(--primary);color:#fff;border-radius:8px;cursor:pointer;font-size:13px;} .alert-actions button{transition:all 0.2s;} .alert-actions button:hover{transform:translateY(-1px);}';
+  document.head.appendChild(styleSheet);
+
+  var detailData = {
+    lvshang: { title: '驴上店铺逾期率持续上升 - 详细分析', body: '<h4>📊 数据详情</h4><p><strong>当前DPD30+率：</strong>6.15%（警戒线5%）</p><p><strong>连续上升月数：</strong>3个月</p><p><strong>生活号渠道DPD30+：</strong>8.50%（严重超标）</p><p><strong>M2→M3+迁徙率：</strong>42%</p><h4>🔍 根因分析</h4><p>1. 生活号渠道客户准入标准偏松，收入验证环节缺失</p><p>2. 大额订单（7台以上）人工审核覆盖不足</p><p>3. 新客占比上升，风控模型对新人群识别能力不足</p><h4>💡 建议措施</h4><p>• 立即收紧生活号渠道准入，增加收入验证</p><p>• 对7台+订单实施强制人工复核</p><p>• 考虑引入外部征信数据辅助决策</p>' },
+    nanjing: { title: '南京城市风险超标 - 详细分析', body: '<h4>📊 数据详情</h4><p><strong>南京DPD30+率：</strong>10.68%（全平台最高）</p><p><strong>超出均值：</strong>6.26个百分点</p><p><strong>总订单：</strong>103笔</p><p><strong>逾期订单：</strong>14笔</p><h4>🔍 根因分析</h4><p>1. 南京团队可能存在审核标准执行不到位的情况</p><p>2. 当地获客渠道可能存在质量风险（如特定推广渠道）</p><p>3. 客户画像显示南京地区企业客户占比较低</p><h4>💡 建议措施</h4><p>• 暂停南京团队大额订单自主审批权</p><p>• 升级为总部复核模式</p><p>• 核查南京地区客户来源渠道</p>' },
+    guiyang: { title: '贵阳地区风险上升 - 详细分析', body: '<h4>📊 数据详情</h4><p><strong>贵阳DPD30+率：</strong>9.66%（第二高风险城市）</p><p><strong>总订单：</strong>62笔</p><p><strong>DPD90+率：</strong>4.84%</p><h4>🔍 根因分析</h4><p>1. 订单量较少但逾期率高，样本可能存在偏差</p><p>2. 需关注当地经济环境变化对还款能力的影响</p><h4>💡 建议措施</h4><p>• 提高贵阳地区准入门槛</p><p>• 加强当地客户资质审核</p>' }
+  };
+
+  document.querySelectorAll('.alert-card .btn-primary').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var card = this.closest('.alert-card');
+      var titleEl = card.querySelector('.alert-title');
+      var key = titleEl.textContent.indexOf('驴上') !== -1 ? 'lvshang' :
+                titleEl.textContent.indexOf('南京') !== -1 ? 'nanjing' : 'guiyang';
+      var data = detailData[key];
+      if (!data) return;
+
+      var panel = document.getElementById('detailPanel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'detailPanel';
+        panel.className = 'detail-panel';
+        document.body.appendChild(panel);
+      }
+      panel.innerHTML = '<div class="detail-content"><div class="detail-title">' + data.title + '</div><div class="detail-body">' + data.body + '</div><button class="detail-close" onclick="this.closest(\'#detailPanel\').classList.remove(\'active\')">关闭</button></div>';
+      panel.classList.add('active');
+      panel.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+    });
+  });
+
+  document.querySelectorAll('.alert-card .btn-secondary').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var card = this.closest('.alert-card');
+      card.style.opacity = '0.5';
+      card.style.pointerEvents = 'none';
+      this.textContent = '✅ 已标记';
+      this.style.background = '#16a34a';
+      this.style.color = '#fff';
+      showToast('已标记为处理中，将在后续跟进', 'success');
+    });
+  });
+
+  var statusCycle = ['pending', 'processing', 'completed'];
+  var statusText = { pending: '待处理', processing: '处理中', completed: '已完成' };
+  var statusColors = { pending: '#fef3c7/#b45309', processing: '#dbeafe/#1d4ed8', completed: '#d1fae5/#047857' };
+
+  document.querySelectorAll('.rec-status').forEach(function(el) {
+    el.title = '点击切换状态';
+    el.addEventListener('click', function() {
+      var current = '';
+      if (this.classList.contains('pending')) current = 'pending';
+      else if (this.classList.contains('processing')) current = 'processing';
+      else if (this.classList.contains('completed')) current = 'completed';
+
+      var nextIdx = (statusCycle.indexOf(current) + 1) % statusCycle.length;
+      var next = statusCycle[nextIdx];
+
+      this.classList.remove('pending', 'processing', 'completed');
+      this.classList.add(next);
+
+      var bgfg = statusColors[next].split('/');
+      this.style.background = bgfg[0];
+      this.style.color = bgfg[1];
+      this.textContent = statusText[next];
+
+      var recItem = this.closest('.recommendation-item');
+      var recTitle = recItem ? recItem.querySelector('.rec-title').textContent : '建议项';
+      showToast(recTitle + ' → ' + statusText[next], next === 'completed' ? 'success' : 'info');
+
+      updateRiskSummary();
+    });
+  });
+
+  function updateRiskSummary() {
+    var pendings = document.querySelectorAll('.rec-status.pending').length;
+    var processings = document.querySelectorAll('.rec-status.processing').length;
+    var completeds = document.querySelectorAll('.rec-status.completed').length;
+    var items = document.querySelectorAll('.risk-summary .risk-count');
+    if (items.length >= 3) {
+      items[0].textContent = pendings;
+      items[1].textContent = processings;
+      items[2].textContent = completeds;
+    }
+  }
+
+  var searchInput = document.querySelector('.search-box input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      var q = this.value.toLowerCase().trim();
+      var cards = document.querySelectorAll('.recommendation-item, .alert-card');
+      cards.forEach(function(card) {
+        var text = card.textContent.toLowerCase();
+        card.style.display = q === '' || text.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+
+});
 </script>
 </body>
 </html>

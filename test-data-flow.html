@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据流测试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #334155;
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+        .status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        .status.info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .data-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .data-card .label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .data-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 审核数据流测试工具</h1>
+        
+        <div class="section">
+            <h2>1. localStorage 状态检查</h2>
+            <button class="btn btn-primary" onclick="checkLocalStorage()">检查 localStorage</button>
+            <div id="localStorageStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>2. 数据格式验证</h2>
+            <button class="btn btn-primary" onclick="validateDataFormat()">验证数据格式</button>
+            <div id="validationStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>3. 数据内容预览</h2>
+            <button class="btn btn-primary" onclick="previewData()">预览数据</button>
+            <div id="dataPreview"></div>
+        </div>
+        
+        <div class="section">
+            <h2>4. 数据清理</h2>
+            <button class="btn btn-danger" onclick="clearAllData()">清除所有数据</button>
+            <div id="clearStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>5. 创建测试数据</h2>
+            <button class="btn btn-primary" onclick="createTestData()">创建测试数据</button>
+            <div id="testDataStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>6. 快速导航</h2>
+            <button class="btn btn-primary" onclick="window.location.href='admin-new.html'">前往后台</button>
+            <button class="btn btn-primary" onclick="window.location.href='audit.html'">前往前台</button>
+        </div>
+    </div>
+    
+    <script>
+        function checkLocalStorage() {
+            const statusDiv = document.getElementById('localStorageStatus');
+            const cache = localStorage.getItem('auditDataCache');
+            const timestamp = localStorage.getItem('auditDataTimestamp');
+            const rawFile = localStorage.getItem('auditRawFile');
+            
+            let html = '';
+            
+            if (cache) {
+                html += '<div class="status success">✅ auditDataCache 存在</div>';
+                html += `<div class="status info">大小: ${(cache.length / 1024).toFixed(2)} KB</div>`;
+            } else {
+                html += '<div class="status error">❌ auditDataCache 不存在</div>';
+            }
+            
+            if (timestamp) {
+                html += `<div class="status info">📅 时间戳: ${timestamp}</div>`;
+            } else {
+                html += '<div class="status error">❌ auditDataTimestamp 不存在</div>';
+            }
+            
+            if (rawFile) {
+                html += '<div class="status success">✅ auditRawFile 存在（原始文件已保存）</div>';
+                html += `<div class="status info">大小: ${(rawFile.length / 1024).toFixed(2)} KB</div>`;
+            } else {
+                html += '<div class="status info">ℹ️ auditRawFile 不存在（原始文件未保存）</div>';
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function validateDataFormat() {
+            const statusDiv = document.getElementById('validationStatus');
+            const cache = localStorage.getItem('auditDataCache');
+            
+            if (!cache) {
+                statusDiv.innerHTML = '<div class="status error">❌ 没有数据可验证</div>';
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(cache);
+                let html = '<div class="status success">✅ JSON 解析成功</div>';
+                
+                const checks = [
+                    { key: 'success', expected: true, actual: data.success },
+                    { key: 'monthlyData', expected: 'array', actual: Array.isArray(data.monthlyData) },
+                    { key: 'weeklyData', expected: 'array', actual: Array.isArray(data.weeklyData) },
+                    { key: 'rawDataCount', expected: 'number', actual: typeof data.rawDataCount === 'number' },
+                    { key: 'stores', expected: 'array', actual: Array.isArray(data.stores) },
+                    { key: 'auditors', expected: 'array', actual: Array.isArray(data.auditors) }
+                ];
+                
+                checks.forEach(check => {
+                    const passed = check.expected === check.actual || 
+                                   (check.expected === 'array' && check.actual === true) ||
+                                   (check.expected === 'number' && check.actual === true);
+                    
+                    if (passed) {
+                        html += `<div class="status success">✅ ${check.key}: ${check.actual}</div>`;
+                    } else {
+                        html += `<div class="status error">❌ ${check.key}: 期望 ${check.expected}, 实际 ${check.actual}</div>`;
+                    }
+                });
+                
+                if (data.monthlyData && data.monthlyData.length > 0) {
+                    html += `<div class="status info">📊 月度数据: ${data.monthlyData.length} 条</div>`;
+                } else {
+                    html += '<div class="status error">❌ 月度数据为空</div>';
+                }
+                
+                if (data.weeklyData && data.weeklyData.length > 0) {
+                    html += `<div class="status info">📊 周度数据: ${data.weeklyData.length} 条</div>`;
+                } else {
+                    html += '<div class="status error">❌ 周度数据为空</div>';
+                }
+                
+                statusDiv.innerHTML = html;
+                
+            } catch (e) {
+                statusDiv.innerHTML = `<div class="status error">❌ JSON 解析失败: ${e.message}</div>`;
+            }
+        }
+        
+        function previewData() {
+            const previewDiv = document.getElementById('dataPreview');
+            const cache = localStorage.getItem('auditDataCache');
+            
+            if (!cache) {
+                previewDiv.innerHTML = '<div class="status error">❌ 没有数据可预览</div>';
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(cache);
+                
+                let html = '<div class="data-grid">';
+                html += `<div class="data-card"><div class="label">总记录数</div><div class="value">${data.rawDataCount || 0}</div></div>`;
+                html += `<div class="data-card"><div class="label">月度数据</div><div class="value">${data.monthlyData ? data.monthlyData.length : 0}</div></div>`;
+                html += `<div class="data-card"><div class="label">周度数据</div><div class="value">${data.weeklyData ? data.weeklyData.length : 0}</div></div>`;
+                html += `<div class="data-card"><div class="label">店铺数</div><div class="value">${data.stores ? data.stores.length : 0}</div></div>`;
+                html += `<div class="data-card"><div class="label">审核人员</div><div class="value">${data.auditors ? data.auditors.length : 0}</div></div>`;
+                html += `<div class="data-card"><div class="label">平均通过率</div><div class="value">${data.summary ? data.summary.avgPassRate : 0}%</div></div>`;
+                html += '</div>';
+                
+                if (data.monthlyData && data.monthlyData.length > 0) {
+                    html += '<h3>月度数据详情</h3>';
+                    html += '<pre>' + JSON.stringify(data.monthlyData, null, 2) + '</pre>';
+                }
+                
+                if (data.stores && data.stores.length > 0) {
+                    html += '<h3>店铺数据</h3>';
+                    html += '<pre>' + JSON.stringify(data.stores, null, 2) + '</pre>';
+                }
+                
+                if (data.auditors && data.auditors.length > 0) {
+                    html += '<h3>审核人员数据</h3>';
+                    html += '<pre>' + JSON.stringify(data.auditors, null, 2) + '</pre>';
+                }
+                
+                previewDiv.innerHTML = html;
+                
+            } catch (e) {
+                previewDiv.innerHTML = `<div class="status error">❌ 数据解析失败: ${e.message}</div>`;
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('确定要清除所有数据吗？')) {
+                localStorage.removeItem('auditDataCache');
+                localStorage.removeItem('auditDataTimestamp');
+                localStorage.removeItem('auditRawFile');
+                
+                document.getElementById('clearStatus').innerHTML = '<div class="status success">✅ 所有数据已清除</div>';
+            }
+        }
+        
+        function createTestData() {
+            const testData = {
+                success: true,
+                dataSource: 'test-data',
+                timestamp: new Date().toISOString(),
+                rawDataCount: 100,
+                monthlyData: [
+                    {
+                        year: 2026,
+                        month: 4,
+                        month_label: '4月',
+                        total_orders: 50,
+                        passed_orders: 45,
+                        pass_rate: '90.00',
+                        jt_orders: 15,
+                        jt_passed: 14,
+                        ls_orders: 12,
+                        ls_passed: 11,
+                        lh_orders: 23,
+                        lh_passed: 20
+                    },
+                    {
+                        year: 2026,
+                        month: 5,
+                        month_label: '5月',
+                        total_orders: 50,
+                        passed_orders: 42,
+                        pass_rate: '84.00',
+                        jt_orders: 16,
+                        jt_passed: 14,
+                        ls_orders: 14,
+                        ls_passed: 12,
+                        lh_orders: 20,
+                        lh_passed: 16
+                    }
+                ],
+                weeklyData: [
+                    { year: 2026, week_number: 14, total_orders: 25, passed_orders: 23, pass_rate: '92.00' },
+                    { year: 2026, week_number: 15, total_orders: 25, passed_orders: 22, pass_rate: '88.00' },
+                    { year: 2026, week_number: 16, total_orders: 25, passed_orders: 21, pass_rate: '84.00' },
+                    { year: 2026, week_number: 17, total_orders: 25, passed_orders: 20, pass_rate: '80.00' }
+                ],
+                stores: [
+                    { name: '箭头', total: 31, passed: 28, pass_rate: '90.32' },
+                    { name: '驴上', total: 26, passed: 23, pass_rate: '88.46' },
+                    { name: '雷猴', total: 23, passed: 19, pass_rate: '82.61' },
+                    { name: '懂机帝', total: 20, passed: 17, pass_rate: '85.00' }
+                ],
+                auditors: [
+                    { name: '张三', total: 30, passed: 27, pass_rate: '90.00' },
+                    { name: '李四', total: 25, passed: 22, pass_rate: '88.00' },
+                    { name: '王五', total: 25, passed: 20, pass_rate: '80.00' },
+                    { name: '赵六', total: 20, passed: 18, pass_rate: '90.00' }
+                ],
+                summary: {
+                    totalOrders: 100,
+                    avgPassRate: '87.00',
+                    months: 2,
+                    weeks: 4
+                }
+            };
+            
+            localStorage.setItem('auditDataCache', JSON.stringify(testData));
+            localStorage.setItem('auditDataTimestamp', new Date().toISOString());
+            
+            document.getElementById('testDataStatus').innerHTML = '<div class="status success">✅ 测试数据已创建并保存</div>';
+        }
+    </script>
+</body>
+</html>

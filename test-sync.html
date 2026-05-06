@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据同步测试工具</title>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f7fa;
+  padding: 40px;
+  margin: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #1e293b;
+  font-size: 28px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+  color: #334155;
+  font-size: 18px;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.status {
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.status-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.status-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+pre {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12px;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.data-item .label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.data-item .value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.log {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.log-entry {
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.log-success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.log-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.log-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔧 数据同步测试工具</h1>
+
+  <div class="card">
+    <h2>📊 localStorage 状态检查</h2>
+    <button class="btn btn-primary" onclick="checkLocalStorage()">检查 localStorage</button>
+    <button class="btn btn-danger" onclick="clearLocalStorage()">清除 localStorage</button>
+    <div id="localStorageStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>📡 BroadcastChannel 测试</h2>
+    <button class="btn btn-success" onclick="testBroadcastChannel()">发送测试消息</button>
+    <div id="broadcastStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧪 模拟数据测试</h2>
+    <button class="btn btn-primary" onclick="createTestData()">创建测试数据</button>
+    <button class="btn btn-success" onclick="loadTestData()">加载测试数据</button>
+    <div id="testDataStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>📋 操作日志</h2>
+    <button class="btn btn-danger" onclick="clearLog()">清除日志</button>
+    <div id="logContainer" class="log"></div>
+  </div>
+</div>
+
+<script>
+let logContainer = document.getElementById('logContainer');
+let broadcastChannel = null;
+
+function addLog(message, type = 'info') {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry log-' + type;
+  entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+  logContainer.appendChild(entry);
+  logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+function clearLog() {
+  logContainer.innerHTML = '';
+  addLog('日志已清除', 'info');
+}
+
+function checkLocalStorage() {
+  addLog('开始检查 localStorage...', 'info');
+  
+  const auditDataCache = localStorage.getItem('auditDataCache');
+  const auditDataTimestamp = localStorage.getItem('auditDataTimestamp');
+  const adminSyncData = localStorage.getItem('adminSyncData');
+  const adminLastSyncTime = localStorage.getItem('adminLastSyncTime');
+  
+  let html = '<div class="data-grid">';
+  
+  html += '<div class="data-item"><div class="label">auditDataCache</div><div class="value">' + 
+    (auditDataCache ? '✅ 存在' : '❌ 不存在') + '</div></div>';
+  
+  html += '<div class="data-item"><div class="label">auditDataTimestamp</div><div class="value">' + 
+    (auditDataTimestamp || '-') + '</div></div>';
+  
+  html += '<div class="data-item"><div class="label">adminSyncData</div><div class="value">' + 
+    (adminSyncData ? '✅ 存在' : '❌ 不存在') + '</div></div>';
+  
+  html += '<div class="data-item"><div class="label">adminLastSyncTime</div><div class="value">' + 
+    (adminLastSyncTime || '-') + '</div></div>';
+  
+  html += '</div>';
+  
+  if (auditDataCache) {
+    try {
+      const data = JSON.parse(auditDataCache);
+      addLog('auditDataCache 解析成功', 'success');
+      addLog('  - success: ' + data.success, 'info');
+      addLog('  - monthlyData 长度: ' + (data.monthlyData ? data.monthlyData.length : 0), 'info');
+      addLog('  - rawDataCount: ' + data.rawDataCount, 'info');
+      
+      html += '<h3 style="margin-top:20px;color:#334155;">审核数据详情</h3>';
+      html += '<pre>' + JSON.stringify({
+        success: data.success,
+        dataSource: data.dataSource,
+        timestamp: data.timestamp,
+        rawDataCount: data.rawDataCount,
+        monthlyDataLength: data.monthlyData ? data.monthlyData.length : 0,
+        weeklyDataLength: data.weeklyData ? data.weeklyData.length : 0,
+        storesLength: data.stores ? data.stores.length : 0,
+        auditorsLength: data.auditors ? data.auditors.length : 0,
+        summary: data.summary
+      }, null, 2) + '</pre>';
+    } catch (e) {
+      addLog('auditDataCache 解析失败: ' + e.message, 'error');
+      html += '<div class="status status-error">解析失败: ' + e.message + '</div>';
+    }
+  } else {
+    addLog('auditDataCache 不存在', 'error');
+    html += '<div class="status status-error">未找到审核数据缓存，请先在后台管理系统上传数据</div>';
+  }
+  
+  document.getElementById('localStorageStatus').innerHTML = html;
+}
+
+function clearLocalStorage() {
+  addLog('清除 localStorage...', 'info');
+  
+  localStorage.removeItem('auditDataCache');
+  localStorage.removeItem('auditDataTimestamp');
+  localStorage.removeItem('adminSyncData');
+  localStorage.removeItem('adminLastSyncTime');
+  
+  addLog('✅ localStorage 已清除', 'success');
+  
+  document.getElementById('localStorageStatus').innerHTML = 
+    '<div class="status status-success">localStorage 已清除</div>';
+}
+
+function testBroadcastChannel() {
+  addLog('测试 BroadcastChannel...', 'info');
+  
+  if (typeof BroadcastChannel === 'undefined') {
+    addLog('❌ 浏览器不支持 BroadcastChannel', 'error');
+    document.getElementById('broadcastStatus').innerHTML = 
+      '<div class="status status-error">浏览器不支持 BroadcastChannel</div>';
+    return;
+  }
+  
+  try {
+    const channel = new BroadcastChannel('fengkong-admin-channel');
+    
+    channel.postMessage({
+      type: 'data-synced',
+      source: 'admin',
+      timestamp: Date.now(),
+      payload: {
+        hasAuditData: true,
+        reportsCount: 5
+      }
+    });
+    
+    addLog('✅ 测试消息已发送', 'success');
+    
+    document.getElementById('broadcastStatus').innerHTML = 
+      '<div class="status status-success">测试消息已发送，请检查前台页面是否收到通知</div>';
+    
+    channel.close();
+  } catch (e) {
+    addLog('❌ 发送失败: ' + e.message, 'error');
+    document.getElementById('broadcastStatus').innerHTML = 
+      '<div class="status status-error">发送失败: ' + e.message + '</div>';
+  }
+}
+
+function createTestData() {
+  addLog('创建测试数据...', 'info');
+  
+  const testData = {
+    success: true,
+    dataSource: 'test-data',
+    timestamp: new Date().toISOString(),
+    rawDataCount: 100,
+    monthlyData: [
+      {
+        year: 2026,
+        month: 5,
+        month_label: '5月',
+        total_orders: 50,
+        passed_orders: 45,
+        pass_rate: '90.00',
+        jt_orders: 20,
+        jt_passed: 18,
+        ls_orders: 15,
+        ls_passed: 14,
+        lh_orders: 15,
+        lh_passed: 13
+      },
+      {
+        year: 2026,
+        month: 4,
+        month_label: '4月',
+        total_orders: 50,
+        passed_orders: 42,
+        pass_rate: '84.00',
+        jt_orders: 18,
+        jt_passed: 15,
+        ls_orders: 16,
+        ls_passed: 14,
+        lh_orders: 16,
+        lh_passed: 13
+      }
+    ],
+    weeklyData: [
+      {
+        year: 2026,
+        week_number: 18,
+        total_orders: 25,
+        passed_orders: 23,
+        pass_rate: '92.00'
+      },
+      {
+        year: 2026,
+        week_number: 19,
+        total_orders: 25,
+        passed_orders: 22,
+        pass_rate: '88.00'
+      }
+    ],
+    stores: [
+      { name: '箭头', total: 38, passed: 33, pass_rate: '86.84' },
+      { name: '驴上', total: 31, passed: 28, pass_rate: '90.32' },
+      { name: '雷猴', total: 31, passed: 26, pass_rate: '83.87' }
+    ],
+    auditors: [
+      { name: '一峰', total: 40, passed: 37, pass_rate: '92.50' },
+      { name: '乐乐', total: 35, passed: 30, pass_rate: '85.71' },
+      { name: '二明', total: 25, passed: 20, pass_rate: '80.00' }
+    ],
+    summary: {
+      totalOrders: 100,
+      avgPassRate: '87.00',
+      months: 2,
+      weeks: 2
+    }
+  };
+  
+  localStorage.setItem('auditDataCache', JSON.stringify(testData));
+  localStorage.setItem('auditDataTimestamp', new Date().toISOString());
+  
+  addLog('✅ 测试数据已创建并保存', 'success');
+  
+  document.getElementById('testDataStatus').innerHTML = 
+    '<div class="status status-success">测试数据已创建，请刷新前台页面查看效果</div>';
+}
+
+function loadTestData() {
+  addLog('加载测试数据...', 'info');
+  
+  const auditDataCache = localStorage.getItem('auditDataCache');
+  
+  if (!auditDataCache) {
+    addLog('❌ 未找到测试数据', 'error');
+    document.getElementById('testDataStatus').innerHTML = 
+      '<div class="status status-error">未找到测试数据，请先创建测试数据</div>';
+    return;
+  }
+  
+  try {
+    const data = JSON.parse(auditDataCache);
+    addLog('✅ 测试数据加载成功', 'success');
+    
+    document.getElementById('testDataStatus').innerHTML = 
+      '<div class="status status-success">测试数据加载成功</div>' +
+      '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  } catch (e) {
+    addLog('❌ 加载失败: ' + e.message, 'error');
+    document.getElementById('testDataStatus').innerHTML = 
+      '<div class="status status-error">加载失败: ' + e.message + '</div>';
+  }
+}
+
+// 初始化
+addLog('数据同步测试工具已加载', 'info');
+addLog('请在后台管理系统上传数据后，使用此工具检查同步状态', 'info');
+</script>
+</body>
+</html>

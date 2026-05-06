@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一键初始化 - 箭头风控平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  color: #16213e;
+  margin-bottom: 12px;
+}
+
+p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102,126,234,0.35);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(22,163,74,0.35);
+}
+
+.credential-box {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.credential-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.credential-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.success-icon {
+  font-size: 72px;
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.status {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+}
+
+.status.show { display: block; }
+
+.status-info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.status-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card" id="mainCard">
+    
+    <!-- 初始状态 -->
+    <div id="stepInit">
+      <div class="icon">🔐</div>
+      <h1>管理员账户初始化</h1>
+      <p>点击下方按钮，系统将自动为您创建一个默认的超级管理员账户</p>
+      
+      <button class="btn btn-primary" onclick="createAdminAccount()">
+        🚀 一键创建管理员账户
+      </button>
+      
+      <button class="btn btn-success" onclick="goToLogin()" style="margin-top:8px;">
+        ✅ 已有账户？去登录
+      </button>
+    </div>
+
+    <!-- 成功状态 -->
+    <div id="stepSuccess" style="display:none;">
+      <div class="success-icon">✅</div>
+      <h1>账户创建成功！</h1>
+      <p>您的管理员账户已创建完成，请妥善保存以下登录信息：</p>
+      
+      <div class="credential-box">
+        <div class="credential-item">
+          <span class="label">📧 邮箱地址</span>
+          <span class="value" id="showEmail"></span>
+        </div>
+        <div class="credential-item">
+          <span class="label">🔑 登录密码</span>
+          <span class="value" id="showPassword"></span>
+        </div>
+        <div class="credential-item">
+          <span class="label">👑 账户角色</span>
+          <span class="value" style="background:#dcfce7;color:#166534;">超级管理员</span>
+        </div>
+        <div class="credential-item">
+          <span class="label">⏰ 创建时间</span>
+          <span class="value" id="showTime"></span>
+        </div>
+      </div>
+      
+      <div class="status status-success show">
+        💡 <strong>提示：</strong>请牢记以上信息，您可以使用此账户登录后台管理系统
+      </div>
+      
+      <button class="btn btn-primary" onclick="goToLogin()">
+        🎉 前往登录页面
+      </button>
+      
+      <button class="btn btn-success" onclick="copyCredentials()">
+        📋 复制账户信息
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// 默认管理员配置
+var DEFAULT_ADMIN = {
+  email: 'admin@fengkong.com',
+  password: 'Admin2026',
+  name: '风控管理员'
+};
+
+function createAdminAccount() {
+  
+  // 检查是否已存在
+  var users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+  var exists = users.find(function(u) { return u.email === DEFAULT_ADMIN.email; });
+  
+  if (exists) {
+    alert('⚠️ 管理员账户已存在！\n\n邮箱：' + DEFAULT_ADMIN.email + '\n\n请直接前往登录页面。');
+    goToLogin();
+    return;
+  }
+  
+  // 创建管理员
+  var adminUser = {
+    id: 'super_admin_' + Date.now(),
+    email: DEFAULT_ADMIN.email,
+    password: DEFAULT_ADMIN.password,
+    name: DEFAULT_ADMIN.name,
+    role: 'super_admin',
+    created_at: new Date().toISOString(),
+    status: 'active',
+    last_login: null,
+    is_system_admin: true
+  };
+  
+  // 保存
+  users.push(adminUser);
+  localStorage.setItem('mock_users', JSON.stringify(users));
+  
+  // 记录日志
+  var log = {
+    type: 'SYSTEM_INIT',
+    action: 'AUTO_SETUP_COMPLETE',
+    timestamp: new Date().toISOString(),
+    details: {
+      email: DEFAULT_ADMIN.email,
+      method: 'one_click_setup',
+      user_agent: navigator.userAgent
+    },
+    severity: 'INFO'
+  };
+  
+  var logs = JSON.parse(localStorage.getItem('security_logs') || '[]');
+  logs.unshift(log);
+  localStorage.setItem('security_logs', JSON.stringify(logs));
+  
+  // 显示成功信息
+  document.getElementById('stepInit').style.display = 'none';
+  document.getElementById('stepSuccess').style.display = 'block';
+  
+  document.getElementById('showEmail').textContent = DEFAULT_ADMIN.email;
+  document.getElementById('showPassword').textContent = DEFAULT_ADMIN.password;
+  document.getElementById('showTime').textContent = new Date().toLocaleString('zh-CN');
+  
+  console.log('[Setup] ✅ 管理员账户创建成功！');
+  console.log('[Setup] 邮箱：' + DEFAULT_ADMIN.email);
+  console.log('[Setup] 密码：' + DEFAULT_ADMIN.password);
+}
+
+function goToLogin() {
+  window.location.href = 'login.html';
+}
+
+function copyCredentials() {
+  var text = 
+    '=== 风控平台管理员账户 ===\n' +
+    '邮箱：' + DEFAULT_ADMIN.email + '\n' +
+    '密码：' + DEFAULT_ADMIN.password + '\n' +
+    '角色：超级管理员\n' +
+    '========================';
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert('✅ 账户信息已复制到剪贴板！');
+    }).catch(function() {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+    document.execCommand('copy');
+    alert('✅ 账户信息已复制到剪贴板！');
+  } catch (err) {
+    console.error('[Copy] 失败:', err);
+    alert('❌ 复制失败，请手动复制以下信息：\n\n' + text);
+  }
+  
+  document.body.removeChild(textarea);
+}
+
+// 页面加载时检查状态
+document.addEventListener('DOMContentLoaded', function() {
+  var users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+  var hasAdmin = users.find(function(u) { return u.role === 'super_admin'; });
+  
+  if (hasAdmin) {
+    // 已有管理员，显示提示
+    var statusDiv = document.querySelector('.status-info');
+    if (!statusDiv) {
+      var info = document.createElement('div');
+      info.className = 'status status-info show';
+      info.innerHTML = 'ℹ️ 检测到已存在管理员账户，您可以直接登录或重新初始化';
+      document.getElementById('stepInit').insertBefore(info, document.getElementById('stepInit').querySelector('.btn'));
+    }
+  }
+});
+</script>
+
+</body>
+</html>

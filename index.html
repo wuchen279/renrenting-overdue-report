@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>数据总览 - 人人租风控数据后台</title>
+<title>数据总览 - 箭头风控智能化分析平台</title>
 <link rel="stylesheet" href="common.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -57,8 +57,6 @@
 .status-pending { background: #fef3c7; color: #d97706; }
 .status-empty { background: #fee2e2; color: #dc2626; }
 
-.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-
 .footer {
   background: #0a2342; color: rgba(255,255,255,0.6); padding: 40px; margin-top: 40px; text-align: center; font-size: 13px;
 }
@@ -72,7 +70,6 @@
   .hero-section { padding: 28px 16px; }
   .hero-section h2 { font-size: 20px; }
   .hero-stats { gap: 20px; }
-  .chart-row { grid-template-columns: 1fr; }
   .report-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
@@ -103,14 +100,14 @@
     <div class="content">
       <div class="hero-section">
         <div class="hero-content">
-          <span class="hero-badge">📊 风控数据分析平台</span>
-          <h2>人人租 · 逾期风控分析平台</h2>
+          <span class="hero-badge">📊 风控智能化分析平台</span>
+          <h2>箭头 · 风控智能化分析平台</h2>
           <p class="hero-sub">基于订单DPD数据的多维度风控分析系统。覆盖全店铺、各维度、各时间周期的风险敞口量化评估，为风控策略优化提供数据驱动的决策依据。</p>
           <div class="hero-stats">
-            <div><div class="hero-stat-val">7,894</div><div class="hero-stat-label">累计订单</div></div>
-            <div><div class="hero-stat-val">7.42%</div><div class="hero-stat-label">综合逾期率</div></div>
-            <div><div class="hero-stat-val">4.42%</div><div class="hero-stat-label">DPD30+ 逾期率</div></div>
-            <div><div class="hero-stat-val">3</div><div class="hero-stat-label">覆盖店铺数</div></div>
+            <div><div class="hero-stat-val" id="heroOrders">7,894</div><div class="hero-stat-label">累计订单</div></div>
+            <div><div class="hero-stat-val" id="heroOverdueRate">7.42%</div><div class="hero-stat-label">综合逾期率</div></div>
+            <div><div class="hero-stat-val" id="heroDpd30">4.42%</div><div class="hero-stat-label">DPD30+ 逾期率</div></div>
+            <div><div class="hero-stat-val" id="heroStoreCount">3</div><div class="hero-stat-label">覆盖店铺数</div></div>
           </div>
         </div>
       </div>
@@ -119,49 +116,38 @@
         <div class="kpi-item kpi-purple">
           <div class="kpi-icon">📋</div>
           <div class="kpi-label">最新报告覆盖订单</div>
-          <div class="kpi-value">7,894</div>
-          <div class="kpi-sub" style="color:#16a34a;">● 2025.01~2026.02 全量</div>
+          <div class="kpi-value" id="kpiOrders">7,894</div>
+          <div class="kpi-sub" style="color:#16a34a;">● <span id="kpiPeriod">2025.01~2026.02</span> 全量</div>
         </div>
         <div class="kpi-item kpi-pink">
           <div class="kpi-icon">⚠️</div>
           <div class="kpi-label">逾期订单（M1~M3+）</div>
-          <div class="kpi-value">586</div>
-          <div class="kpi-sub" style="color:#d97706;">● 占比 7.42%</div>
+          <div class="kpi-value" id="kpiOverdue">586</div>
+          <div class="kpi-sub" style="color:#d97706;">● 占比 <span id="kpiOverdueRate">7.42%</span></div>
         </div>
         <div class="kpi-item kpi-red">
           <div class="kpi-icon">🔴</div>
           <div class="kpi-label">DPD30+ 逾期率</div>
-          <div class="kpi-value">4.42%</div>
-          <div class="kpi-sub" style="color:#d97706;">● 轻度风险，需关注驴上</div>
+          <div class="kpi-value" id="kpiDpd30">4.42%</div>
+          <div class="kpi-sub" style="color:#d97706;">● <span id="kpiRiskNote">轻度风险，需关注驴上</span></div>
         </div>
         <div class="kpi-item kpi-green">
           <div class="kpi-icon">🟢</div>
           <div class="kpi-label">DPD90+ 逾期率</div>
-          <div class="kpi-value">1.85%</div>
+          <div class="kpi-value" id="kpiDpd90">1.85%</div>
           <div class="kpi-sub" style="color:#16a34a;">● 重度逾期可控</div>
         </div>
         <div class="kpi-item kpi-amber">
           <div class="kpi-icon">🏪</div>
           <div class="kpi-label">最高风险店铺</div>
-          <div class="kpi-value">驴上</div>
-          <div class="kpi-sub" style="color:#dc2626;">● DPD30+ 5.85%</div>
+          <div class="kpi-value" id="kpiHighRiskStore">驴上</div>
+          <div class="kpi-sub" style="color:#dc2626;">● DPD30+ <span id="kpiHighRiskDpd">5.85%</span></div>
         </div>
         <div class="kpi-item kpi-blue">
           <div class="kpi-icon">📅</div>
           <div class="kpi-label">报告更新时间</div>
-          <div class="kpi-value" style="font-size:18px;">2026-04-28</div>
+          <div class="kpi-value" style="font-size:18px;" id="kpiReportDate">2026-04-28</div>
           <div class="kpi-sub" style="color:#64748b;">● 下次更新：待定</div>
-        </div>
-      </div>
-
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="chart-header"><h3>店铺DPD30+率对比</h3></div>
-          <div style="position:relative;height:260px;"><canvas id="chartStoreDpd"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header"><h3>月度DPD30+趋势</h3></div>
-          <div style="position:relative;height:260px;"><canvas id="chartMonthlyTrend"></canvas></div>
         </div>
       </div>
 
@@ -178,7 +164,7 @@
             <span style="font-size:12px;color:#64748b;">2026-04-28</span>
           </div>
           <div class="report-card-body">
-            <div class="report-card-title">人人租逾期风控分析报告（2025~2026.02）</div>
+            <div class="report-card-title">箭头逾期风控分析报告（2025~2026.02）</div>
             <div class="report-card-meta">
               📅 统计周期：<strong>2025年1月 ~ 2026年2月</strong><br>
               🏪 覆盖店铺：<strong>箭头 + 驴上 + 雷猴</strong><br>
@@ -310,7 +296,7 @@
       <div class="footer-grid">
         <div class="footer-col">
           <h4>关于本平台</h4>
-          <p>人人租逾期风控数据分析平台，基于订单DPD数据，提供多维度风险敞口量化评估和专业风控建议。报告由 AI 辅助生成，数据解读仅供参考。</p>
+          <p>箭头风控智能化分析平台，基于订单DPD数据，提供多维度风险敞口量化评估和专业风控建议。报告由 AI 辅助生成，数据解读仅供参考。</p>
         </div>
         <div class="footer-col">
           <h4>核心功能</h4>
@@ -327,61 +313,129 @@
           <p>报告数据问题或功能建议，请联系风控数据分析团队。<br>在线报告地址：<br><a href="https://wuchen279.github.io/Claw/report-2025-04.html" target="_blank">wuchen279.github.io/Claw</a></p>
         </div>
       </div>
-      <div class="footer-bottom">© 2025~2026 人人租风控数据分析平台 &nbsp;|&nbsp; Powered by WorkBuddy &nbsp;|&nbsp; 报告版本：v2.0</div>
+      <div class="footer-bottom">© 2025~2026 箭头风控智能化分析平台 &nbsp;|&nbsp; Powered by WorkBuddy &nbsp;|&nbsp; 报告版本：v2.0</div>
     </div>
   </main>
 </div>
 
 <script src="supabase.js"></script>
+<script src="auth.js"></script>
 <script src="common.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   loadFromSupabase(function(loaded) {
-    if (loaded) { console.log('[Supabase] 数据已从云端加载'); }
+    if (loaded) {
+      console.log('[Supabase] 数据已从云端加载');
+      updateIndexUI();
+    }
     renderCharts();
   });
 
-  function renderCharts() {
-  var ctx1 = document.getElementById('chartStoreDpd');
-  if (ctx1) {
-    new Chart(ctx1, {
-      type: 'bar',
-      data: {
-        labels: ['箭头', '驴上', '雷猴'],
-        datasets: [
-          { label: 'DPD30+率', data: [3.17, 5.85, 4.86], backgroundColor: ['#2563eb', '#dc2626', '#d97706'], borderRadius: 6 },
-          { label: 'DPD90+率', data: [1.44, 2.37, 1.90], backgroundColor: ['#93c5fd', '#fca5a5', '#fcd34d'], borderRadius: 6 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
-        scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v + '%'; } } } }
+  function updateIndexUI() {
+    var ordersEl = document.getElementById('heroOrders');
+    var overdueRateEl = document.getElementById('heroOverdueRate');
+    var dpd30El = document.getElementById('heroDpd30');
+    var storeCountEl = document.getElementById('heroStoreCount');
+    var kpiOrdersEl = document.getElementById('kpiOrders');
+    var kpiPeriodEl = document.getElementById('kpiPeriod');
+    var kpiOverdueEl = document.getElementById('kpiOverdue');
+    var kpiOverdueRateEl = document.getElementById('kpiOverdueRate');
+    var kpiDpd30El = document.getElementById('kpiDpd30');
+    var kpiDpd90El = document.getElementById('kpiDpd90');
+    var kpiHighRiskStoreEl = document.getElementById('kpiHighRiskStore');
+    var kpiHighRiskDpdEl = document.getElementById('kpiHighRiskDpd');
+    var kpiReportDateEl = document.getElementById('kpiReportDate');
+    if (ordersEl) ordersEl.textContent = (AppData.total.orders || 0).toLocaleString();
+    if (overdueRateEl) overdueRateEl.textContent = (AppData.total.overdueRate || 0).toFixed(2) + '%';
+    if (dpd30El) dpd30El.textContent = (AppData.total.dpd30 || 0).toFixed(2) + '%';
+    if (storeCountEl) storeCountEl.textContent = AppData.stores ? AppData.stores.length : 3;
+    if (kpiOrdersEl) kpiOrdersEl.textContent = (AppData.total.orders || 0).toLocaleString();
+    if (kpiPeriodEl) kpiPeriodEl.textContent = AppData.period || '2025.01~2026.02';
+    if (kpiOverdueEl) kpiOverdueEl.textContent = (AppData.total.overdue || 0).toLocaleString();
+    if (kpiOverdueRateEl) kpiOverdueRateEl.textContent = (AppData.total.overdueRate || 0).toFixed(2) + '%';
+    if (kpiDpd30El) kpiDpd30El.textContent = (AppData.total.dpd30 || 0).toFixed(2) + '%';
+    if (kpiDpd90El) kpiDpd90El.textContent = (AppData.total.dpd90 || 0).toFixed(2) + '%';
+    if (kpiReportDateEl) kpiReportDateEl.textContent = AppData.reportDate || new Date().toISOString().substring(0, 10);
+    if (AppData.stores && AppData.stores.length > 0) {
+      var highRiskStore = AppData.stores.reduce(function(prev, curr) {
+        return (parseFloat(curr.dpd30) || 0) > (parseFloat(prev.dpd30) || 0) ? curr : prev;
+      });
+      if (kpiHighRiskStoreEl) kpiHighRiskStoreEl.textContent = highRiskStore.name || '未知';
+      if (kpiHighRiskDpdEl) kpiHighRiskDpdEl.textContent = (parseFloat(highRiskStore.dpd30) || 0).toFixed(2) + '%';
+      var riskNoteEl = document.getElementById('kpiRiskNote');
+      if (riskNoteEl) {
+        var dpd30 = parseFloat(highRiskStore.dpd30) || 0;
+        if (dpd30 >= 8) riskNoteEl.textContent = '高风险，需重点关注';
+        else if (dpd30 >= 5) riskNoteEl.textContent = '中风险，需关注' + highRiskStore.name;
+        else riskNoteEl.textContent = '轻度风险，整体可控';
       }
-    });
+    }
   }
 
-  var ctx2 = document.getElementById('chartMonthlyTrend');
-  if (ctx2) {
-    var labels = AppData.monthly.map(function(m) { return m.year + '.' + (m.month < 10 ? '0' : '') + m.month; });
-    var dpd30 = AppData.monthly.map(function(m) { return m.dpd30; });
-    var dpd90 = AppData.monthly.map(function(m) { return m.dpd90; });
-    new Chart(ctx2, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'DPD30+率', data: dpd30, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3, pointRadius: 3 },
-          { label: 'DPD90+率', data: dpd90, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.3, pointRadius: 3 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
-        scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v + '%'; } } } }
-      }
-    });
+  function renderCharts() {
+    console.log('[Index] 图表渲染完成');
   }
+
+  // ========== 检查后台同步数据 ==========
+  function checkAdminSyncData() {
+    try {
+      var syncData = localStorage.getItem('adminSyncData');
+      var lastSyncTime = localStorage.getItem('adminLastSyncTime');
+
+      if (syncData && lastSyncTime) {
+        var data = JSON.parse(syncData);
+        console.log('📊 [前台] 检测到后台同步数据:', data);
+        console.log('📅 [前台] 上次同步时间:', lastSyncTime);
+
+        // 可以在这里添加UI提示，告知用户有新数据
+        var headerRight = document.querySelector('.header-right');
+        if (headerRight && !document.getElementById('syncNotice')) {
+          var notice = document.createElement('div');
+          notice.id = 'syncNotice';
+          notice.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#dcfce7;color:#166534;border-radius:16px;font-size:11px;font-weight:600;margin-left:10px;animation:fadeIn 0.3s ease;';
+          notice.innerHTML = '✨ 数据已更新 (' + lastSyncTime + ')';
+          headerRight.insertBefore(notice, headerRight.firstChild);
+
+          // 5秒后自动消失
+          setTimeout(function() {
+            if (notice.parentNode) {
+              notice.style.opacity = '0';
+              setTimeout(function() {
+                if (notice.parentNode) notice.parentNode.removeChild(notice);
+              }, 300);
+            }
+          }, 5000);
+        }
+      }
+    } catch (e) {
+      // 忽略错误
+    }
+  }
+
+  // 页面加载后检查同步状态
+  setTimeout(checkAdminSyncData, 1000);
+
+  // ========== 前后台跨页面通信 ==========
+  try {
+    var frontendChannel = new BroadcastChannel('fengkong-admin-channel');
+
+    frontendChannel.onmessage = function(event) {
+      var message = event.data;
+      if (message.source === 'admin') {
+        switch(message.type) {
+          case 'data-synced':
+            console.log('📨 [前台] 收到后台同步通知，刷新数据');
+            location.reload();
+            break;
+          default:
+            console.log('📨 [前台] 收到后台消息:', message.type);
+        }
+      }
+    };
+
+    console.log('✅ [前台] 跨页面通信通道已建立');
+  } catch (e) {
+    console.log('ℹ️ [前台] 使用 localStorage 进行跨页面通信');
   }
 });
 </script>

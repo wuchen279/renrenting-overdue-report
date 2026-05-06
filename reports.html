@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>历史报告 - 人人租风控数据后台</title>
+<title>历史报告 - 箭头风控智能化分析平台</title>
 <link rel="stylesheet" href="common.css">
 <style>
 .sidebar-header .logo i {
@@ -429,7 +429,7 @@
           <div class="report-header">
             <div class="report-icon html"><i class="fas fa-file-html"></i></div>
             <div class="report-info">
-              <div class="report-title">人人租2025-04-完整报告</div>
+              <div class="report-title">箭头2025-04-完整报告</div>
               <div class="report-meta">
                 <span><i class="fas fa-calendar"></i> 2026-04-28</span>
                 <span><i class="fas fa-file"></i> 2.1 MB</span>
@@ -499,7 +499,7 @@
           <div class="report-header">
             <div class="report-icon html"><i class="fas fa-file-html"></i></div>
             <div class="report-info">
-              <div class="report-title">人人租2025-12-完整报告</div>
+              <div class="report-title">箭头2025-12-完整报告</div>
               <div class="report-meta">
                 <span><i class="fas fa-calendar"></i> 2026-01-05</span>
                 <span><i class="fas fa-file"></i> 1.9 MB</span>
@@ -569,7 +569,7 @@
           <div class="report-header">
             <div class="report-icon html"><i class="fas fa-file-html"></i></div>
             <div class="report-info">
-              <div class="report-title">人人租2025-11-完整报告</div>
+              <div class="report-title">箭头2025-11-完整报告</div>
               <div class="report-meta">
                 <span><i class="fas fa-calendar"></i> 2025-12-01</span>
                 <span><i class="fas fa-file"></i> 2.0 MB</span>
@@ -726,7 +726,7 @@
       </div>
 
       <div style="text-align: center; color: var(--text-light); font-size: 12px; margin-top: 40px;">
-        © 2026 人人租风控数据后台
+        © 2026 箭头风控智能化分析平台
       </div>
     </div>
   
@@ -734,9 +734,196 @@
   </main>
 </div>
 
+<script src="auth.js"></script>
 <script src="common.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  var allReports = [
+    { id: 1, title: '箭头2025-04-完整报告', date: '2026-04-28', size: '2.1 MB', type: 'monthly', store: 'all', orders: 7894, overdue: '0.00%', dpd30: '4.42%', format: 'html' },
+    { id: 2, title: '2025年Q4数据分析报告', date: '2026-01-15', size: '1.8 MB', type: 'quarterly', store: 'all', orders: 18452, overdue: '2.15%', dpd30: '5.28%', format: 'xlsx' },
+    { id: 3, title: '箭头2025-12-完整报告', date: '2026-01-05', size: '1.9 MB', type: 'monthly', store: 'all', orders: 6234, overdue: '1.85%', dpd30: '5.76%', format: 'html' },
+    { id: 4, title: '2025年11月数据汇总', date: '2025-12-01', size: '856 KB', type: 'monthly', store: 'jt', orders: 2845, overdue: '1.25%', dpd30: '4.76%', format: 'csv' },
+    { id: 5, title: '箭头2025-11-完整报告', date: '2025-12-01', size: '2.0 MB', type: 'monthly', store: 'all', orders: 7123, overdue: '2.35%', dpd30: '6.84%', format: 'html' },
+    { id: 6, title: '2025年年度风控分析报告', date: '2026-01-10', size: '3.2 MB', type: 'yearly', store: 'all', orders: 68452, overdue: '1.82%', dpd30: '4.25%', format: 'xlsx' },
+    { id: 7, title: '驴上店铺风险专项分析', date: '2026-03-20', size: '1.2 MB', type: 'special', store: 'ls', orders: 5382, overdue: '3.15%', dpd30: '6.15%', format: 'html' },
+    { id: 8, title: '2025年Q3渠道分析数据', date: '2025-10-08', size: '1.1 MB', type: 'quarterly', store: 'all', orders: 15234, overdue: '1.95%', dpd30: '4.85%', format: 'csv' }
+  ];
 
+  var currentPage = 1;
+  var itemsPerPage = 6;
+  var filteredReports = [...allReports];
+
+  function renderReports() {
+    var grid = document.querySelector('.report-grid');
+    if (!grid) return;
+    
+    var start = (currentPage - 1) * itemsPerPage;
+    var end = start + itemsPerPage;
+    var pageItems = filteredReports.slice(start, end);
+    
+    grid.innerHTML = pageItems.map(function(report) {
+      var typeLabels = { monthly: '月度报告', quarterly: '季度报告', yearly: '年度报告', special: '专项报告' };
+      var storeLabels = { all: '全店铺', jt: '箭头', ls: '驴上', lh: '雷猴' };
+      var formatIcons = { html: 'fa-file-html', xlsx: 'fa-file-excel', csv: 'fa-file-csv' };
+      
+      return '<div class="report-card" data-id="' + report.id + '" data-type="' + report.type + '" data-store="' + report.store + '">' +
+        '<div class="report-header">' +
+          '<div class="report-icon ' + report.format + '"><i class="fas ' + (formatIcons[report.format] || 'fa-file') + '"></i></div>' +
+          '<div class="report-info">' +
+            '<div class="report-title">' + report.title + '</div>' +
+            '<div class="report-meta">' +
+              '<span><i class="fas fa-calendar"></i> ' + report.date + '</span>' +
+              '<span><i class="fas fa-file"></i> ' + report.size + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="report-tags">' +
+          '<span class="report-tag ' + report.type + '">' + (typeLabels[report.type] || report.type) + '</span>' +
+          '<span class="report-tag ' + report.store + '">' + (storeLabels[report.store] || report.store) + '</span>' +
+        '</div>' +
+        '<div class="report-stats">' +
+          '<div class="stat-item"><div class="stat-value">' + report.orders.toLocaleString() + '</div><div class="stat-label">订单数</div></div>' +
+          '<div class="stat-item"><div class="stat-value">' + report.overdue + '</div><div class="stat-label">逾期率</div></div>' +
+          '<div class="stat-item"><div class="stat-value">' + report.dpd30 + '</div><div class="stat-label">DPD30+</div></div>' +
+        '</div>' +
+        '<div class="report-actions">' +
+          '<button class="report-action-btn preview" onclick="previewReport(' + report.id + ',\'' + report.title + '\')"><i class="fas fa-eye"></i> 预览</button>' +
+          '<button class="report-action-btn download" onclick="downloadReport(' + report.id + ',\'' + report.title + '\')"><i class="fas fa-download"></i> 下载</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    if (pageItems.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:16px;">📭</div><div style="font-size:15px;font-weight:600;">暂无符合条件的报告</div><div style="font-size:13px;margin-top:8px;">请尝试调整筛选条件</div></div>';
+    }
+    
+    renderPagination();
+  }
+
+  function renderPagination() {
+    var pagination = document.querySelector('.pagination');
+    if (!pagination) return;
+    
+    var totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+    if (totalPages <= 1) {
+      pagination.style.display = 'none';
+      return;
+    }
+    pagination.style.display = 'flex';
+    
+    var html = '';
+    html += '<button class="page-btn" onclick="goToPage(' + (currentPage - 1) + ')"' + (currentPage === 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i></button>';
+    
+    for (var i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+        html += '<button class="page-btn' + (i === currentPage ? ' active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        html += '<button class="page-btn" disabled>...</button>';
+      }
+    }
+    
+    html += '<button class="page-btn" onclick="goToPage(' + (currentPage + 1) + ')"' + (currentPage === totalPages ? ' disabled' : '') + '><i class="fas fa-chevron-right"></i></button>';
+    pagination.innerHTML = html;
+  }
+
+  window.goToPage = function(page) {
+    var totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderReports();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.previewReport = function(id, title) {
+    var report = allReports.find(function(r) { return r.id === id; });
+    if (!report) return;
+    
+    var modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.style.cssText = 'display:flex;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;';
+    modal.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;padding:24px;width:90%;max-width:700px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 style="font-size:18px;font-weight:600;color:var(--text);">📄 ' + title + '</h3><button onclick="this.closest(\'div[style*=\"position:fixed\"]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-light);">×</button></div><div style="background:var(--bg);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;"><h4 style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;">报告概览</h4><p><strong>📊 基础信息：</strong></p><p>• 报告标题：' + report.title + '<br>• 生成日期：' + report.date + '<br>• 文件大小：' + report.size + '<br>• 文件格式：' + report.format.toUpperCase() + '</p><p><strong>📈 数据摘要：</strong></p><p>• 订单总数：' + report.orders.toLocaleString() + ' 笔<br>• 逾期率：' + report.overdue + '<br>• DPD30+率：' + report.dpd30 + '</p><p><strong>🎯 风险评估：</strong></p><p>• 风险等级：' + (parseFloat(report.dpd30) > 5 ? '⚠️ 较高风险' : parseFloat(report.dpd30) > 3 ? '🟡 中等风险' : '✅ 低风险') + '<br>• 建议措施：定期监控逾期率变化趋势</p></div><div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-primary" style="flex:1;padding:10px;" onclick="downloadReport(' + id + ',\'' + title + '\');this.closest(\'div[style*=\"position:fixed\"]').remove();">📥 下载报告</button><button class="btn btn-secondary" style="flex:1;padding:10px;border:1px solid var(--border);background:#fff;color:var(--text-light);" onclick="this.closest(\'div[style*=\"position:fixed\"]').remove()">关闭</button></div></div>';
+    
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
+  };
+
+  window.downloadReport = function(id, title) {
+    var btn = event.target.closest('.report-action-btn') || event.target;
+    var origHTML = btn.innerHTML;
+    btn.innerHTML = '⏳ 下载中...';
+    btn.disabled = true;
+    
+    setTimeout(function() {
+      btn.innerHTML = '✅ 已下载';
+      btn.style.background = 'rgba(16,185,129,0.1)';
+      btn.style.color = '#059669';
+      btn.style.borderColor = '#059669';
+      
+      showToast('📥 ' + title + ' 下载成功', 'success');
+      
+      setTimeout(function() {
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    }, 1200);
+  };
+
+  function showToast(msg, type) {
+    var colors = { success: '#16a34a', error: '#dc2626', info: '#2563eb', warn: '#d97706' };
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;background:' + (colors[type] || colors.info) + ';color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:slideInRight 0.3s ease;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(function() { toast.remove(); }, 300); }, 2500);
+  }
+
+  function applyFilters() {
+    var typeFilter = document.getElementById('reportType').value;
+    var storeFilter = document.getElementById('storeRange').value;
+    var timeFilter = document.getElementById('timeRange').value;
+    
+    filteredReports = allReports.filter(function(report) {
+      if (typeFilter !== 'all' && report.type !== typeFilter) return false;
+      if (storeFilter !== 'all' && report.store !== storeFilter) return false;
+      if (timeFilter !== 'all') {
+        var reportDate = new Date(report.date);
+        var now = new Date('2026-05-04');
+        var diffMonths = (now.getFullYear() - reportDate.getFullYear()) * 12 + now.getMonth() - reportDate.getMonth();
+        if (timeFilter === 'last_month' && diffMonths > 1) return false;
+        if (timeFilter === 'last_quarter' && diffMonths > 3) return false;
+        if (timeFilter === 'last_year' && diffMonths > 12) return false;
+      }
+      return true;
+    });
+    
+    currentPage = 1;
+    renderReports();
+    
+    var countEl = document.querySelector('.filter-bar .btn-primary');
+    if (countEl) {
+      var origText = countEl.innerHTML;
+      countEl.innerHTML = '✅ 筛选完成 (' + filteredReports.length + ')';
+      countEl.style.background = '#16a34a';
+      setTimeout(function() { countEl.innerHTML = origText; countEl.style.background = ''; }, 1500);
+    }
+  }
+
+  var filterBtn = document.querySelector('.filter-bar .btn-primary');
+  if (filterBtn) filterBtn.addEventListener('click', applyFilters);
+
+  document.querySelectorAll('.filter-group select').forEach(function(select) {
+    select.addEventListener('change', applyFilters);
+  });
+
+  renderReports();
+
+  var animStyle = document.createElement('style');
+  animStyle.textContent = '@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}} .modal{animation:fadeIn 0.2s ease}@keyframes fadeIn{from{opacity:0}to{opacity:1}}';
+  document.head.appendChild(animStyle);
+});
 </script>
 </body>
 </html>

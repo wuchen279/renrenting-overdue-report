@@ -65,6 +65,6 @@ Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  DONE!" -ForegroundColor Green
 Write-Host "  Frontend: https://wuchen279.github.io/renrenting-overdue-report/" -ForegroundColor Green
-Write-Host "  Admin:    https://wuchen279.github.io/renrenting-overdue-report/admin.html" -ForegroundColor Green
+Write-Host "  Admin:    https://wuchen279.github.io/renrenting-overdue-report/admin-new.html" -ForegroundColor Green
 Write-Host "  DB:       https://mufudfalsojocgibetpm.supabase.co" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green

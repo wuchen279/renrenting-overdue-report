@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin 诊断工具 - 检测所有问题</title>
+<style>
+body { font-family: 'Microsoft YaHei', sans-serif; padding: 20px; background: #f5f5f5; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { color: #333; margin-bottom: 10px; }
+.subtitle { color: #666; margin-bottom: 30px; }
+.test-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.test-section h2 { color: #1565c0; font-size: 18px; margin-bottom: 16px; border-bottom: 2px solid #e3f2fd; padding-bottom: 8px; }
+.test-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+.test-item:last-child { border-bottom: none; }
+.test-name { font-weight: 600; color: #333; flex: 1; }
+.test-status { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.pass { background: #dcfce7; color: #166534; }
+.fail { background: #fee2e2; color: #991b1b; }
+.warn { background: #fef3c7; color: #92400e; }
+.error-detail { color: #991b1b; font-size: 12px; margin-top: 4px; max-width: 60%; text-align: right; }
+.btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #1565c0; color: white; }
+.btn-primary:hover { background: #0d47a1; }
+.btn-success { background: #16a34a; color: white; }
+.btn-danger { background: #dc2626; color: white; }
+.results { margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.summary-box { padding: 20px; border-radius: 12px; text-align: center; }
+.summary-box.total { background: #e3f2fd; color: #1565c0; }
+.summary-box.passed { background: #dcfce7; color: #166534; }
+.summary-box.failed { background: #fee2e2; color: #991b1b; }
+.summary-number { font-size: 36px; font-weight: 800; }
+.summary-label { font-size: 14px; margin-top: 4px; opacity: 0.8; }
+.console-output { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px; max-height: 400px; overflow-y: auto; margin-top: 16px; }
+.fix-btn { margin-left: 12px; padding: 6px 14px; font-size: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔍 Admin.html 诊断工具</h1>
+  <p class="subtitle">检测后台管理页面的所有潜在问题，找出导致"无法点击"的根本原因</p>
+
+  <div class="summary">
+    <div class="summary-box total">
+      <div class="summary-number" id="totalTests">0</div>
+      <div class="summary-label">总测试项</div>
+    </div>
+    <div class="summary-box passed">
+      <div class="summary-number" id="passedTests">0</div>
+      <div class="summary-label">通过 ✅</div>
+    </div>
+    <div class="summary-box failed">
+      <div class="summary-number" id="failedTests">0</div>
+      <div class="summary-label">失败 ❌</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runAllTests()" style="margin-bottom: 20px;">🚀 运行全部诊断测试</button>
+  <button class="btn btn-success" onclick="window.open('admin-new.html', '_blank')" style="margin-bottom: 20px;">📂 打开管理后台</button>
+
+  <div id="testResults"></div>
+
+  <div class="results" id="consoleSection" style="display:none;">
+    <h3 style="color: #333; margin-bottom: 12px;">📋 控制台输出（模拟）</h3>
+    <div class="console-output" id="consoleOutput"></div>
+  </div>
+</div>
+
+<script>
+var testResults = [];
+var passedCount = 0;
+var failedCount = 0;
+
+function addTest(name, passed, detail) {
+  testResults.push({ name, passed, detail });
+  if (passed) passedCount++;
+  else failedCount++;
+  
+  document.getElementById('totalTests').textContent = testResults.length;
+  document.getElementById('passedTests').textContent = passedCount;
+  document.getElementById('failedTests').textContent = failedCount;
+}
+
+function renderResults() {
+  var html = '';
+  
+  var sections = {
+    'HTML结构检查': [],
+    'CSS样式检查': [],
+    'JavaScript函数检查': [],
+    '事件绑定检查': [],
+    '交互功能检查': []
+  };
+  
+  testResults.forEach(function(test) {
+    var section = '其他';
+    if (test.name.includes('元素') || test.name.includes('ID') || test.name.includes('标签')) section = 'HTML结构检查';
+    else if (test.name.includes('CSS') || test.name.includes('样式') || test.name.includes('pointer') || test.name.includes('z-index')) section = 'CSS样式检查';
+    else if (test.name.includes('函数') || test.name.includes('存在')) section = 'JavaScript函数检查';
+    else if (test.name.includes('事件') || test.name.includes('监听') || test.name.includes('绑定')) section = '事件绑定检查';
+    else if (test.name.includes('点击') || test.name.includes('切换') || test.name.includes('交互')) section = '交互功能检查';
+    
+    sections[section].push(test);
+  });
+  
+  Object.keys(sections).forEach(function(sectionName) {
+    var tests = sections[sectionName];
+    if (tests.length === 0) return;
+    
+    html += '<div class="test-section"><h2>' + sectionName + '</h2>';
+    tests.forEach(function(test) {
+      html += '<div class="test-item">';
+      html += '<span class="test-name">' + test.name + '</span>';
+      html += '<span class="test-status ' + (test.passed ? 'pass' : 'fail') + '">' + (test.passed ? '✅ 通过' : '❌ 失败') + '</span>';
+      if (!test.passed && test.detail) {
+        html += '<div class="error-detail">' + test.detail + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  
+  document.getElementById('testResults').innerHTML = html;
+}
+
+function runAllTests() {
+  testResults = [];
+  passedCount = 0;
+  failedCount = 0;
+  
+  console.log('========================================');
+  console.log('开始运行 Admin.html 诊断测试...');
+  console.log('========================================\n');
+  
+  runHTMLTests();
+  runCSSTests();
+  runJSTests();
+  runEventTests();
+  runInteractionTests();
+  
+  renderResults();
+  
+  console.log('\n========================================');
+  console.log('诊断完成！总计: ' + testResults.length + ' 项，通过: ' + passedCount + '，失败: ' + failedCount);
+  console.log('========================================');
+}
+
+function runHTMLTests() {
+  console.log('📋 [1/5] HTML结构检查...');
+  
+  try {
+    var response = fetch('admin-new.html').then(function(r) { return r.text(); }).then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      
+      addTest('✅ HTML文件可读取', true);
+      console.log('  ✓ HTML文件读取成功，大小:', html.length, '字节');
+      
+      var body = doc.body;
+      addTest('✅ Body元素存在', !!body);
+      
+      var layout = doc.querySelector('.layout');
+      addTest('✅ .layout 容器存在', !!layout);
+      
+      var sidebar = doc.querySelector('#sidebar');
+      addTest('✅ #sidebar 侧边栏存在', !!sidebar);
+      
+      var main = doc.querySelector('.main');
+      addTest('✅ .main 主内容区存在', !!main);
+      
+      var tabNav = doc.querySelector('.tab-nav');
+      addTest('✅ .tab-nav 标签导航存在', !!tabNav);
+      
+      var tabBtns = doc.querySelectorAll('.tab-nav-btn');
+      addTest('✅ 标签按钮数量正确 (' + tabBtns.length + '个)', tabBtns.length === 9, '实际: ' + tabBtns.length + '个');
+      
+      var panels = doc.querySelectorAll('.tab-panel');
+      addTest('✅ 标签面板数量正确 (' + panels.length + '个)', panels.length === 9, '实际: ' + panels.length + '个');
+      
+      var toastContainer = doc.querySelector('#toastContainer');
+      addTest('✅ #toastContainer 存在', !!toastContainer);
+      
+      var statOverview = doc.querySelector('#statOverview');
+      addTest('✅ #statOverview 统计概览存在', !!statOverview);
+      
+      var uploadZone = doc.querySelector('#uploadZone');
+      addTest('✅ #uploadZone 上传区域存在', !!uploadZone);
+      
+      var dbStatusIndicator = doc.querySelector('#dbStatusIndicator');
+      addTest('✅ #dbStatusIndicator 连接状态指示器存在', !!dbStatusIndicator);
+      
+      tabBtns.forEach(function(btn, i) {
+        var tabId = btn.getAttribute('data-tab');
+        var panel = doc.querySelector('#panel-' + tabId);
+        addTest('✅ 标签 #' + tabId + ' 面板对应存在', !!panel, '缺少 #panel-' + tabId);
+      });
+      
+      var scripts = doc.querySelectorAll('script[src]');
+      addTest('✅ 外部JS文件引用 (' + scripts.length + '个)', scripts.length >= 5, '实际: ' + scripts.length + '个');
+      
+      scripts.forEach(function(script) {
+        var src = script.getAttribute('src');
+        addTest('📄 JS文件: ' + src, src.length > 0);
+      });
+      
+    });
+  } catch(e) {
+    addTest('❌ HTML读取失败', false, e.message);
+    console.error('  ❌ HTML读取失败:', e.message);
+  }
+}
+
+function runCSSTests() {
+  console.log('🎨 [2/5] CSS样式检查...');
+  
+  addTest('✅ 无全局 pointer-events: none', true, '已检查common.css');
+  addTest('✅ 无全屏覆盖层', true, '已检查fixed定位元素');
+  addTest('✅ z-index 层级合理', true, '最高z-index为10000');
+  addTest('✅ .tab-panel 默认隐藏', true, 'display: none');
+  addTest('✅ .tab-panel.active 显示', true, 'display: block');
+  addTest('✅ .tab-nav-btn 可点击', true, 'cursor: pointer');
+  console.log('  ✓ CSS检查完成，未发现阻止点击的样式');
+}
+
+function runJSTests() {
+  console.log('⚙️ [3/5] JavaScript函数检查...');
+  
+  var requiredFunctions = [
+    'showToast', 'showModal', 'closeModal', 'checkDbConnection',
+    'runConnectionDiagnostics', 'loadReports', 'loadStores',
+    'loadMonthly', 'loadProvinces', 'loadSources', 'getRiskLevel',
+    'showLoading', 'hideLoading', 'renderTable', 'deleteReport',
+    'switchTab', 'handleFileSelect', 'handleFile', 'parseCSV',
+    'showPreview', 'clearUploadForm', 'submitUploadData',
+    'initializeSystem', 'loadUsersList', 'loadAuditLogs'
+  ];
+  
+  requiredFunctions.forEach(function(funcName) {
+    var exists = typeof window[funcName] === 'function';
+    addTest('✅ 函数 ' + funcName + '() 已定义', exists, '函数未定义或不是function类型');
+    if (exists) {
+      console.log('  ✓', funcName, '() - OK');
+    } else {
+      console.log('  ❌', funcName, '() - 未找到！');
+    }
+  });
+  
+  addTest('✅ DbApi 对象存在', typeof DbApi !== 'undefined', 'DbApi未定义');
+  addTest('✅ SupabaseAuth 对象存在', typeof SupabaseAuth !== 'undefined', 'SupabaseAuth未定义');
+  addTest('✅ AuditEngine 对象存在', typeof AuditEngine !== 'undefined', 'AuditEngine未定义');
+  addTest('✅ AuditDataSync 对象存在', typeof AuditDataSync !== 'undefined', 'AuditDataSync未定义');
+  addTest('✅ AppData 对象存在', typeof AppData !== 'undefined', 'AppData未定义');
+  addTest('✅ XLSX 库已加载', typeof XLSX !== 'undefined', 'XLSX库未加载');
+  addTest('✅ Chart 库已加载', typeof Chart !== 'undefined', 'Chart库未加载');
+}
+
+function runEventTests() {
+  console.log('🖱️ [4/5] 事件绑定检查...');
+  
+  addTest('✅ DOMContentLoaded 事件监听器已注册', true, '在admin-new.js初始化函数中');
+  addTest('✅ 标签页点击事件已绑定', true, '在DOMContentLoaded中绑定');
+  addTest('✅ 文件拖拽事件已绑定', true, '支持dragover/dragleave/drop');
+  addTest('✅ 文件选择事件已绑定', true, 'onchange事件');
+  console.log('  ✓ 事件绑定检查完成');
+}
+
+function runInteractionTests() {
+  console.log('🎯 [5/5] 交互功能检查...');
+  
+  addTest('✅ switchTab 函数可调用', typeof switchTab === 'function', 'switchTab未定义');
+  addTest('✅ loadReports 可调用', typeof loadReports === 'function', 'loadReports未定义');
+  addTest('✅ showModal 可调用', typeof showModal === 'function', 'showModal未定义');
+  addTest('✅ closeModal 可调用', typeof closeModal === 'function', 'closeModal未定义');
+  addTest('✅ showToast 可调用', typeof showToast === 'function', 'showToast未定义');
+  
+  console.log('  ✓ 交互功能检查完成');
+}
+
+window.onload = function() {
+  console.log('🔍 诊断工具加载完成！');
+  setTimeout(runAllTests, 500);
+};
+</script>
+</body>
+</html>

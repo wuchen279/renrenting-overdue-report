@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>JS语法错误检测器</title>
+<style>
+body { font-family: 'Microsoft YaHei', sans-serif; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+.container { max-width: 1000px; margin: 0 auto; }
+h1 { color: #569cd6; margin-bottom: 20px; }
+.file-test { background: #252526; border-radius: 8px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #4ec9b0; }
+.file-name { color: #9cdcfe; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.file-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.success { background: #264f36; color: #89d185; }
+.error { background: #5a1d1d; color: #f48771; }
+.error-detail { margin-top: 8px; padding: 12px; background: #2d2d2d; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 13px; color: #f48771; white-space: pre-wrap; word-break: break-all; }
+.summary { position: fixed; top: 20px; right: 20px; background: #252526; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 1000; min-width: 200px; }
+.summary h3 { color: #569cd6; margin-bottom: 12px; }
+.stat { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔍 JavaScript 语法错误检测器</h1>
+  <p style="color: #858585; margin-bottom: 24px;">检测所有JS文件是否存在语法错误，找出导致页面无法运行的致命问题</p>
+  
+  <div id="results"></div>
+</div>
+
+<div class="summary" id="summary" style="display:none;">
+  <h3>📊 检测结果</h3>
+  <div class="stat"><span>总文件数:</span><span id="totalFiles">0</span></div>
+  <div class="stat"><span>✅ 通过:</span><span id="passedFiles" style="color:#89d185;">0</span></div>
+  <div class="stat"><span>❌ 错误:</span><span id="errorFiles" style="color:#f48771;">0</span></div>
+</div>
+
+<script>
+var files = [
+  'supabase.js',
+  'auth.js', 
+  'common.js',
+  'audit-data-sync.js',
+  'audit-engine.js'
+];
+
+var totalFiles = files.length;
+var passedCount = 0;
+var errorCount = 0;
+
+document.getElementById('totalFiles').textContent = totalFiles;
+
+async function checkFile(filename) {
+  try {
+    var response = await fetch(filename);
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+    }
+    
+    var code = await response.text();
+    
+    try {
+      new Function(code);
+      return { success: true, filename: filename, size: code.length };
+    } catch(syntaxError) {
+      return { 
+        success: false, 
+        filename: filename, 
+        error: syntaxError.message,
+        line: syntaxError.lineNumber || '未知'
+      };
+    }
+    
+  } catch(fetchError) {
+    return {
+      success: false,
+      filename: filename,
+      error: '文件读取失败: ' + fetchError.message
+    };
+  }
+}
+
+async function checkAllFiles() {
+  var resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<p style="color:#858585;">正在检测JS文件语法...</p>';
+  
+  for (var i = 0; i < files.length; i++) {
+    var result = await checkFile(files[i]);
+    
+    if (result.success) {
+      passedCount++;
+      
+      resultsDiv.innerHTML += 
+        '<div class="file-test">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<span class="file-name">📄 ' + result.filename + '</span>' +
+            '<span class="file-status success">✅ 语法正确 (' + (result.size / 1024).toFixed(1) + ' KB)</span>' +
+          '</div>' +
+        '</div>';
+        
+      console.log('✅', result.filename, '- OK');
+      
+    } else {
+      errorCount++;
+      
+      resultsDiv.innerHTML += 
+        '<div class="file-test" style="border-left-color:#f48771;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<span class="file-name">📄 ' + result.filename + '</span>' +
+            '<span class="file-status error">❌ 发现错误</span>' +
+          '</div>' +
+          (result.line ? '<div class="error-detail">行号: ' + result.line + '\n错误: ' + result.error + '</div>' : '') +
+          (!result.line ? '<div class="error-detail">' + result.error + '</div>' : '') +
+        '</div>';
+        
+      console.error('❌', result.filename, '-', result.error);
+    }
+    
+    document.getElementById('passedFiles').textContent = passedCount;
+    document.getElementById('errorFiles').textContent = errorCount;
+  }
+  
+  document.getElementById('summary').style.display = 'block';
+  
+  if (errorCount > 0) {
+    console.log('\n========================================');
+    console.log('⚠️ 发现 ' + errorCount + ' 个文件有语法错误！');
+    console.log('========================================\n');
+    
+    resultsDiv.innerHTML += 
+      '<div style="margin-top:20px;padding:20px;background:#2d2d2d;border-radius:12px;border:2px solid #f48771;text-align:center;">' +
+        '<div style="font-size:32px;margin-bottom:12px;">❌</div>' +
+        '<div style="font-size:18px;font-weight:600;color:#f48771;margin-bottom:8px;">发现语法错误！</div>' +
+        '<div style="font-size:13px;color:#858585;">' + errorCount + ' 个文件存在语法错误，这可能导致整个页面无法运行</div>' +
+      '</div>';
+  } else {
+    console.log('\n========================================');
+    console.log('✅ 所有文件语法检查通过！');
+    console.log('========================================\n');
+    
+    resultsDiv.innerHTML += 
+      '<div style="margin-top:20px;padding:20px;background:#264f36;border-radius:12px;border:2px solid #89d185;text-align:center;">' +
+        '<div style="font-size:32px;margin-bottom:12px;">✅</div>' +
+        '<div style="font-size:18px;font-weight:600;color:#89d185;margin-bottom:8px;">全部通过！</div>' +
+        '<div style="font-size:13px;color:#858585;">所有JS文件语法正确，问题可能在其他地方</div>' +
+      '</div>';
+  }
+}
+
+window.onload = function() {
+  setTimeout(checkAllFiles, 500);
+};
+</script>
+</body>
+</html>

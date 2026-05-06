@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统初始化 - 箭头风控智能化分析平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.setup-container {
+  width: 100%;
+  max-width: 520px;
+  animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.setup-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 36px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(102, 126, 234, 0.2);
+}
+
+.setup-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.setup-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 36px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.setup-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #16213e;
+  margin-bottom: 8px;
+}
+
+.setup-header p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.step-dot {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.step-dot.active { background: #667eea; }
+.step-dot.completed { background: #16a34a; }
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-label .required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+  background: #f9fafb;
+}
+
+.form-input:focus {
+  border-color: #667eea;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-input.error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 6px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.error-message.show { display: flex; }
+
+.info-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.6;
+}
+
+.warning-box {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.6;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.success-icon {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.success-icon .icon {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 36px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.3);
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.credential-card {
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.credential-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.credential-item:last-child { border-bottom: none; }
+
+.credential-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.credential-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+@media (max-width: 480px) {
+  .setup-card { padding: 32px 24px; }
+  .setup-header h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="setup-container">
+  <div class="setup-card" id="setupCard">
+    
+    <!-- 步骤 1: 欢迎页面 -->
+    <div id="step1" class="setup-step">
+      <div class="setup-header">
+        <div class="setup-icon">🚀</div>
+        <h1>欢迎使用风控数据平台</h1>
+        <p>首次使用需要进行系统初始化，设置管理员账户以开始使用</p>
+      </div>
+      
+      <div class="info-box">
+        💡 <strong>初始化说明：</strong><br>
+        • 创建超级管理员账户（拥有所有权限）<br>
+        • 设置安全密码用于后续登录<br>
+        • 初始化完成后即可正常使用系统
+      </div>
+      
+      <button class="btn-primary" onclick="goToStep(2)">
+        开始设置 →
+      </button>
+    </div>
+
+    <!-- 步骤 2: 填写管理员信息 -->
+    <div id="step2" class="setup-step" style="display:none;">
+      <div class="setup-header">
+        <div class="setup-icon">👤</div>
+        <h1>创建管理员账户</h1>
+        <p>请填写管理员的基本信息</p>
+      </div>
+      
+      <div class="warning-box">
+        ⚠️ <strong>重要提示：</strong><br>
+        此账户将拥有系统的最高权限，请妥善保管账户信息。
+      </div>
+      
+      <form id="adminForm" novalidate>
+        <div class="form-group">
+          <label class="form-label">管理员姓名<span class="required">*</span></label>
+          <input type="text" id="adminName" class="form-input" placeholder="请输入您的姓名" required>
+          <div class="error-message" id="nameError"></div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">邮箱地址<span class="required">*</span></label>
+          <input type="email" id="adminEmail" class="form-input" placeholder="admin@example.com" required>
+          <div class="error-message" id="emailError"></div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">密码<span class="required">*</span></label>
+          <input type="password" id="adminPassword" class="form-input" placeholder="至少8位，包含字母和数字" required minlength="8">
+          <div class="error-message" id="passwordError"></div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">确认密码<span class="required">*</span></label>
+          <input type="password" id="confirmPassword" class="form-input" placeholder="再次输入密码" required>
+          <div class="error-message" id="confirmError"></div>
+        </div>
+        
+        <button type="submit" class="btn-primary" id="btnSubmit">
+          创建并继续 →
+        </button>
+      </form>
+      
+      <div style="text-align:center;margin-top:20px;">
+        <a href="#" onclick="goToStep(1)" style="color:#64748b;text-decoration:none;font-size:13px;">← 返回上一步</a>
+      </div>
+    </div>
+
+    <!-- 步骤 3: 完成页面 -->
+    <div id="step3" class="setup-step" style="display:none;">
+      <div class="success-icon">
+        <div class="icon">✅</div>
+      </div>
+      
+      <div class="setup-header">
+        <h1>初始化完成！</h1>
+        <p>管理员账户已成功创建，以下是您的登录信息：</p>
+      </div>
+      
+      <div class="credential-card">
+        <div class="credential-item">
+          <span class="credential-label">管理员姓名</span>
+          <span class="credential-value" id="displayName"></span>
+        </div>
+        <div class="credential-item">
+          <span class="credential-label">邮箱地址</span>
+          <span class="credential-value" id="displayEmail"></span>
+        </div>
+        <div class="credential-item">
+          <span class="credential-label">角色权限</span>
+          <span class="credential-value" style="background:#dcfce7;color:#166534;">超级管理员</span>
+        </div>
+      </div>
+      
+      <div class="info-box">
+        🔐 <strong>安全提醒：</strong><br>
+        请妥善保存以上信息，切勿泄露给他人。<br>
+        您可以随时在管理后台修改密码和添加其他用户。
+      </div>
+      
+      <button class="btn-primary" onclick="goToLogin()">
+        进入登录页面 →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // 检查是否已经初始化过
+  var users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+  var hasAdmin = users.some(function(u) { return u.role === 'super_admin'; });
+  
+  if (hasAdmin) {
+    // 已经初始化过，直接跳转到登录页
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // 绑定表单提交事件
+  document.getElementById('adminForm').addEventListener('submit', handleSetup);
+  
+  // 实时验证
+  ['adminName', 'adminEmail', 'adminPassword', 'confirmPassword'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', clearErrors);
+  });
+});
+
+function goToStep(stepNum) {
+  // 隐藏所有步骤
+  document.querySelectorAll('.setup-step').forEach(function(el) {
+    el.style.display = 'none';
+  });
+  
+  // 显示目标步骤
+  document.getElementById('step' + stepNum).style.display = 'block';
+  
+  // 更新步骤指示器
+  updateStepIndicator(stepNum);
+  
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepIndicator(currentStep) {
+  var dots = document.querySelectorAll('.step-dot');
+  dots.forEach(function(dot, index) {
+    dot.classList.remove('active', 'completed');
+    if (index + 1 < currentStep) {
+      dot.classList.add('completed');
+    } else if (index + 1 === currentStep) {
+      dot.classList.add('active');
+    }
+  });
+}
+
+function handleSetup(e) {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+  
+  var name = document.getElementById('adminName').value.trim();
+  var email = document.getElementById('adminEmail').value.trim();
+  var password = document.getElementById('adminPassword').value;
+  
+  setLoading(true);
+  
+  // 创建超级管理员
+  setTimeout(function() {
+    try {
+      var adminUser = {
+        id: 'super_admin_' + Date.now(),
+        email: email,
+        password: password,
+        name: name,
+        role: 'super_admin',
+        created_at: new Date().toISOString(),
+        status: 'active',
+        last_login: null,
+        is_system_admin: true
+      };
+      
+      // 保存到本地存储
+      var users = [adminUser];
+      localStorage.setItem('mock_users', JSON.stringify(users));
+      
+      // 记录初始化日志
+      var initLog = {
+        type: 'SYSTEM_INIT',
+        action: 'INITIAL_SETUP_COMPLETE',
+        timestamp: new Date().toISOString(),
+        details: {
+          admin_email: email,
+          admin_name: name,
+          user_agent: navigator.userAgent
+        },
+        severity: 'INFO'
+      };
+      
+      var logs = JSON.parse(localStorage.getItem('security_logs') || '[]');
+      logs.unshift(initLog);
+      localStorage.setItem('security_logs', JSON.stringify(logs));
+      
+      setLoading(false);
+      
+      // 显示成功信息
+      document.getElementById('displayName').textContent = name;
+      document.getElementById('displayEmail').textContent = email;
+      
+      goToStep(3);
+      
+    } catch (error) {
+      console.error('[Setup] 初始化失败:', error);
+      alert('❌ 初始化失败：' + error.message);
+      setLoading(false);
+    }
+  }, 1500);
+}
+
+function validateForm() {
+  var isValid = true;
+  var name = document.getElementById('adminName').value.trim();
+  var email = document.getElementById('adminEmail').value.trim();
+  var password = document.getElementById('adminPassword').value;
+  var confirm = document.getElementById('confirmPassword').value;
+  
+  clearErrors();
+  
+  // 验证姓名
+  if (!name) {
+    showError('name', '请输入管理员姓名');
+    isValid = false;
+  } else if (name.length < 2) {
+    showError('name', '姓名至少需要2个字符');
+    isValid = false;
+  }
+  
+  // 验证邮箱
+  if (!email) {
+    showError('email', '请输入邮箱地址');
+    isValid = false;
+  } else if (!isValidEmail(email)) {
+    showError('email', '邮箱格式不正确');
+    isValid = false;
+  }
+  
+  // 验证密码
+  if (!password) {
+    showError('password', '请输入密码');
+    isValid = false;
+  } else if (password.length < 8) {
+    showError('password', '密码至少需要8个字符');
+    isValid = false;
+  } else if (!isStrongPassword(password)) {
+    showError('password', '密码需包含字母和数字');
+    isValid = false;
+  }
+  
+  // 验证确认密码
+  if (!confirm) {
+    showError('confirm', '请确认密码');
+    isValid = false;
+  } else if (password !== confirm) {
+    showError('confirm', '两次输入的密码不一致');
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+function isValidEmail(email) {
+  var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+function isStrongPassword(password) {
+  var hasLetter = /[a-zA-Z]/.test(password);
+  var hasNumber = /\d/.test(password);
+  return hasLetter && hasNumber;
+}
+
+function showError(field, message) {
+  var input = document.getElementById(field === 'name' ? 'adminName' : 
+                              field === 'email' ? 'adminEmail' : 
+                              field === 'password' ? 'adminPassword' : 'confirmPassword');
+  var errorEl = document.getElementById(field + 'Error') || 
+                document.getElementById((field === 'confirm' ? 'confirm' : field) + 'Error');
+  
+  if (input) input.classList.add('error');
+  if (errorEl) {
+    errorEl.innerHTML = '<span>⚠️</span> ' + message;
+    errorEl.classList.add('show');
+  }
+}
+
+function clearErrors() {
+  ['adminName', 'adminEmail', 'adminPassword', 'confirmPassword'].forEach(function(id) {
+    var input = document.getElementById(id);
+    if (input) input.classList.remove('error');
+  });
+  
+  ['nameError', 'emailError', 'passwordError', 'confirmError'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.innerHTML = '';
+      el.classList.remove('show');
+    }
+  });
+}
+
+function setLoading(isLoading) {
+  var btn = document.getElementById('btnSubmit');
+  btn.disabled = isLoading;
+  
+  if (isLoading) {
+    btn.innerHTML = '<span class="btn-loading"><span class="spinner"></span> 正在创建...</span>';
+  } else {
+    btn.innerHTML = '创建并继续 →';
+  }
+}
+
+function goToLogin() {
+  window.location.href = 'login.html';
+}
+</script>
+
+</body>
+</html>

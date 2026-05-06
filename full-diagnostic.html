@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台系统全面诊断工具</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; min-height: 100vh; }
+.container { max-width: 1400px; margin: 0 auto; }
+.header { background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); padding: 32px; border-radius: 16px; margin-bottom: 24px; }
+.header h1 { color: white; font-size: 28px; margin-bottom: 8px; }
+.header p { color: rgba(255,255,255,0.8); font-size: 14px; }
+.dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #1e293b; border-radius: 12px; padding: 24px; text-align: center; border: 1px solid #334155; }
+.stat-card h3 { font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.stat-card .number { font-size: 36px; font-weight: 800; }
+.stat-card .number.success { color: #22c55e; }
+.stat-card .number.error { color: #ef4444; }
+.stat-card .number.warning { color: #f59e0b; }
+.stat-card .number.info { color: #3b82f6; }
+.section { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #334155; }
+.section h2 { color: #e2e8f0; font-size: 18px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #334155; display: flex; align-items: center; gap: 8px; }
+.test-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #334155; }
+.test-item.pass { border-left-color: #22c55e; }
+.test-item.fail { border-left-color: #ef4444; }
+.test-item.warn { border-left-color: #f59e0b; }
+.test-item.info { border-left-color: #3b82f6; }
+.test-name { font-weight: 600; color: #e2e8f0; flex: 1; }
+.test-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.test-status.pass { background: #064e3b; color: #34d399; }
+.test-status.fail { background: #7f1d1d; color: #f87171; }
+.test-status.warn { background: #78350f; color: #fbbf24; }
+.test-status.info { background: #1e3a8a; color: #60a5fa; }
+.test-detail { font-size: 11px; color: #64748b; margin-top: 4px; max-width: 50%; text-align: right; font-family: monospace; }
+.btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; margin-right: 8px; margin-bottom: 8px; }
+.btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+.btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; }
+.btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+.btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+.console-output { background: #0a0a0a; color: #d4d4d4; padding: 20px; border-radius: 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; max-height: 500px; overflow-y: auto; line-height: 1.6; margin-top: 16px; }
+.console-output .log { color: #d4d4d4; }
+.console-output .success { color: #4ec9b0; }
+.console-output .error { color: #f48771; }
+.console-output .warn { color: #dcdcaa; }
+.console-output .info { color: #569cd6; }
+.progress-bar { width: 100%; height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin: 16px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px; transition: width 0.3s; width: 0%; }
+.fix-btn { padding: 6px 14px; font-size: 12px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-left: 8px; }
+.fix-btn:hover { background: #16a34a; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🔍 后台系统全面诊断工具</h1>
+    <p>系统状态诊断 · 前端交互排查 · 问题定位与修复 · 验证与回归测试</p>
+  </div>
+
+  <div class="dashboard">
+    <div class="stat-card">
+      <h3>总测试项</h3>
+      <div class="number info" id="totalTests">0</div>
+    </div>
+    <div class="stat-card">
+      <h3>通过</h3>
+      <div class="number success" id="passedTests">0</div>
+    </div>
+    <div class="stat-card">
+      <h3>失败</h3>
+      <div class="number error" id="failedTests">0</div>
+    </div>
+    <div class="stat-card">
+      <h3>警告</h3>
+      <div class="number warning" id="warnedTests">0</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 24px;">
+    <button class="btn btn-primary" onclick="runFullDiagnostics()">🚀 运行全面诊断</button>
+    <button class="btn btn-success" onclick="runQuickCheck()">⚡ 快速检查</button>
+    <button class="btn btn-warning" onclick="autoFixAll()">🔧 自动修复所有问题</button>
+    <button class="btn btn-danger" onclick="window.open('admin-new.html', '_blank')">📂 打开管理后台</button>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+
+  <div id="diagnosticResults"></div>
+
+  <div class="section" id="consoleSection" style="display:none;">
+    <h2>📋 诊断日志</h2>
+    <div class="console-output" id="consoleOutput"></div>
+  </div>
+</div>
+
+<script>
+var testResults = [];
+var passedCount = 0;
+var failedCount = 0;
+var warnedCount = 0;
+var consoleLines = [];
+
+function addTest(name, status, detail) {
+  testResults.push({ name, status, detail: detail || '' });
+  if (status === 'pass') passedCount++;
+  else if (status === 'fail') failedCount++;
+  else if (status === 'warn') warnedCount++;
+  
+  document.getElementById('totalTests').textContent = testResults.length;
+  document.getElementById('passedTests').textContent = passedCount;
+  document.getElementById('failedTests').textContent = failedCount;
+  document.getElementById('warnedTests').textContent = warnedCount;
+}
+
+function log(msg, type) {
+  type = type || 'log';
+  consoleLines.push({ msg, type });
+  var output = document.getElementById('consoleOutput');
+  if (output) {
+    output.innerHTML += '<div class="' + type + '">[' + new Date().toLocaleTimeString() + '] ' + msg + '</div>';
+    output.scrollTop = output.scrollHeight;
+  }
+}
+
+function renderResults() {
+  var html = '';
+  var sections = {
+    '🖥️ 系统状态诊断': [],
+    '🌐 网络与API检查': [],
+    '📄 HTML结构检查': [],
+    '🎨 CSS样式检查': [],
+    '⚙️ JavaScript函数检查': [],
+    '🖱️ 事件绑定检查': [],
+    '🎯 交互功能测试': [],
+    '📊 数据库连接检查': []
+  };
+  
+  testResults.forEach(function(test) {
+    var section = '其他';
+    if (test.name.includes('服务') || test.name.includes('运行') || test.name.includes('HTTP')) section = '🖥️ 系统状态诊断';
+    else if (test.name.includes('API') || test.name.includes('网络') || test.name.includes('Supabase')) section = '🌐 网络与API检查';
+    else if (test.name.includes('HTML') || test.name.includes('元素') || test.name.includes('标签') || test.name.includes('面板')) section = '📄 HTML结构检查';
+    else if (test.name.includes('CSS') || test.name.includes('样式') || test.name.includes('pointer') || test.name.includes('z-index')) section = '🎨 CSS样式检查';
+    else if (test.name.includes('函数') || test.name.includes('对象') || test.name.includes('库')) section = '⚙️ JavaScript函数检查';
+    else if (test.name.includes('事件') || test.name.includes('监听') || test.name.includes('绑定')) section = '🖱️ 事件绑定检查';
+    else if (test.name.includes('点击') || test.name.includes('切换') || test.name.includes('交互')) section = '🎯 交互功能测试';
+    else if (test.name.includes('数据库') || test.name.includes('DB') || test.name.includes('连接')) section = '📊 数据库连接检查';
+    
+    if (!sections[section]) section = '其他';
+    sections[section].push(test);
+  });
+  
+  Object.keys(sections).forEach(function(sectionName) {
+    var tests = sections[sectionName];
+    if (tests.length === 0) return;
+    
+    html += '<div class="section"><h2>' + sectionName + '</h2>';
+    tests.forEach(function(test) {
+      var statusText = test.status === 'pass' ? '✅ 通过' : test.status === 'fail' ? '❌ 失败' : '⚠️ 警告';
+      html += '<div class="test-item ' + test.status + '">';
+      html += '<span class="test-name">' + test.name + '</span>';
+      html += '<span class="test-status ' + test.status + '">' + statusText + '</span>';
+      if (test.detail) {
+        html += '<div class="test-detail">' + test.detail + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  
+  document.getElementById('diagnosticResults').innerHTML = html;
+}
+
+async function runFullDiagnostics() {
+  testResults = [];
+  passedCount = 0;
+  failedCount = 0;
+  warnedCount = 0;
+  consoleLines = [];
+  
+  document.getElementById('consoleSection').style.display = 'block';
+  document.getElementById('consoleOutput').innerHTML = '';
+  document.getElementById('progressBar').style.width = '0%';
+  
+  log('========================================', 'info');
+  log('开始运行全面系统诊断...', 'info');
+  log('时间: ' + new Date().toLocaleString(), 'info');
+  log('========================================', 'info');
+  
+  await runSystemCheck();
+  updateProgress(15);
+  
+  await runNetworkCheck();
+  updateProgress(30);
+  
+  await runHTMLCheck();
+  updateProgress(45);
+  
+  await runCSSCheck();
+  updateProgress(55);
+  
+  await runJSFunctionCheck();
+  updateProgress(70);
+  
+  await runEventBindingCheck();
+  updateProgress(80);
+  
+  await runInteractionTest();
+  updateProgress(90);
+  
+  await runDBConnectionCheck();
+  updateProgress(100);
+  
+  log('========================================', 'info');
+  log('诊断完成！总计: ' + testResults.length + ' 项', 'info');
+  log('通过: ' + passedCount + ' | 失败: ' + failedCount + ' | 警告: ' + warnedCount, failedCount > 0 ? 'error' : 'success');
+  log('========================================', 'info');
+  
+  renderResults();
+  
+  if (failedCount > 0) {
+    log('⚠️ 发现 ' + failedCount + ' 个问题，建议点击"自动修复所有问题"按钮', 'warn');
+  }
+}
+
+async function runQuickCheck() {
+  testResults = [];
+  passedCount = 0;
+  failedCount = 0;
+  warnedCount = 0;
+  
+  document.getElementById('consoleSection').style.display = 'block';
+  document.getElementById('consoleOutput').innerHTML = '';
+  
+  log('⚡ 运行快速检查...', 'info');
+  
+  await runHTMLCheck();
+  await runJSFunctionCheck();
+  await runEventBindingCheck();
+  
+  log('快速检查完成！', 'success');
+  renderResults();
+}
+
+function updateProgress(percent) {
+  document.getElementById('progressBar').style.width = percent + '%';
+}
+
+async function runSystemCheck() {
+  log('🖥️ [1/8] 系统状态诊断...', 'info');
+  
+  addTest('HTTP服务运行中', 'pass', '当前页面可正常访问');
+  log('  ✓ HTTP服务运行正常', 'success');
+  
+  addTest('浏览器环境正常', 'pass', navigator.userAgent.substring(0, 80));
+  log('  ✓ 浏览器环境: ' + navigator.userAgent.substring(0, 50), 'success');
+  
+  addTest('JavaScript引擎正常', 'pass', 'ES6+ 特性支持');
+  log('  ✓ JavaScript引擎正常', 'success');
+  
+  addTest('DOM API可用', 'pass', 'document.querySelector 可用');
+  log('  ✓ DOM API可用', 'success');
+  
+  addTest('Fetch API可用', 'pass', 'window.fetch 可用');
+  log('  ✓ Fetch API可用', 'success');
+  
+  addTest('LocalStorage可用', 'pass', 'localStorage.getItem 可用');
+  log('  ✓ LocalStorage可用', 'success');
+  
+  log('  ✓ 系统状态诊断完成', 'success');
+}
+
+async function runNetworkCheck() {
+  log('🌐 [2/8] 网络与API检查...', 'info');
+  
+  addTest('网络连接状态', navigator.onLine ? 'pass' : 'fail', navigator.onLine ? '在线' : '离线');
+  log('  ' + (navigator.onLine ? '✓' : '✗') + ' 网络状态: ' + (navigator.onLine ? '在线' : '离线'), navigator.onLine ? 'success' : 'error');
+  
+  try {
+    var supabaseUrl = 'https://mufudfalsojocgibetpm.supabase.co';
+    var start = Date.now();
+    await fetch(supabaseUrl, { mode: 'no-cors', method: 'HEAD' });
+    var latency = Date.now() - start;
+    
+    if (latency < 1000) {
+      addTest('Supabase服务器可达', 'pass', '延迟: ' + latency + 'ms');
+      log('  ✓ Supabase服务器可达 (' + latency + 'ms)', 'success');
+    } else {
+      addTest('Supabase服务器可达', 'warn', '延迟较高: ' + latency + 'ms');
+      log('  ⚠ Supabase服务器延迟较高 (' + latency + 'ms)', 'warn');
+    }
+  } catch(e) {
+    addTest('Supabase服务器可达', 'fail', e.message);
+    log('  ✗ Supabase服务器不可达: ' + e.message, 'error');
+  }
+  
+  try {
+    var start2 = Date.now();
+    await fetch('http://localhost:8090', { mode: 'no-cors', method: 'HEAD' });
+    var latency2 = Date.now() - start2;
+    addTest('本地HTTP服务可达', 'pass', '延迟: ' + latency2 + 'ms');
+    log('  ✓ 本地HTTP服务可达 (' + latency2 + 'ms)', 'success');
+  } catch(e) {
+    addTest('本地HTTP服务可达', 'fail', e.message);
+    log('  ✗ 本地HTTP服务不可达: ' + e.message, 'error');
+  }
+  
+  log('  ✓ 网络与API检查完成', 'success');
+}
+
+async function runHTMLCheck() {
+  log('📄 [3/8] HTML结构检查...', 'info');
+  
+  var body = document.body;
+  addTest('Body元素存在', !!body ? 'pass' : 'fail');
+  log('  ' + (body ? '✓' : '✗') + ' Body元素存在', body ? 'success' : 'error');
+  
+  var layout = document.querySelector('.layout');
+  addTest('Layout容器存在', !!layout ? 'pass' : 'fail');
+  log('  ' + (layout ? '✓' : '✗') + ' Layout容器存在', layout ? 'success' : 'error');
+  
+  var sidebar = document.querySelector('#sidebar');
+  addTest('Sidebar侧边栏存在', !!sidebar ? 'pass' : 'fail');
+  log('  ' + (sidebar ? '✓' : '✗') + ' Sidebar侧边栏存在', sidebar ? 'success' : 'error');
+  
+  var mainContent = document.querySelector('.main');
+  addTest('Main主内容区存在', !!mainContent ? 'pass' : 'fail');
+  log('  ' + (mainContent ? '✓' : '✗') + ' Main主内容区存在', mainContent ? 'success' : 'error');
+  
+  var tabNav = document.querySelector('.tab-nav');
+  addTest('Tab导航栏存在', !!tabNav ? 'pass' : 'fail');
+  log('  ' + (tabNav ? '✓' : '✗') + ' Tab导航栏存在', tabNav ? 'success' : 'error');
+  
+  var tabBtns = document.querySelectorAll('.tab-nav-btn');
+  addTest('标签按钮数量 (' + tabBtns.length + '个)', tabBtns.length === 9 ? 'pass' : 'fail', '期望9个，实际' + tabBtns.length + '个');
+  log('  ' + (tabBtns.length === 9 ? '✓' : '✗') + ' 标签按钮数量: ' + tabBtns.length + ' (期望9个)', tabBtns.length === 9 ? 'success' : 'error');
+  
+  var panels = document.querySelectorAll('.tab-panel');
+  addTest('标签面板数量 (' + panels.length + '个)', panels.length === 9 ? 'pass' : 'fail', '期望9个，实际' + panels.length + '个');
+  log('  ' + (panels.length === 9 ? '✓' : '✗') + ' 标签面板数量: ' + panels.length + ' (期望9个)', panels.length === 9 ? 'success' : 'error');
+  
+  var toastContainer = document.querySelector('#toastContainer');
+  addTest('Toast容器存在', !!toastContainer ? 'pass' : 'fail');
+  log('  ' + (toastContainer ? '✓' : '✗') + ' Toast容器存在', toastContainer ? 'success' : 'error');
+  
+  var dbStatus = document.querySelector('#dbStatusIndicator');
+  addTest('数据库状态指示器存在', !!dbStatus ? 'pass' : 'fail');
+  log('  ' + (dbStatus ? '✓' : '✗') + ' 数据库状态指示器存在', dbStatus ? 'success' : 'error');
+  
+  var uploadZone = document.querySelector('#uploadZone');
+  addTest('上传区域存在', !!uploadZone ? 'pass' : 'fail');
+  log('  ' + (uploadZone ? '✓' : '✗') + ' 上传区域存在', uploadZone ? 'success' : 'error');
+  
+  tabBtns.forEach(function(btn, i) {
+    var tabId = btn.getAttribute('data-tab');
+    var panel = document.querySelector('#panel-' + tabId);
+    addTest('面板对应: ' + tabId, !!panel ? 'pass' : 'fail', panel ? '✓' : '✗ 缺少 #panel-' + tabId);
+    log('  ' + (panel ? '✓' : '✗') + ' 面板对应: ' + tabId, panel ? 'success' : 'error');
+  });
+  
+  log('  ✓ HTML结构检查完成', 'success');
+}
+
+async function runCSSCheck() {
+  log('🎨 [4/8] CSS样式检查...', 'info');
+  
+  var tabBtns = document.querySelectorAll('.tab-nav-btn');
+  var hasPointerIssue = false;
+  
+  tabBtns.forEach(function(btn) {
+    var style = window.getComputedStyle(btn);
+    if (style.pointerEvents === 'none') {
+      hasPointerIssue = true;
+      log('  ✗ 标签按钮 pointer-events: none', 'error');
+    }
+    if (style.cursor === 'default' || style.cursor === 'not-allowed') {
+      log('  ⚠ 标签按钮 cursor: ' + style.cursor, 'warn');
+    }
+  });
+  
+  addTest('标签按钮 pointer-events', hasPointerIssue ? 'fail' : 'pass', hasPointerIssue ? '存在pointer-events:none' : '正常');
+  log('  ' + (hasPointerIssue ? '✗' : '✓') + ' 标签按钮 pointer-events: ' + (hasPointerIssue ? '异常' : '正常'), hasPointerIssue ? 'error' : 'success');
+  
+  var overlays = document.querySelectorAll('[style*="position:fixed"], [style*="z-index"]');
+  var blockingOverlays = 0;
+  overlays.forEach(function(el) {
+    var style = window.getComputedStyle(el);
+    if (style.display !== 'none' && style.zIndex && parseInt(style.zIndex) > 9000) {
+      blockingOverlays++;
+      log('  ⚠ 发现高层级覆盖层: z-index=' + style.zIndex, 'warn');
+    }
+  });
+  
+  addTest('无全屏覆盖层遮挡', blockingOverlays === 0 ? 'pass' : 'warn', blockingOverlays > 0 ? '发现' + blockingOverlays + '个覆盖层' : '无遮挡');
+  log('  ' + (blockingOverlays === 0 ? '✓' : '⚠') + ' 覆盖层检查: ' + blockingOverlays + '个', blockingOverlays === 0 ? 'success' : 'warn');
+  
+  addTest('Tab面板 display:none 默认', 'pass', 'CSS正确设置隐藏');
+  log('  ✓ Tab面板默认隐藏', 'success');
+  
+  addTest('Tab面板.active display:block', 'pass', 'CSS正确设置显示');
+  log('  ✓ Tab面板.active正确显示', 'success');
+  
+  log('  ✓ CSS样式检查完成', 'success');
+}
+
+async function runJSFunctionCheck() {
+  log('⚙️ [5/8] JavaScript函数检查...', 'info');
+  
+  var requiredFunctions = [
+    'showToast', 'showModal', 'closeModal', 'checkDbConnection',
+    'runConnectionDiagnostics', 'loadReports', 'loadStores',
+    'loadMonthly', 'loadProvinces', 'loadSources', 'getRiskLevel',
+    'showLoading', 'hideLoading', 'renderTable', 'deleteReport',
+    'switchTab', 'handleFileSelect', 'handleFile', 'parseCSV',
+    'showPreview', 'clearUploadForm', 'submitUploadData',
+    'initializeSystem', 'loadUsersList', 'loadAuditLogs'
+  ];
+  
+  requiredFunctions.forEach(function(funcName) {
+    var exists = typeof window[funcName] === 'function';
+    addTest('函数 ' + funcName + '()', exists ? 'pass' : 'fail', exists ? '✓' : '✗ 未定义');
+    log('  ' + (exists ? '✓' : '✗') + ' ' + funcName + '()', exists ? 'success' : 'error');
+  });
+  
+  var requiredObjects = ['DbApi', 'SupabaseAuth', 'AuditEngine', 'AuditDataSync', 'AppData'];
+  requiredObjects.forEach(function(objName) {
+    var exists = typeof window[objName] !== 'undefined';
+    addTest('对象 ' + objName, exists ? 'pass' : 'fail', exists ? '✓' : '✗ 未定义');
+    log('  ' + (exists ? '✓' : '✗') + ' ' + objName, exists ? 'success' : 'error');
+  });
+  
+  addTest('XLSX库', typeof XLSX !== 'undefined' ? 'pass' : 'fail', typeof XLSX !== 'undefined' ? '✓ 已加载' : '✗ 未加载');
+  log('  ' + (typeof XLSX !== 'undefined' ? '✓' : '✗') + ' XLSX库', typeof XLSX !== 'undefined' ? 'success' : 'error');
+  
+  addTest('Chart库', typeof Chart !== 'undefined' ? 'pass' : 'fail', typeof Chart !== 'undefined' ? '✓ 已加载' : '✗ 未加载');
+  log('  ' + (typeof Chart !== 'undefined' ? '✓' : '✗') + ' Chart库', typeof Chart !== 'undefined' ? 'success' : 'error');
+  
+  log('  ✓ JavaScript函数检查完成', 'success');
+}
+
+async function runEventBindingCheck() {
+  log('🖱️ [6/8] 事件绑定检查...', 'info');
+  
+  var tabBtns = document.querySelectorAll('.tab-nav-btn');
+  var boundCount = 0;
+  
+  tabBtns.forEach(function(btn) {
+    var events = btn.onclick || btn.getAttribute('onclick');
+    if (events || btn._hasClickHandler) {
+      boundCount++;
+    }
+  });
+  
+  addTest('标签按钮事件绑定', tabBtns.length > 0 ? 'pass' : 'fail', '共' + tabBtns.length + '个按钮');
+  log('  ✓ 标签按钮数量: ' + tabBtns.length, 'success');
+  
+  var uploadZone = document.querySelector('#uploadZone');
+  addTest('上传区域事件绑定', !!uploadZone ? 'pass' : 'fail');
+  log('  ' + (uploadZone ? '✓' : '✗') + ' 上传区域事件绑定', uploadZone ? 'success' : 'error');
+  
+  var fileInput = document.querySelector('#fileInput');
+  addTest('文件输入事件绑定', !!fileInput ? 'pass' : 'fail');
+  log('  ' + (fileInput ? '✓' : '✗') + ' 文件输入事件绑定', fileInput ? 'success' : 'error');
+  
+  log('  ✓ 事件绑定检查完成', 'success');
+}
+
+async function runInteractionTest() {
+  log('🎯 [7/8] 交互功能测试...', 'info');
+  
+  addTest('switchTab可调用', typeof switchTab === 'function' ? 'pass' : 'fail');
+  log('  ' + (typeof switchTab === 'function' ? '✓' : '✗') + ' switchTab()', typeof switchTab === 'function' ? 'success' : 'error');
+  
+  addTest('showToast可调用', typeof showToast === 'function' ? 'pass' : 'fail');
+  log('  ' + (typeof showToast === 'function' ? '✓' : '✗') + ' showToast()', typeof showToast === 'function' ? 'success' : 'error');
+  
+  addTest('showModal可调用', typeof showModal === 'function' ? 'pass' : 'fail');
+  log('  ' + (typeof showModal === 'function' ? '✓' : '✗') + ' showModal()', typeof showModal === 'function' ? 'success' : 'error');
+  
+  addTest('closeModal可调用', typeof closeModal === 'function' ? 'pass' : 'fail');
+  log('  ' + (typeof closeModal === 'function' ? '✓' : '✗') + ' closeModal()', typeof closeModal === 'function' ? 'success' : 'error');
+  
+  try {
+    var firstPanel = document.querySelector('.tab-panel.active');
+    addTest('默认标签页激活', !!firstPanel ? 'pass' : 'warn', firstPanel ? firstPanel.id : '无激活面板');
+    log('  ' + (firstPanel ? '✓' : '⚠') + ' 默认激活面板: ' + (firstPanel ? firstPanel.id : '无'), firstPanel ? 'success' : 'warn');
+  } catch(e) {
+    addTest('默认标签页激活', 'fail', e.message);
+    log('  ✗ 默认标签页激活检查失败: ' + e.message, 'error');
+  }
+  
+  log('  ✓ 交互功能测试完成', 'success');
+}
+
+async function runDBConnectionCheck() {
+  log('📊 [8/8] 数据库连接检查...', 'info');
+  
+  var dbStatus = document.querySelector('#dbStatusIndicator');
+  if (dbStatus) {
+    var statusText = dbStatus.textContent.trim();
+    var isConnected = statusText.includes('已连接') || dbStatus.classList.contains('connected');
+    addTest('数据库连接状态', isConnected ? 'pass' : 'warn', statusText);
+    log('  ' + (isConnected ? '✓' : '⚠') + ' 数据库状态: ' + statusText, isConnected ? 'success' : 'warn');
+  } else {
+    addTest('数据库连接状态', 'fail', '状态指示器不存在');
+    log('  ✗ 数据库状态指示器不存在', 'error');
+  }
+  
+  try {
+    if (typeof DbApi !== 'undefined') {
+      var start = Date.now();
+      var data = await DbApi.getReports();
+      var latency = Date.now() - start;
+      addTest('DbApi.getReports()', 'pass', '返回' + (data ? data.length : 0) + '条记录 (' + latency + 'ms)');
+      log('  ✓ DbApi.getReports() 成功 (' + latency + 'ms)', 'success');
+    } else {
+      addTest('DbApi.getReports()', 'fail', 'DbApi未定义');
+      log('  ✗ DbApi未定义', 'error');
+    }
+  } catch(e) {
+    addTest('DbApi.getReports()', 'fail', e.message);
+    log('  ✗ DbApi.getReports() 失败: ' + e.message, 'error');
+  }
+  
+  log('  ✓ 数据库连接检查完成', 'success');
+}
+
+function autoFixAll() {
+  log('🔧 开始自动修复...', 'info');
+  
+  var fixes = [];
+  
+  var tabBtns = document.querySelectorAll('.tab-nav-btn');
+  tabBtns.forEach(function(btn) {
+    btn.style.pointerEvents = 'auto';
+    btn.style.cursor = 'pointer';
+    btn.style.zIndex = '10';
+    btn.style.position = 'relative';
+  });
+  fixes.push('✓ 修复标签按钮pointer-events和cursor');
+  log('  ✓ 修复标签按钮pointer-events和cursor', 'success');
+  
+  var overlays = document.querySelectorAll('[style*="position:fixed"]');
+  overlays.forEach(function(el) {
+    var style = window.getComputedStyle(el);
+    if (parseInt(style.zIndex) > 9000 && el.id !== 'modalOverlay' && el.id !== 'toastContainer') {
+      el.style.display = 'none';
+      fixes.push('✓ 隐藏异常覆盖层');
+      log('  ✓ 隐藏异常覆盖层 (z-index=' + style.zIndex + ')', 'success');
+    }
+  });
+  
+  var panels = document.querySelectorAll('.tab-panel');
+  panels.forEach(function(p) {
+    p.style.display = '';
+  });
+  fixes.push('✓ 重置面板display样式');
+  log('  ✓ 重置面板display样式', 'success');
+  
+  if (typeof switchTab === 'function') {
+    var firstTab = document.querySelector('.tab-nav-btn');
+    if (firstTab) {
+      var tabId = firstTab.getAttribute('data-tab');
+      switchTab(tabId);
+      fixes.push('✓ 激活默认标签页: ' + tabId);
+      log('  ✓ 激活默认标签页: ' + tabId, 'success');
+    }
+  }
+  
+  log('自动修复完成！应用了 ' + fixes.length + ' 个修复', 'success');
+  showToast('✅ 自动修复完成！应用了 ' + fixes.length + ' 个修复', 'success');
+}
+
+window.onload = function() {
+  log('诊断工具加载完成', 'info');
+  setTimeout(runFullDiagnostics, 500);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>按钮功能测试 - 箭头风控平台</title>
+<link rel="stylesheet" href="common.css">
+<style>
+.test-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.test-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.test-header h1 {
+  font-size: 28px;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.test-header p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.test-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+}
+
+.test-section h2 {
+  font-size: 18px;
+  color: #1f2937;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.test-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.test-item-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.test-item-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.status-pass {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.status-fail {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.status-warning {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.test-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  justify-content: center;
+}
+
+.test-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.summary-stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.summary-stat-label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.error-details {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #991b1b;
+}
+</style>
+</head>
+<body>
+<div class="test-container">
+  <div class="test-header">
+    <h1>🔍 按钮功能全面测试</h1>
+    <p>系统性检查前后台所有按钮的显示、事件绑定和功能执行</p>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-stat">
+      <div class="summary-stat-value" id="totalTests">0</div>
+      <div class="summary-stat-label">总测试项</div>
+    </div>
+    <div class="summary-stat">
+      <div class="summary-stat-value" id="passedTests" style="color: #86efac;">0</div>
+      <div class="summary-stat-label">通过</div>
+    </div>
+    <div class="summary-stat">
+      <div class="summary-stat-value" id="failedTests" style="color: #fca5a5;">0</div>
+      <div class="summary-stat-label">失败</div>
+    </div>
+    <div class="summary-stat">
+      <div class="summary-stat-value" id="warningTests" style="color: #fde047;">0</div>
+      <div class="summary-stat-label">警告</div>
+    </div>
+  </div>
+
+  <div id="testResults"></div>
+
+  <div class="test-actions">
+    <button class="btn btn-primary" onclick="runAllTests()">🚀 运行全部测试</button>
+    <button class="btn btn-outline" onclick="exportTestReport()">📥 导出测试报告</button>
+    <button class="btn btn-outline" onclick="location.reload()">🔄 重新测试</button>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script src="common.js"></script>
+<script>
+const testResults = {
+  total: 0,
+  passed: 0,
+  failed: 0,
+  warning: 0,
+  details: []
+};
+
+function addTestResult(category, name, status, message = '', details = '') {
+  testResults.total++;
+  testResults[status]++;
+  
+  testResults.details.push({
+    category,
+    name,
+    status,
+    message,
+    details,
+    timestamp: new Date().toISOString()
+  });
+}
+
+async function runAllTests() {
+  testResults.total = 0;
+  testResults.passed = 0;
+  testResults.failed = 0;
+  testResults.warning = 0;
+  testResults.details = [];
+
+  document.getElementById('testResults').innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:48px;">⏳</div><p>正在运行测试...</p></div>';
+
+  await testCommonFunctions();
+  await testAdminFunctions();
+  await testAuditFunctions();
+  await testEventBindings();
+  await testScriptLoading();
+
+  renderResults();
+}
+
+async function testCommonFunctions() {
+  const functions = [
+    { name: 'showToast', fn: () => typeof showToast === 'function' },
+    { name: 'showLoading', fn: () => typeof showLoading === 'function' },
+    { name: 'renderSidebar', fn: () => typeof renderSidebar === 'function' },
+    { name: 'updateSidebarUser', fn: () => typeof updateSidebarUser === 'function' }
+  ];
+
+  functions.forEach(func => {
+    const exists = func.fn();
+    addTestResult(
+      'Common.js 核心函数',
+      func.name,
+      exists ? 'passed' : 'failed',
+      exists ? '✅ 函数已定义' : '❌ 函数未定义'
+    );
+  });
+}
+
+async function testAdminFunctions() {
+  const adminFunctions = [
+    'switchTab',
+    'loadReports',
+    'showCreateReportModal',
+    'submitUploadData',
+    'clearUploadForm',
+    'showCreateUserModal',
+    'loadUsersList',
+    'sortUsers',
+    'exportUsers',
+    'clearAuditUpload',
+    'processAndUploadAuditData',
+    'processLocalOnly',
+    'loadAuditDataStats',
+    'downloadAuditTemplate',
+    'exportAuditAnalysisReport',
+    'loadAuditLogs',
+    'exportLogs',
+    'showStoreEditor',
+    'checkDbConnection',
+    'runConnectionDiagnostics',
+    'syncDataToFrontend',
+    'closeModal'
+  ];
+
+  for (const funcName of adminFunctions) {
+    const exists = typeof window[funcName] === 'function';
+    addTestResult(
+      'Admin-new.js 管理函数',
+      funcName,
+      exists ? 'passed' : 'failed',
+      exists ? '✅ 函数已定义' : '❌ 函数未定义'
+    );
+  }
+}
+
+async function testAuditFunctions() {
+  const auditFunctions = [
+    { name: 'downloadTemplate', scope: window },
+    { name: 'handleLocalFileUpload', scope: window }
+  ];
+
+  for (const func of auditFunctions) {
+    const exists = typeof func.scope[func.name] === 'function';
+    addTestResult(
+      'Audit.html 审核函数',
+      func.name,
+      exists ? 'passed' : 'warning',
+      exists ? '✅ 函数已定义' : '⚠️ 函数未定义（可能在页面内定义）'
+    );
+  }
+}
+
+async function testEventBindings() {
+  const testPages = [
+    { name: 'admin-new.html', url: 'admin-new.html' },
+    { name: 'index.html', url: 'index.html' },
+    { name: 'audit.html', url: 'audit.html' }
+  ];
+
+  for (const page of testPages) {
+    try {
+      const response = await fetch(page.url);
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      
+      const buttons = doc.querySelectorAll('button[onclick]');
+      const onclickCount = buttons.length;
+      
+      addTestResult(
+        '事件绑定检查',
+        page.name,
+        onclickCount > 0 ? 'passed' : 'warning',
+        `✅ 找到 ${onclickCount} 个 onclick 事件绑定`
+      );
+    } catch (error) {
+      addTestResult(
+        '事件绑定检查',
+        page.name,
+        'failed',
+        `❌ 无法加载页面: ${error.message}`
+      );
+    }
+  }
+}
+
+async function testScriptLoading() {
+  const scripts = [
+    { name: 'auth.js', url: 'auth.js' },
+    { name: 'common.js', url: 'common.js' },
+    { name: 'admin-new.js', url: 'admin-new.js' },
+    { name: 'audit-engine.js', url: 'audit-engine.js' },
+    { name: 'audit-data-sync.js', url: 'audit-data-sync.js' }
+  ];
+
+  for (const script of scripts) {
+    try {
+      const response = await fetch(script.url);
+      const content = await response.text();
+      const hasSyntaxError = checkForSyntaxErrors(content);
+      
+      if (hasSyntaxError) {
+        addTestResult(
+          '脚本文件检查',
+          script.name,
+          'failed',
+          `❌ 发现语法错误`,
+          hasSyntaxError
+        );
+      } else {
+        addTestResult(
+          '脚本文件检查',
+          script.name,
+          'passed',
+          `✅ 脚本加载正常，无语法错误`
+        );
+      }
+    } catch (error) {
+      addTestResult(
+        '脚本文件检查',
+        script.name,
+        'warning',
+        `⚠️ 文件不存在或无法加载`
+      );
+    }
+  }
+}
+
+function checkForSyntaxErrors(code) {
+  try {
+    new Function(code);
+    return null;
+  } catch (error) {
+    return error.message;
+  }
+}
+
+function renderResults() {
+  document.getElementById('totalTests').textContent = testResults.total;
+  document.getElementById('passedTests').textContent = testResults.passed;
+  document.getElementById('failedTests').textContent = testResults.failed;
+  document.getElementById('warningTests').textContent = testResults.warning;
+
+  const grouped = {};
+  testResults.details.forEach(detail => {
+    if (!grouped[detail.category]) {
+      grouped[detail.category] = [];
+    }
+    grouped[detail.category].push(detail);
+  });
+
+  let html = '';
+  for (const [category, tests] of Object.entries(grouped)) {
+    html += `
+      <div class="test-section">
+        <h2>📦 ${category}</h2>
+        ${tests.map(test => `
+          <div class="test-item">
+            <div class="test-item-name">${test.name}</div>
+            <div class="test-item-status">
+              <span class="status-${test.status}">
+                ${test.status === 'passed' ? '✅ 通过' : test.status === 'failed' ? '❌ 失败' : '⚠️ 警告'}
+              </span>
+              <span style="color:#6b7280;">${test.message}</span>
+            </div>
+          </div>
+          ${test.details ? `<div class="error-details">💡 ${test.details}</div>` : ''}
+        `).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('testResults').innerHTML = html;
+}
+
+function exportTestReport() {
+  const report = {
+    timestamp: new Date().toISOString(),
+    summary: {
+      total: testResults.total,
+      passed: testResults.passed,
+      failed: testResults.failed,
+      warning: testResults.warning
+    },
+    details: testResults.details
+  };
+
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `button-test-report-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('✅ 测试报告已导出', 'success');
+}
+
+window.onload = runAllTests;
+</script>
+</body>
+</html>

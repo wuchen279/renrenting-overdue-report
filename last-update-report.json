@@ -1,0 +1,152 @@
+{
+  "update_time": "2026-05-05T01:31:25.922Z",
+  "source_file": "审核数据汇总2026年截止到4月份数据.xlsx",
+  "summary": {
+    "total_raw_records": 4794,
+    "total_months": 4,
+    "total_weeks": 17,
+    "overall_pass_rate": "84.50"
+  },
+  "latest_month": {
+    "year": 2026,
+    "month": 4,
+    "month_label": "4月",
+    "total_orders": 1746,
+    "passed_orders": 1461,
+    "rejected_orders": 285,
+    "total_devices": 3992,
+    "pass_rate": 83.68,
+    "reject_rate": 16.32,
+    "avg_devices": 2.3,
+    "jt_orders": 1158,
+    "jt_pass_rate": 66.32,
+    "ls_orders": 468,
+    "ls_pass_rate": 26.8,
+    "lh_orders": 116,
+    "lh_pass_rate": 6.64,
+    "djd_orders": 4,
+    "djd_pass_rate": 0.23,
+    "top_rejection_reasons": [
+      {
+        "reason": "评分3",
+        "count": 64,
+        "percentage": 22.5
+      },
+      {
+        "reason": "评分1",
+        "count": 29,
+        "percentage": 10.2
+      },
+      {
+        "reason": "评分2",
+        "count": 20,
+        "percentage": 7
+      },
+      {
+        "reason": "有案底",
+        "count": 13,
+        "percentage": 4.6
+      },
+      {
+        "reason": "被执行",
+        "count": 11,
+        "percentage": 3.9
+      },
+      {
+        "reason": "评分卡3",
+        "count": 4,
+        "percentage": 1.4
+      },
+      {
+        "reason": "评分卡2",
+        "count": 4,
+        "percentage": 1.4
+      },
+      {
+        "reason": "评估等级1分",
+        "count": 3,
+        "percentage": 1.1
+      },
+      {
+        "reason": "芝麻分过低",
+        "count": 3,
+        "percentage": 1.1
+      },
+      {
+        "reason": "评分过低",
+        "count": 3,
+        "percentage": 1.1
+      }
+    ],
+    "auditor_stats": [
+      {
+        "name": "乐乐",
+        "total": 1348,
+        "passed": 1128
+      },
+      {
+        "name": "一峰",
+        "total": 398,
+        "passed": 333
+      }
+    ],
+    "created_at": "2026-05-05T01:31:25.922Z",
+    "updated_at": "2026-05-05T01:31:25.922Z",
+    "mom_order_change": "-9.30",
+    "mom_pass_rate_change": "0.30",
+    "mom_pass_rate_trend": "up"
+  },
+  "latest_week": {
+    "year": 2026,
+    "week_number": 18,
+    "week_start_date": "2026-04-27",
+    "week_end_date": "2026-05-03",
+    "total_orders": 282,
+    "passed_orders": 239,
+    "rejected_orders": 43,
+    "total_devices": 720,
+    "pass_rate": 84.8,
+    "reject_rate": 15.2,
+    "jt_orders": 169,
+    "jt_pass_rate": 59.9,
+    "ls_orders": 94,
+    "ls_pass_rate": 33.3,
+    "lh_orders": 19,
+    "lh_pass_rate": 6.7,
+    "created_at": "2026-05-05T01:31:25.922Z",
+    "updated_at": "2026-05-05T01:31:25.922Z",
+    "wow_order_change": "-26.56",
+    "wow_pass_rate_change": "-0.1",
+    "wow_pass_rate_trend": "down"
+  },
+  "monthly_breakdown": [
+    {
+      "period": "2026-01",
+      "label": "1月",
+      "total_orders": 680,
+      "pass_rate": 88.97,
+      "mom_change": null
+    },
+    {
+      "period": "2026-02",
+      "label": "2月",
+      "total_orders": 443,
+      "pass_rate": 85.78,
+      "mom_change": "-3.19"
+    },
+    {
+      "period": "2026-03",
+      "label": "3月",
+      "total_orders": 1925,
+      "pass_rate": 83.38,
+      "mom_change": "-2.40"
+    },
+    {
+      "period": "2026-04",
+      "label": "4月",
+      "total_orders": 1746,
+      "pass_rate": 83.68,
+      "mom_change": "0.30"
+    }
+  ]
+}

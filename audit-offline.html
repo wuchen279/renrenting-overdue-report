@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>审核数据分析 - 离线版 | 箭头风控智能化分析平台</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --primary: #1565c0;
+  --secondary: #42a5f5;
+  --success: #2e7d32;
+  --warning: #ed6c02;
+  --danger: #d32f2f;
+  --bg: #f5f7fa;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-light: #666666;
+  --border: #e0e0e0;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.header {
+  background: var(--gradient);
+  color: white;
+  padding: 30px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 40px rgba(102,126,234,0.3);
+}
+.header h1 { font-size: 28px; margin-bottom: 8px; }
+.header .subtitle { opacity: 0.9; font-size: 14px; }
+.badge-offline {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-left: 12px;
+}
+
+.upload-zone {
+  background: white;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.upload-zone:hover { border-color: var(--primary); background: #f0f7ff; }
+.upload-zone.dragover { border-color: var(--primary); background: #e3f2fd; }
+.upload-icon { font-size: 48px; margin-bottom: 12px; }
+.upload-text { font-size: 16px; color: var(--text-light); margin-bottom: 8px; }
+.upload-hint { font-size: 13px; color: #999; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s;
+}
+.stat-card:hover { transform: translateY(-4px); }
+.stat-card .icon { font-size: 32px; margin-bottom: 8px; }
+.stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 14px; color: var(--text-light); margin-top: 4px; }
+.stat-card .trend { font-size: 12px; margin-top: 8px; }
+.trend.up { color: var(--success); }
+.trend.down { color: var(--danger); }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.chart-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.chart-card h3 { 
+  font-size: 18px; 
+  margin-bottom: 16px; 
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-container { position: relative; height: 300px; }
+
+.table-section {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.table-section h3 { font-size: 18px; margin-bottom: 16px; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.data-table th {
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+}
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:hover { background: #f8f9fa; }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-light);
+}
+.empty-state .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
+.empty-state h2 { font-size: 24px; margin-bottom: 8px; }
+.empty-state p { font-size: 14px; max-width: 400px; margin: 0 auto; }
+
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 20px;
+}
+.spinner {
+  width: 50px; height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.insights-panel {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-left: 4px solid var(--primary);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+.insights-panel h3 { color: var(--primary); margin-bottom: 12px; }
+.insight-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 14px;
+}
+.insight-item:last-child { border-bottom: none; }
+
+@media (max-width: 768px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 审核数据分析系统 <span class="badge-offline">📴 离线版</span></h1>
+    <p class="subtitle">无需网络连接 · 本地Excel数据处理 · 即时分析报告</p>
+  </div>
+
+  <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📁</div>
+    <div class="upload-text"><strong>点击上传或拖拽 Excel 文件到此处</strong></div>
+    <div class="upload-hint">支持格式：*.xlsx, *.xls | 文件命名示例：审核数据汇总2026年截止到4月份数据.xlsx</div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleFileUpload(event)">
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="insights-panel" id="insightsPanel">
+      <h3>💡 数据洞察</h3>
+      <div id="insightsList"></div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>📈 月度通过率趋势</h3>
+        <div class="chart-container">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>📊 店铺通过率对比</h3>
+        <div class="chart-container">
+          <canvas id="storeChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>📅 周度订单量分布</h3>
+        <div class="chart-container">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>🎯 审核员绩效对比</h3>
+        <div class="chart-container">
+          <canvas id="auditorChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-section">
+      <h3>📋 月度详细数据</h3>
+      <table class="data-table" id="monthlyTable">
+        <thead><tr><th>月份</th><th>总订单</th><th>通过数</th><th>拒绝数</th><th>通过率</th><th>环比变化</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table-section">
+      <h3>🏪 店铺详细数据</h3>
+      <table class="data-table" id="storeTable">
+        <thead><tr><th>店铺名称</th><th>总订单</th><th>通过率</th><th>平均台数</th><th>占比</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    <div class="icon">📊</div>
+    <h2>等待加载数据</h2>
+    <p>请上传包含审核数据的 Excel 文件以开始分析。系统将自动解析数据并生成可视化报告。</p>
+  </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay" style="display:none;">
+  <div class="spinner"></div>
+  <div style="font-size: 16px; color: var(--text-light);">正在处理数据...</div>
+</div>
+
+<script>
+var rawData = [];
+var processedData = { monthly: [], weekly: [], stores: {}, auditors: {} };
+var charts = {};
+
+function showLoading() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function showToast(message, type) {
+  console.log('[' + (type || 'info') + ']', message);
+}
+
+function handleFileUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.name.match(/\.xlsx?$/i)) {
+    alert('请选择 Excel 文件（.xlsx 或 .xls）');
+    return;
+  }
+
+  console.log('[Offline] 开始处理文件:', file.name, '大小:', (file.size / 1024).toFixed(1), 'KB');
+  showLoading();
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var workbook = XLSX.read(data, { type: 'array' });
+      
+      var firstSheetName = workbook.SheetNames[0];
+      var worksheet = workbook.Sheets[firstSheetName];
+      
+      rawData = XLSX.utils.sheet_to_json(worksheet);
+      
+      console.log('[Offline] 成功读取', rawData.length, '条记录');
+      
+      if (rawData.length === 0) {
+        throw new Error('文件中没有找到数据');
+      }
+
+      processData();
+      renderAll();
+      hideLoading();
+      
+    } catch (error) {
+      console.error('[Offline] 文件处理失败:', error);
+      hideLoading();
+      alert('文件处理失败：' + error.message + '\n\n请确保文件格式正确且包含必要的列（时间、店铺、是否通过等）');
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
+}
+
+var uploadZone = document.getElementById('uploadZone');
+
+uploadZone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', function(e) {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  
+  var file = e.dataTransfer.files[0];
+  if (file && file.name.match(/\.xlsx?$/i)) {
+    document.getElementById('fileInput').files = e.dataTransfer.files;
+    handleFileUpload({ target: { files: [file] } });
+  } else {
+    alert('请选择 Excel 文件');
+  }
+});
+
+function excelDateToJSDate(serial) {
+  if (!serial) return new Date();
+  if (typeof serial === 'string' && serial.indexOf('-') !== -1) return new Date(serial);
+  if (serial instanceof Date) return serial;
+  
+  var utc_days = Math.floor(serial - 25569);
+  var utc_value = utc_days * 86400;
+  var date_info = new Date(utc_value * 1000);
+  
+  var fractional_day = serial - Math.floor(serial) + 0.0000001;
+  var total_seconds = Math.floor(86400 * fractional_day);
+  var seconds = total_seconds % 60;
+  total_seconds -= seconds;
+  var hours = Math.floor(total_seconds / (60 * 60));
+  var minutes = Math.floor((total_seconds % 3600) / 60);
+  
+  return new Date(date_info.getUTCFullYear(), date_info.getUTCMonth(), date_info.getUTCDate(), hours, minutes, seconds);
+}
+
+function getISOWeek(date) {
+  var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  var dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function processData() {
+  console.time('[Offline] 数据处理');
+  
+  processedData.monthly = [];
+  processedData.weekly = [];
+  processedData.stores = {};
+  processedData.auditors = {};
+  
+  var monthlyMap = {};
+  var weeklyMap = {};
+  
+  rawData.forEach(function(row) {
+    var date = excelDateToJSDate(row['时间']);
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var weekNum = getISOWeek(date);
+    var yearMonth = year + '-' + String(month).padStart(2, '0');
+    var yearWeek = year + '-W' + String(weekNum).padStart(2, '0');
+    
+    var store = row['店铺'] || '未知';
+    var isPass = String(row['是否通过']).trim() === '是' || row['是否通过'] === true || row['是否通过'] === 1;
+    var devices = parseInt(row['台数']) || 1;
+    var auditor = (row['审核人员'] || '').trim() || '未知';
+    
+    if (!monthlyMap[yearMonth]) {
+      monthlyMap[yearMonth] = {
+        year: year,
+        month: month,
+        label: month + '月',
+        total: 0,
+        passed: 0,
+        rejected: 0,
+        stores: {},
+        auditors: {}
+      };
+    }
+    
+    monthlyMap[yearMonth].total++;
+    monthlyMap[yearMonth].passed += isPass ? 1 : 0;
+    monthlyMap[yearMonth].rejected += isPass ? 0 : 1;
+    
+    if (!monthlyMap[yearMonth].stores[store]) {
+      monthlyMap[yearMonth].stores[store] = { total: 0, passed: 0 };
+    }
+    monthlyMap[yearMonth].stores[store].total++;
+    monthlyMap[yearMonth].stores[store].passed += isPass ? 1 : 0;
+    
+    if (!monthlyMap[yearMonth].auditors[auditor]) {
+      monthlyMap[yearMonth].auditors[auditor] = { total: 0, passed: 0 };
+    }
+    monthlyMap[yearMonth].auditors[auditor].total++;
+    monthlyMap[yearMonth].auditors[auditor].passed += isPass ? 1 : 0;
+    
+    if (!weeklyMap[yearWeek]) {
+      weeklyMap[yearWeek] = {
+        year: year,
+        week: weekNum,
+        label: yearWeek,
+        start: date,
+        end: date,
+        total: 0,
+        passed: 0,
+        stores: {}
+      };
+    }
+    
+    weeklyMap[yearWeek].total++;
+    weeklyMap[yearWeek].passed += isPass ? 1 : 0;
+    
+    if (date < weeklyMap[yearWeek].start) weeklyMap[yearWeek].start = date;
+    if (date > weeklyMap[yearWeek].end) weeklyMap[yearWeek].end = date;
+    
+    if (!weeklyMap[yearWeek].stores[store]) {
+      weeklyMap[yearWeek].stores[store] = { total: 0, passed: 0 };
+    }
+    weeklyMap[yearWeek].stores[store].total++;
+    weeklyMap[yearWeek].stores[store].passed += isPass ? 1 : 0;
+    
+    if (!processedData.stores[store]) {
+      processedData.stores[store] = { total: 0, passed: 0, devices: 0 };
+    }
+    processedData.stores[store].total++;
+    processedData.stores[store].passed += isPass ? 1 : 0;
+    processedData.stores[store].devices += devices;
+    
+    if (!processedData.auditors[auditor]) {
+      processedData.auditors[auditor] = { total: 0, passed: 0 };
+    }
+    processedData.auditors[auditor].total++;
+    processedData.auditors[auditor].passed += isPass ? 1 : 0;
+  });
+  
+  Object.keys(monthlyMap).sort().forEach(function(key) {
+    var m = monthlyMap[key];
+    m.passRate = m.total > 0 ? ((m.passed / m.total) * 100).toFixed(1) : 0;
+    m.rejectRate = m.total > 0 ? ((m.rejected / m.total) * 100).toFixed(1) : 0;
+    m.avgDevices = (m.total * 2.5).toFixed(1);
+    processedData.monthly.push(m);
+  });
+  
+  Object.keys(weeklyMap).sort().forEach(function(key) {
+    var w = weeklyMap[key];
+    w.passRate = w.total > 0 ? ((w.passed / w.total) * 100).toFixed(1) : 0;
+    processedData.weekly.push(w);
+  });
+  
+  console.log('[Offline] 处理完成:', {
+    records: rawData.length,
+    months: processedData.monthly.length,
+    weeks: processedData.weekly.length,
+    stores: Object.keys(processedData.stores).length,
+    auditors: Object.keys(processedData.auditors).length
+  });
+  
+  console.timeEnd('[Offline] 数据处理');
+}
+
+function renderAll() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  document.getElementById('uploadZone').style.display = 'none';
+  
+  renderStats();
+  renderInsights();
+  renderMonthlyChart();
+  renderStoreChart();
+  renderWeeklyChart();
+  renderAuditorChart();
+  renderMonthlyTable();
+  renderStoreTable();
+}
+
+function renderStats() {
+  var statsGrid = document.getElementById('statsGrid');
+  
+  var totalOrders = rawData.length;
+  var totalPassed = Object.values(processedData.auditors).reduce(function(s, a) { return s + a.passed; }, 0);
+  var avgPassRate = processedData.monthly.length > 0 
+    ? (processedData.monthly.reduce(function(s, m) { return s + parseFloat(m.passRate); }, 0) / processedData.monthly.length).toFixed(1)
+    : 0;
+  var storeCount = Object.keys(processedData.stores).length;
+  var latestMonth = processedData.monthly[processedData.monthly.length - 1];
+  var trend = processedData.monthly.length >= 2 
+    ? (parseFloat(processedData.monthly[processedData.monthly.length - 1].passRate) - parseFloat(processedData.monthly[processedData.monthly.length - 2].passRate)).toFixed(1)
+    : 0;
+  
+  var html = '';
+  
+  html += '<div class="stat-card">';
+  html += '<div class="icon">📋</div>';
+  html += '<div class="value">' + totalOrders.toLocaleString() + '</div>';
+  html += '<div class="label">总审核单数</div>';
+  html += '</div>';
+  
+  html += '<div class="stat-card">';
+  html += '<div class="icon">✅</div>';
+  html += '<div class="value">' + avgPassRate + '%</div>';
+  html += '<div class="label">平均通过率</div>';
+  html += '<div class="trend ' + (trend >= 0 ? 'up' : 'down') + '">' + (trend >= 0 ? '↑' : '↓') + ' ' + Math.abs(trend) + 'pp 环比</div>';
+  html += '</div>';
+  
+  html += '<div class="stat-card">';
+  html += '<div class="icon">🏪</div>';
+  html += '<div class="value">' + storeCount + '</div>';
+  html += '<div class="label">覆盖店铺数</div>';
+  html += '</div>';
+  
+  html += '<div class="stat-card">';
+  html += '<div class="icon">👥</div>';
+  html += '<div class="value">' + Object.keys(processedData.auditors).length + '</div>';
+  html += '<div class="label">审核人员数</div>';
+  html += '</div>';
+  
+  if (latestMonth) {
+    html += '<div class="stat-card">';
+    html += '<div class="icon">📅</div>';
+    html += '<div class="value">' + latestMonth.label + '</div>';
+    html += '<div class="label">最新月份</div>';
+    html += '<div class="trend">' + latestMonth.total.toLocaleString() + ' 单 | ' + latestMonth.passRate + '% 通过</div>';
+    html += '</div>';
+    
+    html += '<div class="stat-card">';
+    html += '<div class="icon">📆</div>';
+    html += '<div class="value">' + processedData.weekly.length + '</div>';
+    html += '<div class="label">统计周数</div>';
+    html += '</div>';
+  }
+  
+  statsGrid.innerHTML = html;
+}
+
+function renderInsights() {
+  var insightsList = document.getElementById('insightsList');
+  var insights = [];
+  
+  if (processedData.monthly.length > 0) {
+    var bestMonth = processedData.monthly.reduce(function(a, b) { 
+      return parseFloat(a.passRate) > parseFloat(b.passRate) ? a : b; 
+    });
+    var worstMonth = processedData.monthly.reduce(function(a, b) { 
+      return parseFloat(a.passRate) < parseFloat(b.passRate) ? a : b; 
+    });
+    
+    insights.push('📈 最佳月份：<strong>' + bestMonth.label + '</strong>，通过率达到 <strong>' + bestMonth.passRate + '%</strong>');
+    insights.push('⚠️ 需关注月份：<strong>' + worstMonth.label + '</strong>，通过率仅 <strong>' + worstMonth.passRate + '%</strong>（低于平均水平 ' + ((processedData.monthly.reduce(function(s,m){return s+parseFloat(m.passRate)},0)/processedData.monthly.length).toFixed(1)) + '%）');
+  }
+  
+  var topStore = Object.entries(processedData.stores)
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .sort(function(a,b) { return b.total - a.total; })[0];
+  
+  if (topStore) {
+    insights.push('🏪 主要业务店铺：<strong>' + topStore.name + '</strong>，占总单量的 <strong>' + ((topStore.total/rawData.length)*100).toFixed(1) + '%</strong>，通过率 <strong>' + topStore.rate + '%</strong>');
+  }
+  
+  var lowPassStores = Object.entries(processedData.stores)
+    .filter(function(e) { return e[1].total > 10; })
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .filter(function(s) { return parseFloat(s.rate) < 80; });
+  
+  if (lowPassStores.length > 0) {
+    insights.push('❌ 通过率偏低的店铺（<80%）：<strong>' + lowPassStores.map(function(s){return s.name+'('+s.rate+'%)'}).join(', ') + '</strong>，建议重点审核');
+  }
+  
+  var topAuditor = Object.entries(processedData.auditors)
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .sort(function(a,b) { return b.total - a.total; })[0];
+  
+  if (topAuditor) {
+    insights.push('👨‍💼 最活跃审核员：<strong>' + topAuditor.name + '</strong>，完成 <strong>' + topAuditor.total + '</strong> 单，通过率 <strong>' + topAuditor.rate + '%</strong>');
+  }
+  
+  if (processedData.weekly.length > 0) {
+    var recentWeeks = processedData.weekly.slice(-4);
+    var avgRecent = recentWeeks.reduce(function(s,w){return s+parseFloat(w.passRate)},0)/recentWeeks.length;
+    insights.push('📊 近4周平均通过率：<strong>' + avgRecent.toFixed(1) + '%</strong>，趋势' + (avgRecent > 85 ? '良好 ✓' : avgRecent > 75 ? '一般 ⚠️' : '需改进 ✗'));
+  }
+  
+  insightsList.innerHTML = insights.map(function(i) {
+    return '<div class="insight-item">' + i + '</div>';
+  }).join('');
+}
+
+function renderMonthlyChart() {
+  var ctx = document.getElementById('monthlyChart').getContext('2d');
+  
+  if (charts.monthly) charts.monthly.destroy();
+  
+  charts.monthly = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: processedData.monthly.map(function(m) { return m.label; }),
+      datasets: [{
+        label: '通过率 (%)',
+        data: processedData.monthly.map(function(m) { return parseFloat(m.passRate); }),
+        borderColor: '#1565c0',
+        backgroundColor: 'rgba(21,101,192,0.1)',
+        fill: true,
+        tension: 0.4,
+        yAxisID: 'y'
+      }, {
+        label: '订单量',
+        data: processedData.monthly.map(function(m) { return m.total; }),
+        borderColor: '#ed6c02',
+        backgroundColor: 'rgba(237,108,2,0.1)',
+        fill: true,
+        tension: 0.4,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      scales: {
+        y: { type: 'linear', position: 'left', title: { display: true, text: '通过率 (%)' }, min: 0, max: 100 },
+        y1: { type: 'linear', position: 'right', title: { display: true, text: '订单量' }, grid: { drawOnChartArea: false } }
+      },
+      plugins: { legend: { position: 'top' } }
+    }
+  });
+}
+
+function renderStoreChart() {
+  var ctx = document.getElementById('storeChart').getContext('2d');
+  
+  if (charts.store) charts.store.destroy();
+  
+  var stores = Object.entries(processedData.stores)
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .sort(function(a,b) { return b.total - a.total; });
+  
+  charts.store = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: stores.map(function(s) { return s.name; }),
+      datasets: [{
+        label: '通过率 (%)',
+        data: stores.map(function(s) { return parseFloat(s.rate); }),
+        backgroundColor: ['#1565c0', '#42a5f5', '#90caf9', '#bbdefb'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: '通过率 (%)' } } }
+    }
+  });
+}
+
+function renderWeeklyChart() {
+  var ctx = document.getElementById('weeklyChart').getContext('2d');
+  
+  if (charts.weekly) charts.weekly.destroy();
+  
+  charts.weekly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: processedData.weekly.map(function(w) { return w.label; }),
+      datasets: [{
+        label: '订单量',
+        data: processedData.weekly.map(function(w) { return w.total; }),
+        backgroundColor: '#764ba2',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true, title: { display: true, text: '订单数量' } }
+      }
+    }
+  });
+}
+
+function renderAuditorChart() {
+  var ctx = document.getElementById('auditorChart').getContext('2d');
+  
+  if (charts.auditor) charts.auditor.destroy();
+  
+  var auditors = Object.entries(processedData.auditors)
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .sort(function(a,b) { return b.total - a.total; });
+  
+  charts.auditor = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: auditors.map(function(a) { return a.name + ' (' + a.total + '单)'; }),
+      datasets: [{
+        data: auditors.map(function(a) { return a.total; }),
+        backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              var auditor = auditors[context.dataIndex];
+              return context.label + ' | 通过率: ' + auditor.rate + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderMonthlyTable() {
+  var tbody = document.querySelector('#monthlyTable tbody');
+  
+  var html = '';
+  processedData.monthly.forEach(function(m, i) {
+    var prevM = processedData.monthly[i-1];
+    var change = prevM ? (parseFloat(m.passRate) - parseFloat(prevM.passRate)).toFixed(1) : '-';
+    var changeClass = !prevM ? '' : (change > 0 ? 'trend up' : change < 0 ? 'trend down' : '');
+    
+    html += '<tr>';
+    html += '<td><strong>' + m.label + '</strong></td>';
+    html += '<td>' + m.total.toLocaleString() + '</td>';
+    html += '<td>' + m.passed.toLocaleString() + '</td>';
+    html += '<td>' + m.rejected.toLocaleString() + '</td>';
+    html += '<td><strong>' + m.passRate + '%</strong></td>';
+    html += '<td class="' + changeClass + '">' + (change !== '-' ? (change > 0 ? '+' : '') + change + 'pp' : '-') + '</td>';
+    html += '</tr>';
+  });
+  
+  tbody.innerHTML = html;
+}
+
+function renderStoreTable() {
+  var tbody = document.querySelector('#storeTable tbody');
+  
+  var stores = Object.entries(processedData.stores)
+    .map(function(e) { return { name: e[0], ...e[1], rate: e[1].total > 0 ? ((e[1].passed/e[1].total)*100).toFixed(1) : 0 }; })
+    .sort(function(a,b) { return b.total - a.total; });
+  
+  var html = '';
+  stores.forEach(function(s) {
+    html += '<tr>';
+    html += '<td><strong>' + s.name + '</strong></td>';
+    html += '<td>' + s.total.toLocaleString() + '</td>';
+    html += '<td><strong>' + s.rate + '%</strong></td>';
+    html += '<td>' + (s.devices/s.total).toFixed(1) + '</td>';
+    html += '<td>' + ((s.total/rawData.length)*100).toFixed(1) + '%</td>';
+    html += '</tr>';
+  });
+  
+  tbody.innerHTML = html;
+}
+
+console.log('[Offline] 离线版审核数据系统已加载');
+console.log('[Offline] 版本: v1.0.0');
+console.log('[Offline] 特性: 无需网络 · 本地处理 · 即时分析');
+</script>
+</body>
+</html>

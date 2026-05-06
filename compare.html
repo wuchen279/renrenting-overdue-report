@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>对比分析 - 人人租风控数据后台</title>
+<title>对比分析 - 箭头风控智能化分析平台</title>
 <link rel="stylesheet" href="common.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -341,7 +341,7 @@
             <option value="order">订单指标</option>
           </select>
         </div>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" id="btnQuery" onclick="applyFilters()">
           🔍 查询
         </button>
       </div>
@@ -522,7 +522,7 @@
       </div>
 
       <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
-        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+        © 2026 箭头风控智能化分析平台 | 数据更新时间：2026年04月28日
       </div>
     </div>
   
@@ -530,119 +530,136 @@
   </main>
 </div>
 
+<script src="auth.js"></script>
 <script src="common.js"></script>
 <script>
-
-document.addEventListener('DOMContentLoaded', function() {
-  var metricFilter = document.getElementById('metricType');
-  if (metricFilter) {
-    metricFilter.addEventListener('change', function() {
-      var val = this.value;
-      var rows = document.querySelectorAll('.data-table tbody tr');
-      rows.forEach(function(row) {
-        var cells = row.querySelectorAll('td');
-        if (cells.length >= 2) {
-          var metric = cells[1].textContent.trim();
-          var isOverdue = metric.indexOf('DPD') !== -1 || metric.indexOf('逾期') !== -1 || metric.indexOf('M1') !== -1;
-          var isOrder = metric.indexOf('订单') !== -1 || metric.indexOf('正常') !== -1;
-          if (val === 'all') {
-            row.style.display = '';
-          } else if (val === 'overdue') {
-            row.style.display = isOverdue ? '' : 'none';
-          } else if (val === 'order') {
-            row.style.display = isOrder ? '' : 'none';
-          }
-        }
-      });
-    });
+var allChartData = {
+  store: {
+    dpdCompare: { labels: ['箭头', '驴上', '雷猴', '全店铺'], datasets: [
+      { label: 'DPD30+率', data: [3.17, 6.15, 4.62, 4.42], backgroundColor: 'rgba(21, 101, 192, 0.8)', borderRadius: 8 },
+      { label: 'DPD90+率', data: [1.49, 4.13, 2.63, 1.85], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 8 }
+    ]},
+    stageDist: { labels: ['M1', 'M2', 'M3', 'M3+'], datasets: [
+      { label: '逾期数量', data: [474, 226, 180, 292], backgroundColor: ['rgba(59,130,246,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)'], borderRadius: 8 }
+    ]},
+    orderCompare: { labels: ['箭头', '驴上', '雷猴'], datasets: [
+      { label: '总订单', data: [7894, 5382, 2512], backgroundColor: 'rgba(16,185,129,0.8)', borderRadius: 8 },
+      { label: '正常订单', data: [7233, 4836, 2321], backgroundColor: 'rgba(148,163,184,0.8)', borderRadius: 8 }
+    ]},
+    trendCompare: { labels: ['2025-01','2025-06','2025-09','2025-11','2026-01','2026-02'], datasets: [
+      { label:'箭头',data:[0.88,2.08,5.00,4.76,1.08,0],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:5 },
+      { label:'驴上',data:[0,5.00,10.54,6.98,2.94,0.66],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.4,pointRadius:5 },
+      { label:'雷猴',data:[0,12.50,3.57,4.00,2.38,1.20],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.4,pointRadius:5 }
+    ]}
+  },
+  city: {
+    dpdCompare: { labels: ['南京','贵阳','东莞','武汉','成都'], datasets: [
+      { label:'DPD30+率',data:[10.68,9.66,7.34,6.03,5.56],backgroundColor:'rgba(21,101,192,0.8)',borderRadius:8 },
+      { label:'DPD90+率',data:[2.91,4.84,1.33,2.41,1.71],backgroundColor:'rgba(239,68,68,0.8)',borderRadius:8 }
+    ]},
+    stageDist: { labels:['M1','M2','M3','M3+'], datasets: [{ label:'逾期数量',data:[160,73,58,95],backgroundColor:['rgba(59,130,246,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)'],borderRadius:8 }]},
+    orderCompare: { labels:['深圳','上海','北京','杭州','广州'], datasets: [
+      { label:'总订单',data:[2845,567,423,389,312],backgroundColor:'rgba(16,185,129,0.8)',borderRadius:8 },
+      { label:'逾期订单',data:[118,20,14,11,15],backgroundColor:'rgba(239,68,68,0.8)',borderRadius:8 }
+    ]},
+    trendCompare: { labels:['2025-Q1','2025-Q2','2025-Q3','2025-Q4','2026-Q1'], datasets: [
+      { label:'高风险城市均值',data:[8.2,7.5,8.8,9.4,6.2],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.4,pointRadius:5 },
+      { label:'低风险城市均值',data:[2.1,2.8,3.2,3.5,2.9],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:5 }
+    ]}
+  },
+  source: {
+    dpdCompare: { labels:['企业小程序','生活号'], datasets: [
+      { label:'DPD30+率',data:[4.49,4.32],backgroundColor:'rgba(21,101,192,0.8)',borderRadius:8 },
+      { label:'DPD90+率',data:[1.47,2.82],backgroundColor:'rgba(239,68,68,0.8)',borderRadius:8 }
+    ]},
+    stageDist: { labels:['M1','M2','M3','M3+'], datasets: [{ label:'小程序逾期',data:[245,98,72,128],backgroundColor:['rgba(59,130,246,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)'],borderRadius:8 }]},
+    orderCompare: { labels:['企业小程序','生活号'], datasets: [
+      { label:'总订单',data:[5450,2444],backgroundColor:'rgba(16,185,129,0.8)',borderRadius:8 },
+      { label:'正常订单',data:[5032,2276],backgroundColor:'rgba(148,163,184,0.8)',borderRadius:8 }
+    ]},
+    trendCompare: { labels:['2025-Q1','2025-Q2','2025-Q3','2025-Q4','2026-Q1'], datasets: [
+      { label:'小程序DPD30+',data:[3.2,4.1,5.5,5.9,3.8],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.1)',fill:true,tension:0.4,pointRadius:5 },
+      { label:'生活号DPD30+',data:[4.5,5.2,6.8,7.5,5.1],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.4,pointRadius:5 }
+    ]}
+  },
+  month: {
+    dpdCompare: { labels:['2025-11','2025-08','2025-09','2025-10','2025-07'], datasets: [
+      { label:'DPD30+率',data:[6.84,6.43,3.86,4.53,5.92],backgroundColor:'rgba(21,101,192,0.8)',borderRadius:8 },
+      { label:'DPD90+率',data:[1.82,2.36,1.60,2.01,3.83],backgroundColor:'rgba(239,68,68,0.8)',borderRadius:8 }
+    ]},
+    stageDist: { labels:['M1','M2','M3','M3+'], datasets: [{ label:'峰值月逾期',data:[28,15,9,10],backgroundColor:['rgba(59,130,246,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)'],borderRadius:8 }]},
+    orderCompare: { labels:['2025-11','2025-08','2025-09','2025-10','2025-07'], datasets: [
+      { label:'总订单',data:[745,578,623,689,612],backgroundColor:'rgba(16,185,129,0.8)',borderRadius:8 },
+      { label:'逾期订单',data:[51,37,24,31,36],backgroundColor:'rgba(239,68,68,0.8)',borderRadius:8 }
+    ]},
+    trendCompare: { labels:['2025-01','2025-04','2025-07','2025-10','2026-01','2026-02'], datasets: [
+      { label:'DPD30+率',data:[0.88,3.21,5.92,4.53,1.79,0.21],borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,0.1)',fill:true,tension:0.4,pointRadius:5 },
+      { label:'移动平均(3月)',data:[null,null,3.34,4.89,4.08,2.18],borderColor:'#f59e0b',backgroundColor:'transparent',borderDash:[5,5],tension:0.4,pointRadius:0 }
+    ]}
   }
-
-  function showChart(canvasId, loadingId) {
-    document.getElementById(loadingId).style.display = 'none';
-    document.getElementById(canvasId).style.display = 'block';
+};
+var chartInstances = {};
+function showChart(canvasId, loadingId) {
+  document.getElementById(loadingId).style.display = 'none';
+  document.getElementById(canvasId).style.display = 'block';
+}
+function createOrUpdateChart(canvasId, chartConfig) {
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+  chartInstances[canvasId] = new Chart(ctx, chartConfig);
+}
+function renderChartsByDimension(dimension) {
+  var data = allChartData[dimension] || allChartData.store;
+  function baseOpts(yMax) {
+    return {
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:20,color:'#6b7280'}}},
+      scales:{
+        y:{beginAtZero:true,max:yMax||undefined,ticks:{color:'#9ca3af',callback:function(v){return v+'%';}},grid:{color:'rgba(0,0,0,0.04)'}},
+        x:{ticks:{color:'#6b7280'},grid:{display:false}}
+      }
+    };
   }
-
-  new Chart(document.getElementById('chartDpdCompare').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['箭头', '驴上', '雷猴', '全店铺'],
-      datasets: [
-        { label: 'DPD30+率', data: [3.17, 6.15, 4.62, 4.42], backgroundColor: 'rgba(21, 101, 192, 0.8)', borderRadius: 8 },
-        { label: 'DPD90+率', data: [1.49, 4.13, 2.63, 1.85], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 8 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
-      scales: {
-        y: { beginAtZero: true, max: 8, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
-      }
+  createOrUpdateChart('chartDpdCompare',{type:'bar',data:data.dpdCompare,options:baseOpts(14)});
+  createOrUpdateChart('chartDpd90Compare',{type:'bar',data:data.stageDist,options:baseOpts()});
+  createOrUpdateChart('chartOrderCompare',{type:'bar',data:data.orderCompare,options:baseOpts()});
+  createOrUpdateChart('chartTrendCompare',{type:'line',data:data.trendCompare,options:baseOpts(14)});
+  showChart('chartDpdCompare','loadingDpdCompare');
+  showChart('chartDpd90Compare','loadingDpd90Compare');
+  showChart('chartOrderCompare','loadingOrderCompare');
+  showChart('chartTrendCompare','loadingTrendCompare');
+  var titles={store:'📈 对比分析图表',city:'📈 城市对比分析',source:'📈 渠道对比分析',month:'📈 月度趋势分析'};
+  var st=document.querySelectorAll('.section-title');
+  if(st.length>0)st[0].textContent=titles[dimension]||titles.store;
+  if(st.length>1)st[1].textContent=dimension==='store'?'📊 店铺详细对比':dimension==='city'?'📊 城市详细对比':dimension==='source'?'📊 渠道详细对比':'📊 月度详细数据';
+}
+function applyFilters() {
+  var dimension=document.getElementById('compareDimension').value;
+  var metricType=document.getElementById('metricType').value;
+  renderChartsByDimension(dimension);
+  var rows=document.querySelectorAll('.data-table tbody tr');
+  rows.forEach(function(row){
+    var cells=row.querySelectorAll('td');
+    if(cells.length>=2){
+      var m=cells[1].textContent.trim();
+      var isOverdue=m.indexOf('DPD')!==-1||m.indexOf('逾期')!==-1||m.indexOf('M1')!==-1;
+      var isOrder=m.indexOf('订单')!==-1||m.indexOf('正常')!==-1;
+      row.style.display=(metricType==='all')||(metricType==='overdue'&&isOverdue)||(metricType==='order'&&isOrder)?'':'none';
     }
   });
-
-  new Chart(document.getElementById('chartDpd90Compare').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['M1', 'M2', 'M3', 'M3+'],
-      datasets: [
-        { label: '逾期数量', data: [474, 226, 180, 292], backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(139, 92, 246, 0.7)'], borderRadius: 8 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
-      }
-    }
+  var btn=document.getElementById('btnQuery');
+  var orig=btn.innerHTML;btn.innerHTML='✅ 已应用';btn.style.background='#16a34a';
+  setTimeout(function(){btn.innerHTML=orig;btn.style.background='';},1200);
+}
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('compareDimension').addEventListener('change',function(){renderChartsByDimension(this.value);});
+  document.getElementById('timeRange').addEventListener('change',function(){
+    var m={month:'本月 vs 上月',quarter:'本季度 vs 上季度',year:'本年 vs 上年',custom:'自定义范围'};
+    var b=document.querySelector('.date-badge');if(b)b.textContent='📅 '+m[this.value];
   });
-
-  new Chart(document.getElementById('chartOrderCompare').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['箭头', '驴上', '雷猴'],
-      datasets: [
-        { label: '总订单', data: [7894, 5382, 2512], backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 8 },
-        { label: '正常订单', data: [7233, 4836, 2321], backgroundColor: 'rgba(148, 163, 184, 0.8)', borderRadius: 8 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
-      }
-    }
-  });
-
-  new Chart(document.getElementById('chartTrendCompare').getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: ['2025-01', '2025-06', '2025-09', '2025-11', '2026-01', '2026-02'],
-      datasets: [
-        { label: '箭头', data: [0.88, 2.08, 5.00, 4.76, 1.08, 0], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
-        { label: '驴上', data: [0, 5.00, 10.54, 6.98, 2.94, 0.66], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 5 },
-        { label: '雷猴', data: [0, 12.50, 3.57, 4.00, 2.38, 1.20], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, pointRadius: 5 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#6b7280' } } },
-      scales: {
-        y: { beginAtZero: true, max: 14, ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { color: '#6b7280' }, grid: { display: false } }
-      }
-    }
-  });
-  showChart('chartDpdCompare', 'loadingDpdCompare');
-  showChart('chartDpd90Compare', 'loadingDpd90Compare');
-  showChart('chartOrderCompare', 'loadingOrderCompare');
-  showChart('chartTrendCompare', 'loadingTrendCompare');
+  document.getElementById('metricType').addEventListener('change',applyFilters);
+  renderChartsByDimension('store');
 });
-
 </script>
 </body>
 </html>

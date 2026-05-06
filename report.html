@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自动化报告生成 - 人人租风控数据后台</title>
+<title>自动化报告生成 - 箭头风控智能化分析平台</title>
 <link rel="stylesheet" href="common.css">
 <style>
 .hero-section {
@@ -447,8 +447,90 @@
         </div>
       </div>
 
+      <!-- 报告生成模态框 -->
+      <div class="modal" id="generateModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>📄 生成新报告</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+          </div>
+          
+          <div class="form-group">
+            <label>报告标题</label>
+            <input type="text" id="reportTitle" value="2026年4月月度风控报告" placeholder="请输入报告标题">
+          </div>
+          
+          <div class="form-group">
+            <label>报告类型</label>
+            <select id="reportType">
+              <option value="monthly">📅 月度风控报告</option>
+              <option value="quarterly">📊 季度分析报告</option>
+              <option value="strategy">🎯 策略效果评估报告</option>
+              <option value="regional">🗺️ 地域风险分析报告</option>
+              <option value="custom">⚙️ 自定义风控报告</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>数据周期</label>
+            <select id="reportPeriod">
+              <option value="current_month">当前月份（2026年4月）</option>
+              <option value="last_month">上个月份（2026年3月）</option>
+              <option value="current_quarter">当前季度（2026 Q1）</option>
+              <option value="custom_range">自定义范围</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>包含模块</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" checked> 数据概览与KPI指标</label>
+              <label class="checkbox-item"><input type="checkbox" checked> 月度趋势分析</label>
+              <label class="checkbox-item"><input type="checkbox" checked> 店铺对比分析</label>
+              <label class="checkbox-item"><input type="checkbox" checked> 风险预警与建议</label>
+              <label class="checkbox-item"><input type="checkbox"> 策略效果评估</label>
+              <label class="checkbox-item"><input type="checkbox"> 地域风险热力图</label>
+            </div>
+          </div>
+          
+          <div id="progressSection" style="display: none;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: var(--text-light);">生成进度</span>
+              <span id="progressText" style="font-size: 12px; color: var(--primary); font-weight: 600;">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+          
+          <div id="previewSection" style="display: none;">
+            <div class="report-preview">
+              <h4 id="previewTitle">报告预览</h4>
+              <p><strong>📊 数据概览：</strong></p>
+              <p>• 总订单数：7,894 笔<br>
+                 • DPD30+率：4.42%<br>
+                 • DPD90+率：1.85%<br>
+                 • 逾期订单数：146 笔</p>
+              <p><strong>📈 趋势分析：</strong></p>
+              <p>• 环比变化：DPD30+率下降0.85个百分点<br>
+                 • 同比变化：DPD30+率上升1.23个百分点<br>
+                 • 风险等级：中等风险（需关注）</p>
+              <p><strong>⚠️ 风险提示：</strong></p>
+              <p>• 驴上店铺DPD30+率偏高（6.15%）<br>
+                 • 南京地区逾期率上升趋势明显<br>
+                 • 建议加强7台以上订单审核</p>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-primary" style="flex: 1; padding: 12px;" onclick="generateReport()" id="btnGenerate">✨ 开始生成</button>
+            <button class="btn btn-secondary" style="flex: 1; padding: 12px;" onclick="closeModal()">取消</button>
+          </div>
+        </div>
+      </div>
+
       <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 28px;">
-        © 2026 人人租风控数据后台 | 数据更新时间：2026年04月28日
+        © 2026 箭头风控智能化分析平台 | 数据更新时间：2026年04月28日
       </div>
     </div>
   
@@ -456,6 +538,7 @@
   </main>
 </div>
 
+<script src="auth.js"></script>
 <script src="common.js"></script>
 <script>
 
@@ -502,11 +585,49 @@ function generateReport() {
 }
 
 function previewReport(reportId) {
-  alert(`正在打开 ${reportId} 报告预览...\n\n报告将包含以下模块：\n• 数据概览与KPI指标\n• 月度趋势分析\n• 店铺对比分析\n• 风险预警与建议\n• 策略效果评估`);
+  var reportData = {
+    '2026-04': { title: '2026年4月月度风控报告', date: '2026-04-28', type: '月度报告', orders: 7894, dpd30: 4.42, dpd90: 1.85 },
+    '2026-Q1': { title: '2026年Q1季度分析报告', date: '2026-04-01', type: '季度报告', orders: 22456, dpd30: 4.18, dpd90: 1.72 },
+    'strategy': { title: '风控策略效果评估报告', date: '2026-03-15', type: '策略评估', orders: 68452, dpd30: 4.25, dpd90: 1.82 },
+    '2026-03': { title: '2026年3月月度风控报告', date: '2026-03-31', type: '月度报告', orders: 7123, dpd30: 5.27, dpd90: 2.15 }
+  };
+  
+  var data = reportData[reportId] || reportData['2026-04'];
+  
+  var modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.innerHTML = '<div class="modal-content" style="max-width: 800px;"><div class="modal-header"><h3>📄 ' + data.title + '</h3><button class="modal-close" onclick="this.closest(\'.modal\').remove()">×</button></div><div class="report-preview"><h4>报告概览</h4><p><strong>📊 基础数据：</strong></p><p>• 报告周期：' + data.date + '<br>• 总订单数：' + data.orders.toLocaleString() + ' 笔<br>• DPD30+率：' + data.dpd30 + '%<br>• DPD90+率：' + data.dpd90 + '%</p><p><strong>📈 核心发现：</strong></p><p>• 整体风险水平：' + (data.dpd30 > 5 ? '较高风险（需重点关注）' : data.dpd30 > 3 ? '中等风险（需关注）' : '低风险（控制良好）') + '<br>• 主要风险点：驴上店铺逾期率偏高<br>• 改善建议：加强高风险订单审核流程</p><p><strong>🎯 风控建议：</strong></p><p>1. 对DPD30+率超过5%的店铺实施专项管控<br>2. 加强7台以上订单的人工审核<br>3. 优化南京地区客户准入标准<br>4. 建立月度风险预警机制</p></div><div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-primary" style="flex:1;" onclick="downloadReport(\'' + reportId + '\');this.closest(\'.modal\').remove();">📥 下载完整报告</button><button class="btn btn-secondary" style="flex:1;" onclick="this.closest(\'.modal\').remove()">关闭</button></div></div>';
+  
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
 }
 
 function downloadReport(reportId) {
-  alert(`正在下载 ${reportId} 报告...\n\n报告格式：HTML\n文件大小：约 2.5MB\n预计下载时间：3秒`);
+  var btn = event.target;
+  var origText = btn.innerHTML;
+  btn.innerHTML = '⏳ 准备下载...';
+  btn.disabled = true;
+  
+  setTimeout(function() {
+    btn.innerHTML = '✅ 下载已开始';
+    btn.style.background = '#16a34a';
+    btn.style.color = '#fff';
+    
+    var notification = document.createElement('div');
+    notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:slideInRight 0.3s ease;';
+    notification.textContent = '📥 ' + reportId + ' 报告下载已开始';
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+      notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.3s';
+      setTimeout(function() { notification.remove(); }, 300);
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2500);
+  }, 1000);
 }
 
 // 报告类型切换时更新标题
@@ -520,6 +641,11 @@ document.getElementById('reportType').addEventListener('change', function() {
   };
   document.getElementById('reportTitle').value = typeMap[this.value];
 });
+
+// 添加动画样式
+var style = document.createElement('style');
+style.textContent = '@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }';
+document.head.appendChild(style);
 
 </script>
 </body>

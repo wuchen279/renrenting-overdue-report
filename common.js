@@ -65,13 +65,14 @@ var NAV_ITEMS = [
   { icon: '📤', label: '数据上传', href: 'upload.html', id: 'upload' },
   { icon: '📈', label: '对比分析', href: 'compare.html', id: 'compare' },
   { icon: '📉', label: '趋势追踪', href: 'trend.html', id: 'trend' },
+  { icon: '📋', label: '审核数据', href: 'audit.html', id: 'audit' },
   { icon: '🎯', label: '策略评估', href: 'strategy.html', id: 'strategy' },
   { icon: '🗺️', label: '地域风险', href: 'region.html', id: 'region' },
   { icon: '⚠️', label: '风控建议', href: 'risk.html', id: 'risk' },
   { icon: '📄', label: '报告生成', href: 'report.html', id: 'report' },
   { icon: '📁', label: '历史报告', href: 'reports.html', id: 'reports' },
   { type: 'divider' },
-  { icon: '🔧', label: '管理后台', href: 'admin.html', id: 'admin', admin: true }
+  { icon: '🎛️', label: '管理后台', href: 'admin-new.html', id: 'admin-new', admin: true }
 ];
 
 function getCurrentPageId() {
@@ -101,7 +102,33 @@ function renderSidebar() {
     '<div class="sidebar-header">' +
       '<div class="logo"><span>🛡️</span><span>风控数据平台</span></div>' +
     '</div>' +
-    '<ul class="sidebar-menu">' + menuHtml + '</ul>';
+    '<ul class="sidebar-menu">' + menuHtml + '</ul>' +
+    '<div class="sidebar-user">' +
+      '<div id="sidebarUserArea"></div>' +
+    '</div>';
+
+  updateSidebarUser();
+}
+
+function updateSidebarUser() {
+  var area = document.getElementById('sidebarUserArea');
+  if (!area) return;
+
+  var user = SupabaseAuth.getUser();
+  if (user) {
+    area.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<span style="width:28px;height:28px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;">' + (user.name ? user.name[0].toUpperCase() : '👤') + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.name || user.email.split('@')[0]) + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + user.email + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button onclick="handleLogout()" style="width:100%;padding:8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;" onmouseover="this.background=\'#fee2e2\'" onmouseout="this.background=\'#fef2f2\'">🚪 退出登录</button>';
+  } else {
+    area.innerHTML =
+      '<a href="login.html" style="display:block;width:100%;padding:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-align:center;text-decoration:none;border-radius:10px;font-size:13px;font-weight:600;transition:transform 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'\'">🔐 登录系统</a>';
+  }
 }
 
 function initSearch() {
@@ -246,10 +273,101 @@ function initTabs() {
 
 function initApp() {
   renderSidebar();
+  initAuth();
   initSearch();
   initFilterBar();
   initTabs();
   initTableSort();
+}
+
+function initAuth() {
+  var user = SupabaseAuth.getUser();
+  if (user) {
+    updateUserInfo(user);
+    updateSidebarUser();
+  } else {
+    updateSidebarUser();
+  }
+
+  SupabaseAuth.onAuthChange(function(event, data) {
+    if (event === 'login' || event === 'session') {
+      updateUserInfo(data.user);
+      updateSidebarUser();
+    } else if (event === 'logout') {
+      clearUserInfo();
+      updateSidebarUser();
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.logout-btn')) {
+      e.preventDefault();
+      handleLogout();
+    }
+  });
+}
+
+function updateUserInfo(user) {
+  var userInfos = document.querySelectorAll('.user-info');
+  userInfos.forEach(function(el) {
+    var nameEl = el.querySelector('.name');
+    if (nameEl) {
+      nameEl.textContent = user.name || user.email.split('@')[0] || '用户';
+    }
+    el.title = user.email;
+    el.style.cursor = 'pointer';
+
+    if (!el.querySelector('.user-dropdown')) {
+      var dropdown = document.createElement('div');
+      dropdown.className = 'user-dropdown';
+      dropdown.style.cssText = 'position:absolute;top:100%;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px;padding:8px;z-index:100;display:none;margin-top:4px;';
+      dropdown.innerHTML =
+        '<div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+          '<div style="font-size:13px;font-weight:600;color:#16213e;">' + (user.name || user.email.split('@')[0]) + '</div>' +
+          '<div style="font-size:11px;color:#9ca3af;margin-top:2px;">' + user.email + '</div>' +
+        '</div>' +
+        '<a href="login.html" class="logout-btn" style="display:block;padding:10px 14px;font-size:13px;color:#dc2626;text-decoration:none;border-radius:8px;transition:background 0.2s;">🚪 退出登录</a>';
+
+      el.style.position = 'relative';
+      el.appendChild(dropdown);
+
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var dd = this.querySelector('.user-dropdown');
+        if (dd) dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+      });
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.user-info')) {
+      var dropdowns = document.querySelectorAll('.user-dropdown');
+      dropdowns.forEach(function(d) { d.style.display = 'none'; });
+    }
+  });
+}
+
+function clearUserInfo() {
+  var userInfos = document.querySelectorAll('.user-info');
+  userInfos.forEach(function(el) {
+    var nameEl = el.querySelector('.name');
+    if (nameEl) nameEl.textContent = '未登录';
+    var dropdown = el.querySelector('.user-dropdown');
+    if (dropdown) dropdown.remove();
+  });
+}
+
+async function handleLogout() {
+  var result = await SupabaseAuth.signOut();
+
+  if (result.success) {
+    showToast('已退出登录', 'info');
+    setTimeout(function() {
+      window.location.href = 'login.html';
+    }, 800);
+  } else {
+    showToast('退出失败，请重试', 'error');
+  }
 }
 
 function loadFromSupabase(callback) {
@@ -258,6 +376,9 @@ function loadFromSupabase(callback) {
     return;
   }
   var reportId = new URLSearchParams(window.location.search).get('report');
+  if (!reportId && typeof localStorage !== 'undefined') {
+    reportId = localStorage.getItem('currentReportId');
+  }
   var promise = reportId ? DbApi.getReport(reportId) : DbApi.getLatestReport();
   promise.then(function(report) {
     if (!report) { callback(false); return; }
@@ -268,9 +389,9 @@ function loadFromSupabase(callback) {
       DbApi.getProvinceData(report.id)
     ]).then(function(results) {
       var stores = (results[0] || []).map(function(s) { return { name: s.store_name, orders: s.total_orders, dpd30: parseFloat(s.dpd30_rate), dpd90: parseFloat(s.dpd90_rate), m1: s.m1, m2: s.m2, m3: s.m3, m3plus: s.m3_plus, normal: s.normal_orders, normalReturn: s.normal_return }; });
-      var monthly = (results[1] || []).map(function(m) { return { year: m.year, month: m.month, total: m.total_orders, dpd30: parseFloat(m.dpd30_rate), dpd90: parseFloat(m.dpd90_rate); });
+      var monthly = (results[1] || []).map(function(m) { return { year: m.year, month: m.month, total: m.total_orders, dpd30: parseFloat(m.dpd30_rate), dpd90: parseFloat(m.dpd90_rate) }; });
       var sourcesRaw = results[2] || [];
-      var provinces = (results[3] || []).map(function(p) { return { name: p.province_name, total: p.total_orders, dpd30: parseFloat(p.dpd30_rate), dpd90: parseFloat(p.dpd90_rate); });
+      var provinces = (results[3] || []).map(function(p) { return { name: p.province_name, total: p.total_orders, dpd30: parseFloat(p.dpd30_rate), dpd90: parseFloat(p.dpd90_rate) }; });
 
       AppData.stores = stores.length > 0 ? stores : AppData.stores;
       AppData.monthly = monthly.length > 0 ? monthly : AppData.monthly;
@@ -299,8 +420,477 @@ function loadFromSupabase(callback) {
   }).catch(function() { callback(false); });
 }
 
+var modalOverlay = null;
+var modalContainer = null;
+
+function showModal(title, content, options, isForm) {
+  if (modalOverlay) {
+    closeModal();
+  }
+
+  options = options || {};
+  var width = options.width || '520px';
+  var height = options.height || 'auto';
+  var closable = options.closable !== false;
+
+  modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-overlay';
+  modalOverlay.id = 'globalModal';
+
+  modalContainer = document.createElement('div');
+  modalContainer.className = 'modal-container';
+  modalContainer.style.maxWidth = width;
+  modalContainer.style.height = height;
+
+  var headerHtml = '<div class="modal-header">' +
+    '<h3 class="modal-title">' + title + '</h3>' +
+    (closable ? '<button class="modal-close" onclick="closeModal()">✕</button>' : '') +
+  '</div>';
+
+  var bodyHtml = '<div class="modal-body">' + (content || '') + '</div>';
+
+  modalContainer.innerHTML = headerHtml + bodyHtml;
+  modalOverlay.appendChild(modalContainer);
+  document.body.appendChild(modalOverlay);
+
+  modalOverlay.addEventListener('click', function(e) {
+    if (e.target === modalOverlay && closable) {
+      closeModal();
+    }
+  });
+
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(function() {
+    modalOverlay.classList.add('active');
+    modalContainer.classList.add('active');
+  }, 10);
+
+  return modalContainer;
+}
+
+function closeModal() {
+  if (!modalOverlay) return;
+
+  modalOverlay.classList.remove('active');
+  modalContainer.classList.remove('active');
+
+  setTimeout(function() {
+    if (modalOverlay && modalOverlay.parentNode) {
+      modalOverlay.parentNode.removeChild(modalOverlay);
+    }
+    modalOverlay = null;
+    modalContainer = null;
+    document.body.style.overflow = '';
+  }, 300);
+}
+
+function showToast(message, type, duration) {
+  type = type || 'info';
+  duration = duration || 3000;
+
+  var container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+
+  var iconMap = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  toast.innerHTML = '<span class="toast-icon">' + (iconMap[type] || 'ℹ️') + '</span>' +
+                   '<span class="toast-message">' + message + '</span>' +
+                   '<button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+
+  container.appendChild(toast);
+
+  setTimeout(function() {
+    toast.classList.add('fade-out');
+    setTimeout(function() {
+      if (toast.parentNode) {
+        toast.remove();
+      }
+    }, 300);
+  }, duration);
+}
+
+function showLoading(message) {
+  message = message || '加载中...';
+
+  var overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.id = 'loadingOverlay';
+  overlay.innerHTML =
+    '<div class="loading-spinner">' +
+      '<div class="spinner"></div>' +
+      '<p class="loading-text">' + message + '</p>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  setTimeout(function() {
+    overlay.classList.add('active');
+  }, 10);
+
+  return overlay;
+}
+
+function hideLoading() {
+  var overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    setTimeout(function() {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    }, 300);
+  }
+}
+
+function confirmAction(message, onConfirm, onCancel) {
+  showModal(
+    '确认操作',
+    '<div style="text-align:center;padding:20px 0;">' +
+      '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>' +
+      '<p style="font-size:15px;color:var(--text);margin-bottom:24px;line-height:1.6;">' + message + '</p>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+        '<button class="btn btn-outline" onclick="closeModal();' + (typeof onCancel === 'function' ? 'onCancel()' : '') + '" style="padding:10px 28px;">取消</button>' +
+        '<button class="btn btn-danger" id="confirmBtn" style="padding:10px 28px;">确认</button>' +
+      '</div>' +
+    '</div>',
+    { width: '420px' },
+    false
+  );
+
+  setTimeout(function() {
+    var btn = document.getElementById('confirmBtn');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        closeModal();
+        if (typeof onConfirm === 'function') {
+          onConfirm();
+        }
+      });
+    }
+  }, 100);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && modalOverlay) {
+    closeModal();
+  }
+});
+
+var sessionWarningShown = false;
+var sessionTimerElement = null;
+
+function initSessionManager() {
+  if (!SupabaseAuth || !SupabaseAuth.isAuthenticated()) return;
+
+  createSessionStatusBar();
+  setupSessionListeners();
+  updateSessionDisplay();
+}
+
+function createSessionStatusBar() {
+  var existingBar = document.getElementById('sessionStatusBar');
+  if (existingBar) existingBar.remove();
+
+  var statusBar = document.createElement('div');
+  statusBar.id = 'sessionStatusBar';
+  statusBar.style.cssText = [
+    'position: fixed',
+    'top: 0',
+    'left: 0',
+    'right: 0',
+    'height: ' + (window.innerWidth < 768 ? '32px' : '36px'),
+    'background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+    'color: #fff',
+    'display: flex',
+    'align-items: center',
+    'justify-content: space-between',
+    'padding: 0 20px',
+    'font-size: ' + (window.innerWidth < 768 ? '11px' : '12px'),
+    'z-index: 9998',
+    'box-shadow: 0 2px 8px rgba(0,0,0,0.15)',
+    'transition: all 0.3s ease'
+  ].join(';');
+
+  var leftSection = document.createElement('div');
+  leftSection.style.cssText = 'display:flex;align-items:center;gap:12px;';
+
+  var userIcon = document.createElement('span');
+  userIcon.innerHTML = '👤';
+  userIcon.style.fontSize = '14px';
+
+  var userInfo = document.createElement('span');
+  userInfo.id = 'sessionUserInfo';
+  userInfo.style.fontWeight = '600';
+  var user = SupabaseAuth.getUser();
+  userInfo.textContent = user ? (user.name || user.email.split('@')[0]) : '用户';
+
+  var sessionTime = document.createElement('span');
+  sessionTime.id = 'sessionTimeDisplay';
+  sessionTime.style.cssText = [
+    'background: rgba(255,255,255,0.15)',
+    'padding: 3px 10px',
+    'border-radius: 12px',
+    'font-family: monospace',
+    'font-size: 11px'
+  ].join(';');
+
+  leftSection.appendChild(userIcon);
+  leftSection.appendChild(userInfo);
+  leftSection.appendChild(sessionTime);
+
+  var rightSection = document.createElement('div');
+  rightSection.style.cssText = 'display:flex;align-items:center;gap:10px;';
+
+  var extendBtn = document.createElement('button');
+  extendBtn.id = 'extendSessionBtn';
+  extendBtn.textContent = '⏰ 延长会话';
+  extendBtn.style.cssText = [
+    'background: rgba(255,255,255,0.2)',
+    'color: #fff',
+    'border: 1px solid rgba(255,255,255,0.3)',
+    'padding: 4px 12px',
+    'border-radius: 6px',
+    'cursor: pointer',
+    'font-size: 11px',
+    'font-weight: 600',
+    'transition: all 0.2s'
+  ].join(';');
+  extendBtn.onmouseenter = function() { this.style.background = 'rgba(255,255,255,0.3)'; };
+  extendBtn.onmouseleave = function() { this.style.background = 'rgba(255,255,255,0.2)'; };
+  extendBtn.onclick = handleExtendSession;
+
+  var logoutBtn = document.createElement('button');
+  logoutBtn.id = 'logoutBtn';
+  logoutBtn.textContent = '🚪 安全退出';
+  logoutBtn.style.cssText = [
+    'background: rgba(220,38,38,0.8)',
+    'color: #fff',
+    'border: none',
+    'padding: 4px 12px',
+    'border-radius: 6px',
+    'cursor: pointer',
+    'font-size: 11px',
+    'font-weight: 600',
+    'transition: all 0.2s'
+  ].join(';');
+  logoutBtn.onmouseenter = function() { this.style.background = '#dc2626'; };
+  logoutBtn.onmouseleave = function() { this.style.background = 'rgba(220,38,38,0.8)'; };
+  logoutBtn.onclick = handleSecureLogout;
+
+  rightSection.appendChild(extendBtn);
+  rightSection.appendChild(logoutBtn);
+
+  statusBar.appendChild(leftSection);
+  statusBar.appendChild(rightSection);
+
+  document.body.insertBefore(statusBar, document.body.firstChild);
+
+  var mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.body;
+  if (mainContent && mainContent !== document.body) {
+    mainContent.style.paddingTop = (window.innerWidth < 768 ? '32px' : '36px');
+  }
+
+  sessionTimerElement = sessionTime;
+
+  console.log('[UI] 会话状态栏已创建');
+}
+
+function updateSessionDisplay() {
+  if (!sessionTimerElement) return;
+
+  var remaining = SupabaseAuth.getSessionRemainingTime();
+  var formatted = SupabaseAuth.formatSessionTime(remaining);
+
+  sessionTimerElement.textContent = '⏱ 剩余: ' + formatted;
+
+  if (remaining <= 15 * 60 * 1000 && remaining > 0) {
+    sessionTimerElement.style.background = 'rgba(245,158,11,0.3)';
+    sessionTimerElement.style.color = '#fef3c7';
+  } else if (remaining <= 5 * 60 * 1000 && remaining > 0) {
+    sessionTimerElement.style.background = 'rgba(220,38,38,0.3)';
+    sessionTimerElement.style.color = '#fee2e2';
+    sessionTimerElement.style.animation = 'pulse 1s infinite';
+  } else {
+    sessionTimerElement.style.background = 'rgba(255,255,255,0.15)';
+    sessionTimerElement.style.color = '#fff';
+    sessionTimerElement.style.animation = 'none';
+  }
+}
+
+function setupSessionListeners() {
+  SupabaseAuth.onAuthChange(function(event, data) {
+    switch (event) {
+      case 'session_tick':
+        updateSessionDisplay();
+        break;
+
+      case 'session_warning':
+        showSessionWarning(data);
+        break;
+
+      case 'logout':
+        removeSessionStatusBar();
+        break;
+    }
+  });
+}
+
+function showSessionWarning(data) {
+  if (sessionWarningShown) return;
+  sessionWarningShown = true;
+
+  showModal(
+    '⚠️ 会话即将过期',
+    '<div style="text-align:center;padding:20px;">' +
+      '<div style="font-size:64px;margin-bottom:16px;">⏰</div>' +
+      '<h3 style="font-size:18px;color:var(--warning);margin-bottom:12px;">登录即将过期</h3>' +
+      '<p style="font-size:14px;color:var(--text-light);margin-bottom:8px;line-height:1.6;">您的登录会话将在 <strong style="color:var(--warning);font-size:16px;">' + data.formatted + '</strong> 后过期</p>' +
+      '<p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;">过期后系统将自动退出，未保存的数据可能丢失</p>' +
+      '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" onclick="handleExtendSession();closeModal();sessionWarningShown=false;" style="padding:12px 28px;font-size:14px;">⏰ 延长4小时</button>' +
+        '<button class="btn btn-outline" onclick="handleSecureLogout()" style="padding:12px 28px;font-size:14px;">🚪 立即退出</button>' +
+      '</div>' +
+    '</div>',
+    { width: '440px' },
+    false
+  );
+}
+
+function handleExtendSession() {
+  var result = SupabaseAuth.extendSession();
+
+  if (result.success) {
+    showToast('✅ 会话已延长4小时', 'success');
+    sessionWarningShown = false;
+    updateSessionDisplay();
+
+    setTimeout(function() {
+      showToast('💡 新的过期时间: ' + new Date(result.newExpiry).toLocaleString('zh-CN'), 'info');
+    }, 1500);
+  } else {
+    showToast('❌ 延长失败: ' + result.error, 'error');
+  }
+
+  closeModal();
+}
+
+function handleSecureLogout() {
+  confirmAction(
+    '确定要安全退出系统吗？<br><span style="color:var(--text-muted);font-size:13px;">退出后需要重新登录才能继续使用</span>',
+    function() {
+      closeModal();
+
+      showLoading('正在安全退出...');
+
+      setTimeout(function() {
+        SupabaseAuth.signOut().then(function() {
+          hideLoading();
+          showToast('👋 已安全退出', 'success');
+
+          setTimeout(function() {
+            window.location.href = '/login.html?reason=MANUAL_LOGOUT&t=' + Date.now();
+          }, 500);
+        }).catch(function(error) {
+          hideLoading();
+          console.error('[Logout] 退出异常:', error);
+          window.location.href = '/login.html?reason=LOGOUT_ERROR&t=' + Date.now();
+        });
+      }, 800);
+    },
+    function() {
+      closeModal();
+    }
+  );
+}
+
+function removeSessionStatusBar() {
+  var bar = document.getElementById('sessionStatusBar');
+  if (bar) {
+    bar.remove();
+    console.log('[UI] 会话状态栏已移除');
+  }
+
+  sessionTimerElement = null;
+  sessionWarningShown = false;
+}
+
+function checkLogoutReason() {
+  var reason = sessionStorage.getItem('logout_reason');
+  var time = sessionStorage.getItem('logout_time');
+
+  if (!reason) return;
+
+  sessionStorage.removeItem('logout_reason');
+  sessionStorage.removeItem('logout_time');
+
+  setTimeout(function() {
+    var reasonMessages = {
+      'SESSION_EXPIRED': {
+        title: '⏰ 登录已过期',
+        message: '由于长时间未操作，您的登录会话已自动过期。为了账户安全，请重新登录。',
+        icon: '⏰',
+        type: 'warning'
+      },
+      'MANUAL_LOGOUT': {
+        title: '👋 已成功退出',
+        message: '您已安全退出系统。如需继续使用，请重新登录。',
+        icon: '👋',
+        type: 'success'
+      },
+      'LOGOUT_ERROR': {
+        title: '⚠️ 退出异常',
+        message: '退出过程出现异常，但您已被强制登出。请重新登录。',
+        icon: '⚠️',
+        type: 'warning'
+      }
+    };
+
+    var config = reasonMessages[reason] || {
+      title: '💡 提示',
+      message: '请重新登录以继续使用系统。',
+      icon: '💡',
+      type: 'info'
+    };
+
+    showModal(
+      config.title,
+      '<div style="text-align:center;padding:20px;">' +
+        '<div style="font-size:56px;margin-bottom:16px;">' + config.icon + '</div>' +
+        '<p style="font-size:14px;color:var(--text-light);line-height:1.6;margin-bottom:20px;">' + config.message + '</p>' +
+        (time ? '<p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">退出时间: ' + new Date(time).toLocaleString('zh-CN') + '</p>' : '') +
+        '<button class="btn btn-primary" onclick="closeModal()" style="padding:10px 28px;">我知道了，去登录</button>' +
+      '</div>',
+      { width: '400px' }
+    );
+
+    if (reason === 'SESSION_EXPIRED') {
+      console.warn('[Session] 用户会话过期，提示重新登录');
+    }
+  }, 500);
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
+  document.addEventListener('DOMContentLoaded', function() {
+    initApp();
+    initSessionManager();
+    checkLogoutReason();
+  });
 } else {
   initApp();
+  initSessionManager();
+  checkLogoutReason();
 }
