@@ -66,7 +66,7 @@
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -74,17 +74,39 @@
 .kpi-card {
   background: var(--bg-card);
   border-radius: 14px;
-  padding: 20px;
+  padding: 18px 16px;
   border: 1px solid var(--border);
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .kpi-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(21, 101, 192, 0.12);
+}
+
+.kpi-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.kpi-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.kpi-primary .kpi-value,
+.kpi-primary .kpi-label {
+  color: #fff;
+}
+
+.kpi-primary:hover {
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
 }
 
 .kpi-value {
@@ -99,6 +121,42 @@
   font-size: 12px;
   color: var(--text-light);
   font-weight: 600;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.kpi-primary .kpi-sub {
+  color: rgba(255,255,255,0.7);
+}
+
+.kpi-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.kpi-trend-badge.up {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.kpi-trend-badge.down {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.kpi-trend-badge.neutral {
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .kpi-trend {
@@ -130,6 +188,16 @@
   padding: 20px;
   border: 1px solid var(--border);
   margin-bottom: 20px;
+}
+
+.chart-primary {
+  border: 2px solid #667eea;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+.chart-primary .chart-title {
+  color: #667eea;
+  font-weight: 700;
 }
 
 .chart-header {
@@ -364,49 +432,51 @@
         </div>
       </div>
 
-      <!-- KPI Cards -->
+      <!-- KPI Cards - 周核心指标 -->
       <div class="kpi-grid" id="kpiGrid">
-        <div class="kpi-card" id="kpiTotalOrders">
+        <div class="kpi-card kpi-primary" id="kpiTotalOrders">
+          <div class="kpi-icon">📦</div>
           <div class="kpi-value">-</div>
           <div class="kpi-label">累计审核订单</div>
+          <div class="kpi-sub"></div>
+        </div>
+        <div class="kpi-card" id="kpiTotalWeeks">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-value">-</div>
+          <div class="kpi-label">统计周期</div>
+          <div class="kpi-sub">周</div>
+        </div>
+        <div class="kpi-card" id="kpiAvgWeekOrders">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-value">-</div>
+          <div class="kpi-label">平均周审核量</div>
+          <div class="kpi-sub">单/周</div>
         </div>
         <div class="kpi-card" id="kpiAvgPassRate">
+          <div class="kpi-icon">✅</div>
           <div class="kpi-value">-</div>
-          <div class="kpi-label">平均通过率</div>
+          <div class="kpi-label">整体通过率</div>
+          <div class="kpi-sub"></div>
         </div>
-        <div class="kpi-card success" id="kpiLatestPassRate">
+        <div class="kpi-card success" id="kpiLatestWeekOrders">
+          <div class="kpi-icon">🎯</div>
           <div class="kpi-value">-</div>
-          <div class="kpi-label">本月通过率</div>
+          <div class="kpi-label">最新周审核量</div>
+          <div class="kpi-trend-badge"></div>
         </div>
-        <div class="kpi-card" id="kpiWeekTrend">
+        <div class="kpi-card" id="kpiLatestWeekRate">
+          <div class="kpi-icon">📈</div>
           <div class="kpi-value">-</div>
-          <div class="kpi-label">周环比变化</div>
-        </div>
-        <div class="kpi-card" id="kpiMonthTrend">
-          <div class="kpi-value">-</div>
-          <div class="kpi-label">月环比变化</div>
+          <div class="kpi-label">最新周通过率</div>
+          <div class="kpi-trend-badge"></div>
         </div>
       </div>
 
-      <!-- 图表区域 -->
+      <!-- 图表区域 - 周核心 -->
       <div class="grid-2">
-        <div class="chart-container">
+        <div class="chart-container chart-primary">
           <div class="chart-header">
-            <h3 class="chart-title">📈 月度审核趋势（含环比）</h3>
-            <select id="monthlyPeriodSelect" onchange="renderMonthlyChart()" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-              <option value="all">全部月份</option>
-              <option value="quarter">最近3个月</option>
-              <option value="halfyear">最近6个月</option>
-            </select>
-          </div>
-          <div class="chart-box">
-            <canvas id="monthlyChart"></canvas>
-          </div>
-        </div>
-
-        <div class="chart-container">
-          <div class="chart-header">
-            <h3 class="chart-title">📊 周度审核量与通过率趋势</h3>
+            <h3 class="chart-title">📊 周度审核趋势分析</h3>
             <select id="weeklyPeriodSelect" onchange="renderWeeklyChart()" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
               <option value="all">全部周</option>
               <option value="month">最近4周</option>
@@ -417,13 +487,27 @@
             <canvas id="weeklyChart"></canvas>
           </div>
         </div>
+
+        <div class="chart-container">
+          <div class="chart-header">
+            <h3 class="chart-title">📈 月度审核概览</h3>
+            <select id="monthlyPeriodSelect" onchange="renderMonthlyChart()" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+              <option value="all">全部月份</option>
+              <option value="quarter">最近3个月</option>
+              <option value="halfyear">最近6个月</option>
+            </select>
+          </div>
+          <div class="chart-box">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
       </div>
 
-      <!-- 新增：每周审核量详细数据表 -->
+      <!-- 每周审核量详细数据表（核心展示） -->
       <div class="chart-container" style="margin-top:20px;">
         <div class="chart-header">
-          <h3 class="chart-title">📅 每周审核量详细数据</h3>
-          <span style="font-size:12px;color:#6b7280;">按周统计审核量和通过率</span>
+          <h3 class="chart-title">📋 周度审核明细数据</h3>
+          <span style="font-size:12px;color:#6b7280;background:#f1f5f9;padding:4px 12px;border-radius:12px;" id="weeklySummaryBadge">-</span>
         </div>
         <div id="weeklyDataTable" style="padding:16px;max-height:400px;overflow:auto;">
           <div class="empty-state">
@@ -1013,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', function() {
           };
           
           // 直接渲染数据
-          updateHeroSection(result.monthlyData);
+          updateHeroSection(result.monthlyData, result.weeklyData);
           updateKPICards(result.monthlyData, result.weeklyData);
           renderMonthlyChart(result.monthlyData);
           renderWeeklyChart(result.weeklyData);
@@ -1042,18 +1126,23 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // 更新Hero区域
-  function updateHeroSection(data) {
-    var totalOrders = data.reduce((sum, m) => sum + (m.total_orders || 0), 0);
-    var avgPassRate = data.length > 0 ? 
-      (data.reduce((sum, m) => sum + parseFloat(m.pass_rate || 0), 0) / data.length).toFixed(1) : '0';
+  function updateHeroSection(monthlyData, weeklyData) {
+    var totalOrders = monthlyData.reduce((sum, m) => sum + (m.total_orders || 0), 0);
+    var totalPassed = monthlyData.reduce((sum, m) => sum + (parseFloat(m.passed_orders) || 0), 0);
+    var avgPassRate = totalOrders > 0 ? ((totalPassed / totalOrders) * 100).toFixed(1) : '0';
     
-    var firstMonth = data[0];
-    var lastMonth = data[data.length - 1];
+    var totalWeeks = weeklyData.length;
+    var avgWeekOrders = totalWeeks > 0 ? Math.round(totalOrders / totalWeeks) : 0;
+    
+    var firstWeek = weeklyData[0];
+    var lastWeek = weeklyData[weeklyData.length - 1];
+    
+    var firstDateRange = firstWeek ? getWeekDateRange(firstWeek.year, firstWeek.week_number) : '';
+    var lastDateRange = lastWeek ? getWeekDateRange(lastWeek.year, lastWeek.week_number) : '';
     
     document.getElementById('heroDescription').textContent = 
-      '基于 ' + (firstMonth?.year || '') + '年' + (firstMonth?.month || '') + '月 ~ ' + 
-      (lastMonth?.year || '') + '年' + (lastMonth?.month || '') + '月 共 ' + totalOrders.toLocaleString() + ' 单审批记录，' +
-      '从整体、月度、周度、店铺四个维度进行深度分析，自动生成风控策略建议。';
+      '基于 ' + (firstDateRange || '') + ' ~ ' + (lastDateRange || '') + ' 共 ' + totalWeeks + ' 周、' + totalOrders.toLocaleString() + ' 单审核记录，' +
+      '以周为核心维度进行深度分析，输出审核量趋势、通过率变化、周环比等关键指标。';
     
     document.getElementById('heroTotalOrders').textContent = totalOrders.toLocaleString();
     document.getElementById('heroTotalOrders').style.cssText = 'font-size:22px;font-weight:800;color:#4fc3f7;';
@@ -1061,72 +1150,107 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('heroPassRate').textContent = avgPassRate + '%';
     document.getElementById('heroPassRate').style.cssText = 'font-size:22px;font-weight:800;color:#4fc3f7;';
     
-    document.getElementById('heroMonths').textContent = data.length + '个月';
+    document.getElementById('heroMonths').textContent = totalWeeks + '周';
     document.getElementById('heroMonths').style.cssText = 'font-size:22px;font-weight:800;color:#4fc3f7;';
     
-    document.getElementById('heroStores').textContent = '4个店铺';
+    document.getElementById('heroStores').textContent = '周均' + avgWeekOrders + '单';
     document.getElementById('heroStores').style.cssText = 'font-size:22px;font-weight:800;color:#4fc3f7;';
     
-    document.getElementById('dataPeriodBadge').textContent = 
-      '📅 ' + (firstMonth?.year || '') + '.' + String(firstMonth?.month || '').padStart(2, '0') + ' ~ ' + 
-      (lastMonth?.year || '') + '.' + String(lastMonth?.month || '').padStart(2, '0');
+    var periodText = firstWeek && lastWeek ? 
+      (firstWeek.year + 'W' + String(firstWeek.week_number).padStart(2, '0') + ' ~ ' + 
+       lastWeek.year + 'W' + String(lastWeek.week_number).padStart(2, '0')) : '';
+    document.getElementById('dataPeriodBadge').textContent = '📅 ' + periodText;
   }
 
-  // 更新KPI卡片
+  // 更新KPI卡片 - 周核心指标
   function updateKPICards(monthlyData, weeklyData) {
+    if (!weeklyData || weeklyData.length === 0) return;
+    
     var totalOrders = monthlyData.reduce((sum, m) => sum + (m.total_orders || 0), 0);
-    var avgPassRate = monthlyData.length > 0 ? 
-      (monthlyData.reduce((sum, m) => sum + parseFloat(m.pass_rate || 0), 0) / monthlyData.length).toFixed(2) : '0';
+    var totalPassed = monthlyData.reduce((sum, m) => sum + (parseFloat(m.passed_orders) || 0), 0);
+    var overallPassRate = totalOrders > 0 ? ((totalPassed / totalOrders) * 100).toFixed(2) : '0';
     
-    var latestMonth = monthlyData[monthlyData.length - 1];
-    var latestPassRate = latestMonth ? parseFloat(latestMonth.pass_rate || 0) : 0;
-    var momChange = latestMonth ? parseFloat(latestMonth.mom_pass_rate_change || 0) : null;
+    var totalWeeks = weeklyData.length;
+    var avgWeekOrders = totalWeeks > 0 ? Math.round(totalOrders / totalWeeks) : 0;
     
+    // 最新一周数据
     var latestWeek = weeklyData[weeklyData.length - 1];
-    var weekTrend = null;
-    if (weeklyData.length >= 2) {
-      var prevWeek = weeklyData[weeklyData.length - 2];
-      weekTrend = parseFloat(latestWeek?.pass_rate || 0) - parseFloat(prevWeek?.pass_rate || 0);
+    var prevWeek = weeklyData.length >= 2 ? weeklyData[weeklyData.length - 2] : null;
+    
+    var latestWeekOrders = latestWeek ? latestWeek.total_orders || 0 : 0;
+    var latestWeekRate = latestWeek ? parseFloat(latestWeek.pass_rate || 0) : 0;
+    var latestWeekLabel = latestWeek ? 
+      (latestWeek.year + 'W' + String(latestWeek.week_number).padStart(2, '0')) : '';
+    
+    // 计算周环比
+    var orderWowChange = null;
+    var rateWowChange = null;
+    
+    if (prevWeek) {
+      var prevOrders = prevWeek.total_orders || 0;
+      var prevRate = parseFloat(prevWeek.pass_rate || 0);
+      
+      if (prevOrders > 0) {
+        orderWowChange = ((latestWeekOrders - prevOrders) / prevOrders * 100).toFixed(1);
+      }
+      rateWowChange = (latestWeekRate - prevRate).toFixed(2);
     }
     
-    // 总订单数
-    document.querySelector('#kpiTotalOrders .kpi-value').textContent = totalOrders.toLocaleString();
+    // 1. 累计审核订单
+    var kpiTotal = document.querySelector('#kpiTotalOrders .kpi-value');
+    kpiTotal.textContent = totalOrders.toLocaleString();
+    document.querySelector('#kpiTotalOrders .kpi-sub').textContent = 
+      monthlyData.length + '个月 · ' + totalWeeks + '周';
     
-    // 平均通过率
-    document.querySelector('#kpiAvgPassRate .kpi-value').textContent = avgPassRate + '%';
+    // 2. 统计周期（周数）
+    document.querySelector('#kpiTotalWeeks .kpi-value').textContent = totalWeeks;
     
-    // 本月通过率
-    var rateEl = document.querySelector('#kpiLatestPassRate .kpi-value');
-    rateEl.textContent = latestPassRate.toFixed(2) + '%';
-    if (momChange !== null) {
-      var trendBadge = document.createElement('div');
-      trendBadge.className = 'kpi-trend ' + (momChange >= 0 ? 'trend-up' : 'trend-down');
-      trendBadge.style.background = momChange >= 0 ? '#dcfce7' : '#fee2e2';
-      trendBadge.textContent = (momChange >= 0 ? '+' : '') + momChange.toFixed(2) + 'pp';
-      rateEl.parentElement.appendChild(trendBadge);
-    }
-    document.getElementById('kpiLatestPassRate').className = 'kpi-card ' + 
-      (latestPassRate >= 85 ? 'success' : (latestPassRate >= 80 ? 'warning' : 'danger'));
+    // 3. 平均周审核量
+    document.querySelector('#kpiAvgWeekOrders .kpi-value').textContent = avgWeekOrders.toLocaleString();
     
-    // 周环比
-    var weekTrendEl = document.querySelector('#kpiWeekTrend .kpi-value');
-    if (weekTrend !== null) {
-      weekTrendEl.textContent = (weekTrend >= 0 ? '+' : '') + weekTrend.toFixed(2) + '%';
-      weekTrendEl.className = 'kpi-value ' + (weekTrend >= 0 ? 'trend-up' : 'trend-down');
+    // 4. 整体通过率
+    var rateEl = document.querySelector('#kpiAvgPassRate .kpi-value');
+    rateEl.textContent = overallPassRate + '%';
+    document.getElementById('kpiAvgPassRate').className = 'kpi-card ' + 
+      (overallPassRate >= 90 ? 'success' : (overallPassRate >= 85 ? 'warning' : 'danger'));
+    
+    // 5. 最新周审核量
+    var ordersEl = document.querySelector('#kpiLatestWeekOrders .kpi-value');
+    ordersEl.textContent = latestWeekOrders.toLocaleString();
+    document.querySelector('#kpiLatestWeekOrders .kpi-sub').textContent = latestWeekLabel;
+    
+    var orderBadge = document.querySelector('#kpiLatestWeekOrders .kpi-trend-badge');
+    if (orderWowChange !== null) {
+      orderBadge.className = 'kpi-trend-badge ' + (orderWowChange >= 0 ? 'up' : 'down');
+      orderBadge.textContent = (orderWowChange >= 0 ? '+' : '') + orderWowChange + '%';
+      orderBadge.style.display = 'inline-flex';
     } else {
-      weekTrendEl.textContent = '-';
-      weekTrendEl.className = 'kpi-value';
+      orderBadge.style.display = 'none';
     }
     
-    // 月环比
-    var monthTrendEl = document.querySelector('#kpiMonthTrend .kpi-value');
-    if (momChange !== null) {
-      monthTrendEl.textContent = (momChange >= 0 ? '+' : '') + momChange.toFixed(2) + '%';
-      monthTrendEl.className = 'kpi-value ' + (momChange >= 0 ? 'trend-up' : 'trend-down');
+    // 6. 最新周通过率
+    var weekRateEl = document.querySelector('#kpiLatestWeekRate .kpi-value');
+    weekRateEl.textContent = latestWeekRate.toFixed(2) + '%';
+    document.querySelector('#kpiLatestWeekRate .kpi-sub').textContent = latestWeekLabel;
+    
+    document.getElementById('kpiLatestWeekRate').className = 'kpi-card ' + 
+      (latestWeekRate >= 90 ? 'success' : (latestWeekRate >= 85 ? 'warning' : 'danger'));
+    
+    var rateBadge = document.querySelector('#kpiLatestWeekRate .kpi-trend-badge');
+    if (rateWowChange !== null) {
+      rateBadge.className = 'kpi-trend-badge ' + (rateWowChange >= 0 ? 'up' : 'down');
+      rateBadge.textContent = (rateWowChange >= 0 ? '+' : '') + rateWowChange + 'pp';
+      rateBadge.style.display = 'inline-flex';
     } else {
-      monthTrendEl.textContent = '-';
-      monthTrendEl.className = 'kpi-value';
+      rateBadge.style.display = 'none';
     }
+    
+    console.log('[Audit] ✅ KPI卡片更新完成（周核心模式）');
+    console.log('   - 累计订单:', totalOrders);
+    console.log('   - 总周数:', totalWeeks);
+    console.log('   - 周均审核:', avgWeekOrders);
+    console.log('   - 整体通过率:', overallPassRate + '%');
+    console.log('   - 最新周:', latestWeekLabel, '| 审核量:', latestWeekOrders, '| 通过率:', latestWeekRate.toFixed(2) + '%');
   }
 
   // 渲染月度趋势图（含环比）
@@ -1437,11 +1561,27 @@ document.addEventListener('DOMContentLoaded', function() {
     var displayData = filteredWeeklyData.length > 0 ? filteredWeeklyData : weeklyData;
 
     var totalOrders = displayData.reduce((sum, w) => sum + (w.total_orders || 0), 0);
-    var avgPassRate = (displayData.reduce((sum, w) => sum + parseFloat(w.pass_rate || 0), 0) / displayData.length).toFixed(2);
+    var totalPassed = displayData.reduce((sum, w) => sum + (parseFloat(w.passed_orders) || 0), 0);
+    var avgPassRate = totalOrders > 0 ? ((totalPassed / totalOrders) * 100).toFixed(2) : '0';
+    var avgWeekOrders = Math.round(totalOrders / displayData.length);
 
-    var html = '<div style="margin-bottom:16px;padding:12px;background:#f0f9ff;border-radius:8px;border-left:4px solid #3b82f6;">';
-    html += '<span style="font-size:13px;color:#1e40af;"><strong>汇总：</strong>共 ' + displayData.length + ' 周，总审核量 ' + totalOrders.toLocaleString() + ' 单，平均通过率 ' + avgPassRate + '%</span>';
-    html += '</div>';
+    // 更新汇总徽章
+    var summaryBadge = document.getElementById('weeklySummaryBadge');
+    if (summaryBadge) {
+      summaryBadge.textContent = '共 ' + displayData.length + ' 周 | 总计 ' + totalOrders.toLocaleString() + ' 单 | 均通过率 ' + avgPassRate + '%';
+    }
+
+    console.log('[Audit] 📋 周度明细数据:');
+    console.log('   - 统计周数:', displayData.length);
+    console.log('   - 总审核量:', totalOrders);
+    console.log('   - 平均周审核量:', avgWeekOrders);
+    console.log('   - 整体通过率:', avgPassRate + '%');
+
+    var html = '<div style="margin-bottom:16px;padding:12px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:10px;border-left:4px solid #3b82f6;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">';
+    html += '<span style="font-size:14px;color:#1e40af;font-weight:600;">📊 汇总：' + displayData.length + ' 周 · 总计 <strong>' + totalOrders.toLocaleString() + '</strong> 单 · 通过率 <strong>' + avgPassRate + '%</strong></span>';
+    html += '<span style="font-size:12px;color:#3b82f6;background:white;padding:4px 12px;border-radius:12px;">📈 周均 ' + avgWeekOrders.toLocaleString() + ' 单</span>';
+    html += '</div></div>';
 
     html += '<table class="data-table"><thead><tr>';
     html += '<th>周次</th><th>审核量</th><th>通过数</th><th>通过率</th><th>通过率环比<br><span style="font-size:10px;font-weight:400;color:#6b7280;">(本周 vs 上周)</span></th><th>趋势</th>';
