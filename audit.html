@@ -1023,9 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('heroDescription').textContent = '正在从后台同步数据，请稍候...';
   
-  showLoading(false);
-
-  // ========== 数据清除/重置功能 ==========
+  // ========== 数据清除/重置功能（全局函数） ==========
   
   function showToolbar() {
     var toolbar = document.getElementById('actionToolbar');
@@ -1055,7 +1053,6 @@ document.addEventListener('DOMContentLoaded', function() {
       statusText.textContent = text;
     }
     
-    // 有数据时显示清除按钮
     if (btnClear) {
       btnClear.style.display = (status === 'success') ? 'flex' : 'none';
     }
@@ -1079,7 +1076,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[Audit] 🗑️ 开始清除所有审核数据...');
     
     try {
-      // 清除所有相关缓存
       var keysToRemove = [
         'auditDataCache',
         'auditDataTimestamp',
@@ -1093,17 +1089,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
-      // 隐藏工具栏
       hideToolbar();
-      
-      // 更新状态
       updateDataStatus('warning', '数据已清除，请从后台上传新数据');
       
       console.log('[Audit] ✅ 所有审核数据已清除');
       
       showToast('✅ 数据已成功清除！请前往管理后台上传新文件', 'success', 5000);
       
-      // 延迟刷新页面，让用户看到提示
       setTimeout(function() {
         location.reload();
       }, 1500);
@@ -1113,6 +1105,8 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast('❌ 清除失败: ' + error.message, 'error', 5000);
     }
   }
+
+  showLoading(false);
 
   async function loadAndRenderAuditData() {
     var result;
