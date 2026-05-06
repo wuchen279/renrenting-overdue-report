@@ -1164,7 +1164,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 更新KPI卡片 - 周核心指标
   function updateKPICards(monthlyData, weeklyData) {
-    if (!weeklyData || weeklyData.length === 0) return;
+    if (!weeklyData || weeklyData.length === 0) {
+      console.warn('[Audit] ⚠️ 无周数据，跳过KPI更新');
+      return;
+    }
     
     var totalOrders = monthlyData.reduce((sum, m) => sum + (m.total_orders || 0), 0);
     var totalPassed = monthlyData.reduce((sum, m) => sum + (parseFloat(m.passed_orders) || 0), 0);
@@ -1196,53 +1199,78 @@ document.addEventListener('DOMContentLoaded', function() {
       rateWowChange = (latestWeekRate - prevRate).toFixed(2);
     }
     
+    // 安全更新辅助函数
+    function safeSetText(selector, text) {
+      var el = document.querySelector(selector);
+      if (el) {
+        el.textContent = text;
+      } else {
+        console.warn('[Audit] ⚠️ 找不到元素:', selector);
+      }
+    }
+    
+    function safeSetHtml(selector, html) {
+      var el = document.querySelector(selector);
+      if (el) {
+        el.innerHTML = html;
+      } else {
+        console.warn('[Audit] ⚠️ 找不到元素:', selector);
+      }
+    }
+    
+    function safeSetClass(id, className) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.className = className;
+      }
+    }
+    
     // 1. 累计审核订单
-    var kpiTotal = document.querySelector('#kpiTotalOrders .kpi-value');
-    kpiTotal.textContent = totalOrders.toLocaleString();
-    document.querySelector('#kpiTotalOrders .kpi-sub').textContent = 
-      monthlyData.length + '个月 · ' + totalWeeks + '周';
+    safeSetText('#kpiTotalOrders .kpi-value', totalOrders.toLocaleString());
+    safeSetHtml('#kpiTotalOrders .kpi-sub', monthlyData.length + '个月 · ' + totalWeeks + '周');
     
     // 2. 统计周期（周数）
-    document.querySelector('#kpiTotalWeeks .kpi-value').textContent = totalWeeks;
+    safeSetText('#kpiTotalWeeks .kpi-value', totalWeeks);
     
     // 3. 平均周审核量
-    document.querySelector('#kpiAvgWeekOrders .kpi-value').textContent = avgWeekOrders.toLocaleString();
+    safeSetText('#kpiAvgWeekOrders .kpi-value', avgWeekOrders.toLocaleString());
     
     // 4. 整体通过率
-    var rateEl = document.querySelector('#kpiAvgPassRate .kpi-value');
-    rateEl.textContent = overallPassRate + '%';
-    document.getElementById('kpiAvgPassRate').className = 'kpi-card ' + 
-      (overallPassRate >= 90 ? 'success' : (overallPassRate >= 85 ? 'warning' : 'danger'));
+    safeSetText('#kpiAvgPassRate .kpi-value', overallPassRate + '%');
+    safeSetClass('kpiAvgPassRate', 'kpi-card ' + 
+      (overallPassRate >= 90 ? 'success' : (overallPassRate >= 85 ? 'warning' : 'danger')));
     
     // 5. 最新周审核量
-    var ordersEl = document.querySelector('#kpiLatestWeekOrders .kpi-value');
-    ordersEl.textContent = latestWeekOrders.toLocaleString();
-    document.querySelector('#kpiLatestWeekOrders .kpi-sub').textContent = latestWeekLabel;
+    safeSetText('#kpiLatestWeekOrders .kpi-value', latestWeekOrders.toLocaleString());
+    safeSetText('#kpiLatestWeekOrders .kpi-sub', latestWeekLabel);
     
     var orderBadge = document.querySelector('#kpiLatestWeekOrders .kpi-trend-badge');
-    if (orderWowChange !== null) {
-      orderBadge.className = 'kpi-trend-badge ' + (orderWowChange >= 0 ? 'up' : 'down');
-      orderBadge.textContent = (orderWowChange >= 0 ? '+' : '') + orderWowChange + '%';
-      orderBadge.style.display = 'inline-flex';
-    } else {
-      orderBadge.style.display = 'none';
+    if (orderBadge) {
+      if (orderWowChange !== null) {
+        orderBadge.className = 'kpi-trend-badge ' + (orderWowChange >= 0 ? 'up' : 'down');
+        orderBadge.textContent = (orderWowChange >= 0 ? '+' : '') + orderWowChange + '%';
+        orderBadge.style.display = 'inline-flex';
+      } else {
+        orderBadge.style.display = 'none';
+      }
     }
     
     // 6. 最新周通过率
-    var weekRateEl = document.querySelector('#kpiLatestWeekRate .kpi-value');
-    weekRateEl.textContent = latestWeekRate.toFixed(2) + '%';
-    document.querySelector('#kpiLatestWeekRate .kpi-sub').textContent = latestWeekLabel;
+    safeSetText('#kpiLatestWeekRate .kpi-value', latestWeekRate.toFixed(2) + '%');
+    safeSetText('#kpiLatestWeekRate .kpi-sub', latestWeekLabel);
     
-    document.getElementById('kpiLatestWeekRate').className = 'kpi-card ' + 
-      (latestWeekRate >= 90 ? 'success' : (latestWeekRate >= 85 ? 'warning' : 'danger'));
+    safeSetClass('kpiLatestWeekRate', 'kpi-card ' + 
+      (latestWeekRate >= 90 ? 'success' : (latestWeekRate >= 85 ? 'warning' : 'danger')));
     
     var rateBadge = document.querySelector('#kpiLatestWeekRate .kpi-trend-badge');
-    if (rateWowChange !== null) {
-      rateBadge.className = 'kpi-trend-badge ' + (rateWowChange >= 0 ? 'up' : 'down');
-      rateBadge.textContent = (rateWowChange >= 0 ? '+' : '') + rateWowChange + 'pp';
-      rateBadge.style.display = 'inline-flex';
-    } else {
-      rateBadge.style.display = 'none';
+    if (rateBadge) {
+      if (rateWowChange !== null) {
+        rateBadge.className = 'kpi-trend-badge ' + (rateWowChange >= 0 ? 'up' : 'down');
+        rateBadge.textContent = (rateWowChange >= 0 ? '+': '') + rateWowChange + 'pp';
+        rateBadge.style.display = 'inline-flex';
+      } else {
+        rateBadge.style.display = 'none';
+      }
     }
     
     console.log('[Audit] ✅ KPI卡片更新完成（周核心模式）');
@@ -1257,9 +1285,15 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderMonthlyChart(data) {
     if (!data || data.length === 0) return;
     
-    var ctx = document.getElementById('monthlyChart').getContext('2d');
+    var ctx = document.getElementById('monthlyChart');
+    if (!ctx) {
+      console.warn('[Audit] ⚠️ 找不到 monthlyChart 元素');
+      return;
+    }
     
-    if (monthlyChart) monthlyChart.destroy();
+    ctx = ctx.getContext('2d');
+    
+    try { if (monthlyChart && typeof monthlyChart.destroy === 'function') monthlyChart.destroy(); } catch(e) { monthlyChart = null; }
     
     var filterValue = document.getElementById('monthlyPeriodSelect').value;
     var filteredData = filterValue === 'quarter' ? data.slice(-3) : 
@@ -1388,9 +1422,15 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderWeeklyChart(data) {
     if (!data || data.length === 0) return;
     
-    var ctx = document.getElementById('weeklyChart').getContext('2d');
+    var ctx = document.getElementById('weeklyChart');
+    if (!ctx) {
+      console.warn('[Audit] ⚠️ 找不到 weeklyChart 元素');
+      return;
+    }
     
-    if (weeklyChart) weeklyChart.destroy();
+    ctx = ctx.getContext('2d');
+    
+    try { if (weeklyChart && typeof weeklyChart.destroy === 'function') weeklyChart.destroy(); } catch(e) { weeklyChart = null; }
     
     var filterValue = document.getElementById('weeklyPeriodSelect').value;
     var filteredData = filterValue === 'month' ? data.slice(-4) : 
@@ -1645,12 +1685,21 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx = ctx.getContext('2d');
 
       // 安全地销毁旧的图表实例
-      if (window.auditorChart && typeof window.auditorChart.destroy === 'function') {
-        try {
-          window.auditorChart.destroy();
-        } catch (destroyError) {
-          console.warn('[Audit] ⚠️ 销毁旧图表失败:', destroyError);
+      try {
+        if (window.auditorChart) {
+          // 检查是否是 Chart 实例
+          if (typeof window.auditorChart.destroy === 'function') {
+            window.auditorChart.destroy();
+          } else if (window.auditorChart instanceof Chart) {
+            // 如果是 Chart 实例但 destroy 不是函数（异常状态）
+            console.warn('[Audit] ⚠️ auditorChart 是 Chart 实例但无法销毁');
+          }
+          // 清除引用
+          window.auditorChart = null;
         }
+      } catch (e) {
+        console.warn('[Audit] ⚠️ 销毁旧图表失败:', e.message);
+        window.auditorChart = null;
       }
 
     // 只显示前10名审核人员
@@ -1835,7 +1884,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     ctx = ctx.getContext('2d');
     
-    if (storeChart) storeChart.destroy();
+    try { if (storeChart && typeof storeChart.destroy === 'function') storeChart.destroy(); } catch(e) { storeChart = null; }
     
     var latestMonth = data[data.length - 1];
     
