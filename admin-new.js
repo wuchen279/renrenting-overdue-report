@@ -960,6 +960,11 @@
   };
 
   function processAuditData(rawData) {
+    console.log('═══════════════════════════════════════');
+    console.log('📊 开始处理审核数据');
+    console.log('   原始记录数:', rawData.length);
+    console.log('═══════════════════════════════════════');
+
     const monthlyMap = {};
     const weeklyMap = {};
     const stores = {};
@@ -969,39 +974,85 @@
     var currentYear = today.getFullYear();
     var currentMonth = today.getMonth() + 1;
     
-    console.log('[Analysis] 当前日期:', today.toISOString().split('T')[0]);
-    console.log('[Analysis] 将过滤掉', currentYear, '年', currentMonth, '月之后的未来数据');
+    var stats = {
+      total: rawData.length,
+      processed: 0,
+      skipped: {
+        invalidDate: 0,
+        futureDate: 0,
+        missingData: 0
+      },
+      dateSamples: [],
+      deviceStats: { withDevices: 0, withoutDevices: 0, totalDevices: 0 }
+    };
     
-    rawData.forEach(function(row) {
-      let date;
-      if (typeof row['时间'] === 'number') {
-        date = excelDateToJSDate(row['时间']);
-      } else if (typeof row['时间'] === 'string') {
-        date = new Date(row['时间']);
-      } else {
+    console.log('[Analysis] 当前日期:', today.toISOString().split('T')[0]);
+    console.log('[Analysis] 数据截止月份:', currentYear, '年', currentMonth, '月');
+
+    rawData.forEach(function(row, index) {
+      var rawTimeValue = row['时间'];
+      var date = parseDateSafely(rawTimeValue);
+      
+      if (!date || isNaN(date.getTime())) {
+        stats.skipped.invalidDate++;
+        if (stats.skipped.invalidDate <= 5) {
+          console.warn('[Analysis] ⚠️ 第', index + 1, '行: 无法解析日期 - 原始值:', rawTimeValue, '(类型:', typeof rawTimeValue, ')');
+        }
         return;
       }
-      
-      if (isNaN(date.getTime())) return;
       
       var recordYear = date.getFullYear();
       var recordMonth = date.getMonth() + 1;
       
       if (recordYear > currentYear || (recordYear === currentYear && recordMonth > currentMonth)) {
-        console.warn('[Analysis] ⚠️ 跳过未来日期:', date.toISOString().split('T')[0], '(属于', recordYear, '年', recordMonth, '月)');
+        stats.skipped.futureDate++;
+        if (stats.skipped.futureDate <= 5) {
+          console.warn('[Analysis] ⚠️ 第', index + 1, '行: 未来日期已跳过 -', 
+                      date.toISOString().split('T')[0], '(', recordYear, '年', recordMonth, '月)');
+        }
         return;
       }
       
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const weekNum = getISOWeek(date);
-      const yearMonth = year + '-' + String(month).padStart(2, '0');
-      const yearWeek = year + '-W' + String(weekNum).padStart(2, '0');
+      var storeName = (row['店铺'] || '').trim() || '未知';
+      var passValue = row['是否通过'];
+      var isPass = false;
       
-      const storeName = row['店铺'] || '未知';
-      const isPass = String(row['是否通过']).trim() === '是' || row['是否通过'] === true || row['是否通过'] === 1;
-      const devices = parseInt(row['台数']) || 1;
-      const auditor = (row['审核人员'] || '').trim() || '未知';
+      if (passValue !== null && passValue !== undefined && passValue !== '') {
+        var passStr = String(passValue).trim();
+        isPass = passStr === '是' || passStr === 'yes' || passStr === 'true' || 
+                 passStr === '1' || passStr === '通过' || passValue === true || passValue === 1;
+      }
+      
+      var devices = parseInt(row['台数']) || 1;
+      if (isNaN(devices) || devices < 1) devices = 1;
+      
+      if (devices > 1) {
+        stats.deviceStats.withDevices++;
+        stats.deviceStats.totalDevices += devices;
+      } else {
+        stats.deviceStats.withoutDevices++;
+      }
+      
+      var auditor = (row['审核人员'] || '').trim() || '未知';
+      
+      var year = date.getFullYear();
+      var month = date.getMonth() + 1;
+      var weekNum = getISOWeek(date);
+      var yearMonth = year + '-' + String(month).padStart(2, '0');
+      var yearWeek = year + '-W' + String(weekNum).padStart(2, '0');
+      
+      if (index < 10 || index % 500 === 0) {
+        stats.dateSamples.push({
+          row: index + 1,
+          rawValue: rawTimeValue,
+          parsed: date.toISOString().split('T')[0],
+          yearMonth: yearMonth,
+          yearWeek: yearWeek,
+          devices: devices,
+          store: storeName,
+          isPass: isPass
+        });
+      }
       
       if (!monthlyMap[yearMonth]) {
         monthlyMap[yearMonth] = {
@@ -1016,22 +1067,24 @@
           ls_orders: 0,
           ls_passed: 0,
           lh_orders: 0,
-          lh_passed: 0
+          lh_passed: 0,
+          raw_record_count: 0
         };
       }
       
-      monthlyMap[yearMonth].total_orders++;
-      monthlyMap[yearMonth].passed_orders += isPass ? 1 : 0;
+      monthlyMap[yearMonth].total_orders += devices;
+      monthlyMap[yearMonth].raw_record_count++;
+      monthlyMap[yearMonth].passed_orders += isPass ? devices : 0;
       
-      if (storeName === '箭头') { 
-        monthlyMap[yearMonth].jt_orders++; 
-        if (isPass) monthlyMap[yearMonth].jt_passed++; 
-      } else if (storeName === '驴上') { 
-        monthlyMap[yearMonth].ls_orders++; 
-        if (isPass) monthlyMap[yearMonth].ls_passed++; 
-      } else if (storeName === '雷猴' || storeName === '懂机帝') { 
-        monthlyMap[yearMonth].lh_orders++; 
-        if (isPass) monthlyMap[yearMonth].lh_passed++; 
+      if (storeName.indexOf('箭头') !== -1) { 
+        monthlyMap[yearMonth].jt_orders += devices; 
+        if (isPass) monthlyMap[yearMonth].jt_passed += devices; 
+      } else if (storeName.indexOf('驴上') !== -1) { 
+        monthlyMap[yearMonth].ls_orders += devices; 
+        if (isPass) monthlyMap[yearMonth].ls_passed += devices; 
+      } else if (storeName.indexOf('雷猴') !== -1 || storeName.indexOf('懂机帝') !== -1) { 
+        monthlyMap[yearMonth].lh_orders += devices; 
+        if (isPass) monthlyMap[yearMonth].lh_passed += devices; 
       }
       
       if (!weeklyMap[yearWeek]) {
@@ -1040,43 +1093,75 @@
           week_number: weekNum,
           total_orders: 0,
           passed_orders: 0,
-          pass_rate: 0
+          pass_rate: 0,
+          raw_record_count: 0
         };
       }
       
-      weeklyMap[yearWeek].total_orders++;
-      weeklyMap[yearWeek].passed_orders += isPass ? 1 : 0;
+      weeklyMap[yearWeek].total_orders += devices;
+      weeklyMap[yearWeek].raw_record_count++;
+      weeklyMap[yearWeek].passed_orders += isPass ? devices : 0;
       
       if (!stores[storeName]) {
         stores[storeName] = { total: 0, passed: 0 };
       }
-      stores[storeName].total++;
-      stores[storeName].passed += isPass ? 1 : 0;
+      stores[storeName].total += devices;
+      stores[storeName].passed += isPass ? devices : 0;
       
       if (!auditors[auditor]) {
         auditors[auditor] = { total: 0, passed: 0 };
       }
-      auditors[auditor].total++;
-      auditors[auditor].passed += isPass ? 1 : 0;
+      auditors[auditor].total += devices;
+      auditors[auditor].passed += isPass ? devices : 0;
+      
+      stats.processed++;
     });
     
+    console.log('═══════════════════════════════════════');
+    console.log('📊 数据处理完成 - 统计摘要');
+    console.log('═══════════════════════════════════════');
+    console.log('✅ 成功处理:', stats.processed, '条记录');
+    console.log('⏭️  跳过记录:');
+    console.log('   - 无效日期:', stats.skipped.invalidDate, '条');
+    console.log('   - 未来日期:', stats.skipped.futureDate, '条');
+    console.log('📦 设备统计:');
+    console.log('   - 单台记录:', stats.deviceStats.withoutDevices, '条');
+    console.log('   - 多台记录:', stats.deviceStats.withDevices, '条 (共', stats.deviceStats.totalDevices, '台)');
+    console.log('📅 月度汇总 (', Object.keys(monthlyMap).length, '个月份):');
+    
     Object.keys(monthlyMap).sort().forEach(function(key) {
-      const m = monthlyMap[key];
-      m.pass_rate = m.total_orders > 0 ? ((m.passed_orders / m.total_orders) * 100).toFixed(2) : 0;
+      var m = monthlyMap[key];
+      m.pass_rate = m.total_orders > 0 ? ((m.passed_orders / m.total_orders) * 100).toFixed(2) : '0';
       
-      // 计算各店铺通过率
       m.jt_pass_rate = m.jt_orders > 0 ? ((m.jt_passed / m.jt_orders) * 100).toFixed(2) : '0';
       m.ls_pass_rate = m.ls_orders > 0 ? ((m.ls_passed / m.ls_orders) * 100).toFixed(2) : '0';
       m.lh_pass_rate = m.lh_orders > 0 ? ((m.lh_passed / m.lh_orders) * 100).toFixed(2) : '0';
+      
+      console.log('   ', key, '(' + m.month_label + '):', 
+                  m.total_orders, '单 (原始', m.raw_record_count, '行) |',
+                  '通过:', m.passed_orders, '| 通过率:', m.pass_rate + '%');
     });
+    
+    console.log('📆 周汇总 (', Object.keys(weeklyMap).length, '周):');
     
     Object.keys(weeklyMap).sort().forEach(function(key) {
-      const w = weeklyMap[key];
-      w.pass_rate = w.total_orders > 0 ? ((w.passed_orders / w.total_orders) * 100).toFixed(2) : 0;
+      var w = weeklyMap[key];
+      w.pass_rate = w.total_orders > 0 ? ((w.passed_orders / w.total_orders) * 100).toFixed(2) : '0';
+      
+      console.log('   ', key + ':', 
+                  w.total_orders, '单 (原始', (w.raw_record_count || 0), '行) |',
+                  '通过:', w.passed_orders, '| 通过率:', w.pass_rate + '%');
     });
     
-    // 计算周环比（本周 vs 上周）
-    const weeklyDataArray = Object.values(weeklyMap).sort(function(a, b) {
+    console.log('📋 数据样本（前10条）:');
+    stats.dateSamples.forEach(function(s) {
+      console.log('   行', s.row, ':', s.rawValue, '→', s.parsed, 
+                  '|', s.yearMonth, '| W' + String(s.week_number || '').padStart(2, '0'),
+                  '| 台数:', s.devices, '|', s.store, '| 通过:', s.isPass ? '✓' : '✗');
+    });
+    console.log('═══════════════════════════════════════');
+    
+    var weeklyDataArray = Object.values(weeklyMap).sort(function(a, b) {
       if (a.year !== b.year) return a.year - b.year;
       return a.week_number - b.week_number;
     });
@@ -1109,11 +1194,21 @@
     const monthlyData = Object.values(monthlyMap);
     const weeklyData = weeklyDataArray;
     
+    var totalOrders = 0;
+    var totalPassed = 0;
+    monthlyData.forEach(function(m) {
+      totalOrders += m.total_orders;
+      totalPassed += parseFloat(m.passed_orders || 0);
+    });
+    
     return {
       success: true,
       dataSource: 'admin-upload',
       timestamp: new Date().toISOString(),
       rawDataCount: rawData.length,
+      processedCount: stats.processed,
+      skippedCount: stats.skipped.invalidDate + stats.skipped.futureDate,
+      processingStats: stats,
       monthlyData: monthlyData,
       weeklyData: weeklyData,
       stores: Object.entries(stores).map(function(e) {
@@ -1121,7 +1216,7 @@
           name: e[0],
           total: e[1].total,
           passed: e[1].passed,
-          pass_rate: e[1].total > 0 ? ((e[1].passed / e[1].total) * 100).toFixed(2) : 0
+          pass_rate: e[1].total > 0 ? ((e[1].passed / e[1].total) * 100).toFixed(2) : '0'
         };
       }).sort(function(a, b) { return b.total - a.total; }),
       auditors: Object.entries(auditors).map(function(e) {
@@ -1129,13 +1224,13 @@
           name: e[0],
           total: e[1].total,
           passed: e[1].passed,
-          pass_rate: e[1].total > 0 ? ((e[1].passed / e[1].total) * 100).toFixed(2) : 0
+          pass_rate: e[1].total > 0 ? ((e[1].passed / e[1].total) * 100).toFixed(2) : '0'
         };
       }).sort(function(a, b) { return b.total - a.total; }),
       summary: {
-        totalOrders: rawData.length,
-        avgPassRate: monthlyData.length > 0 ? 
-          (monthlyData.reduce(function(s, m) { return s + parseFloat(m.pass_rate); }, 0) / monthlyData.length).toFixed(2) : 0,
+        totalOrders: totalOrders,
+        totalPassed: totalPassed,
+        avgPassRate: totalOrders > 0 ? ((totalPassed / totalOrders) * 100).toFixed(2) : '0',
         months: monthlyData.length,
         weeks: weeklyData.length
       }
@@ -1143,17 +1238,83 @@
   }
 
   function excelDateToJSDate(serial) {
-    const utc_days = Math.floor(serial - 25569);
-    const utc_value = utc_days * 86400;
-    const date_info = new Date(utc_value * 1000);
-    return date_info;
+    if (typeof serial !== 'number' || isNaN(serial)) return null;
+    
+    var utc_days = Math.floor(serial - 25569);
+    var utc_value = utc_days * 86400;
+    var date_info = new Date(utc_value * 1000);
+    
+    var year = date_info.getUTCFullYear();
+    var month = date_info.getUTCMonth();
+    var day = date_info.getUTCDate();
+    
+    return new Date(year, month, day);
+  }
+
+  function parseDateFromString(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    
+    dateStr = String(dateStr).trim();
+    
+    var patterns = [
+      /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/,
+      /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/,
+      /^(\d{4})年(\d{1,2})月(\d{1,2})日?$/,
+      /^(\d{4})(\d{2})(\d{2})$/
+    ];
+    
+    for (var i = 0; i < patterns.length; i++) {
+      var match = dateStr.match(patterns[i]);
+      if (match) {
+        var year, month, day;
+        
+        if (i === 0 || i === 2 || i === 3) {
+          year = parseInt(match[1]);
+          month = parseInt(match[2]) - 1;
+          day = parseInt(match[3]);
+        } else if (i === 1) {
+          year = parseInt(match[3]);
+          month = parseInt(match[1]) - 1;
+          day = parseInt(match[2]);
+        }
+        
+        if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+          var parsed = new Date(year, month, day);
+          if (!isNaN(parsed.getTime())) return parsed;
+        }
+      }
+    }
+    
+    var fallback = new Date(dateStr);
+    if (!isNaN(fallback.getTime())) return fallback;
+    
+    return null;
+  }
+
+  function parseDateSafely(rawValue) {
+    if (rawValue === null || rawValue === undefined || rawValue === '') return null;
+    
+    var date = null;
+    
+    if (typeof rawValue === 'number') {
+      date = excelDateToJSDate(rawValue);
+    } else if (typeof rawValue === 'string' || rawValue instanceof Date) {
+      date = parseDateFromString(rawValue);
+      if (!date && rawValue instanceof Date && !isNaN(rawValue.getTime())) {
+        date = new Date(rawValue.getFullYear(), rawValue.getMonth(), rawValue.getDate());
+      }
+    } else {
+      date = parseDateFromString(String(rawValue));
+    }
+    
+    return date;
   }
 
   function getISOWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   }
 
