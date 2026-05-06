@@ -909,16 +909,24 @@ document.addEventListener('DOMContentLoaded', function() {
       if (cachedAuditData) {
         console.log('[Audit] ✓ 检测到本地缓存的审核数据');
         console.log('[Audit] 缓存时间:', cachedTimestamp);
-        
+
         var parsedData = JSON.parse(cachedAuditData);
-        
+
         console.log('[Audit] 解析后的数据:');
         console.log('  - success:', parsedData.success);
+        console.log('  - dataSource:', parsedData.dataSource);
         console.log('  - monthlyData 存在:', !!parsedData.monthlyData);
         console.log('  - monthlyData 长度:', parsedData.monthlyData ? parsedData.monthlyData.length : 0);
         console.log('  - rawDataCount:', parsedData.rawDataCount);
-        
-        if (parsedData && parsedData.success && parsedData.monthlyData && parsedData.monthlyData.length > 0) {
+
+        if (parsedData && parsedData.dataSource === 'test-data') {
+          console.warn('[Audit] ⚠️ 检测到测试数据，已自动忽略！');
+          console.warn('[Audit] 测试数据包含虚假的5月份数据，不会显示');
+          localStorage.removeItem('auditDataCache');
+          localStorage.removeItem('auditDataTimestamp');
+          cachedAuditData = null;
+          showToast('⚠️ 已自动清除测试数据（包含虚假的未来日期）', 'warning', 5000);
+        } else if (parsedData && parsedData.success && parsedData.monthlyData && parsedData.monthlyData.length > 0) {
           console.log('[Audit] ✅ 使用本地缓存数据显示');
           console.log('[Audit] monthlyData 长度:', parsedData.monthlyData.length);
           dataSource = 'localStorage';
