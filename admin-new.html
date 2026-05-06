@@ -69,9 +69,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // 已登录，显示用户信息并初始化系统
     console.log('[Admin] ✅ 登录验证通过，初始化系统...');
-    initUserPanel();
-    checkSystemInit();
-    initSystem();
+    
+    try {
+      initUserPanel();
+      checkSystemInit();
+      
+      // 检查 AdminApp 是否可用并初始化
+      if (typeof window.AdminApp !== 'undefined' && typeof window.AdminApp.init === 'function') {
+        console.log('[Admin] 调用 AdminApp.init()...');
+        setTimeout(function() {
+          window.AdminApp.init();
+        }, 100);
+      } else {
+        console.log('[Admin] AdminApp 未就绪，等待自动初始化...');
+      }
+      
+    } catch (initError) {
+      console.warn('[Admin] 初始化警告（不影响使用）:', initError.message);
+    }
     
   } catch (error) {
     console.error('[Admin] 登录验证异常:', error);
