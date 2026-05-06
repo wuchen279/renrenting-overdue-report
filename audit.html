@@ -899,12 +899,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 首先检查 localStorage 中是否有后台同步的审核数据
     try {
+      var CACHE_VERSION = '2.0';
+      var cachedVersion = localStorage.getItem('auditDataCacheVersion');
+      
+      if (cachedVersion && cachedVersion !== CACHE_VERSION) {
+        console.warn('[Audit] 🔄 检测到旧版本缓存 (v' + cachedVersion + ')，需要重新生成数据');
+        console.log('[Audit] 当前版本: v' + CACHE_VERSION);
+        localStorage.removeItem('auditDataCache');
+        localStorage.removeItem('auditDataTimestamp');
+        localStorage.removeItem('auditDataCacheVersion');
+        showToast('🔄 已清除旧版缓存，请重新从后台上传数据', 'info', 5000);
+      }
+      
       var cachedAuditData = localStorage.getItem('auditDataCache');
       var cachedTimestamp = localStorage.getItem('auditDataTimestamp');
       
       console.log('[Audit] 检查 localStorage:');
       console.log('  - auditDataCache 存在:', !!cachedAuditData);
       console.log('  - auditDataTimestamp:', cachedTimestamp);
+      console.log('  - 缓存版本:', cachedVersion || '无');
       
       if (cachedAuditData) {
         console.log('[Audit] ✓ 检测到本地缓存的审核数据');
@@ -924,11 +937,63 @@ document.addEventListener('DOMContentLoaded', function() {
           console.warn('[Audit] 测试数据包含虚假的5月份数据，不会显示');
           localStorage.removeItem('auditDataCache');
           localStorage.removeItem('auditDataTimestamp');
+          localStorage.removeItem('auditDataCacheVersion');
           cachedAuditData = null;
           showToast('⚠️ 已自动清除测试数据（包含虚假的未来日期）', 'warning', 5000);
         } else if (parsedData && parsedData.success && parsedData.monthlyData && parsedData.monthlyData.length > 0) {
           console.log('[Audit] ✅ 使用本地缓存数据显示');
           console.log('[Audit] monthlyData 长度:', parsedData.monthlyData.length);
+          
+          var today = new Date();
+          var currentYear = today.getFullYear();
+          var currentMonth = today.getMonth() + 1;
+          
+          console.log('[Audit] 📅 当前日期:', today.toISOString().split('T')[0]);
+          console.log('[Audit] 🔍 开始过滤未来日期数据...');
+          
+          var originalMonthlyLength = parsedData.monthlyData.length;
+          var originalWeeklyLength = (parsedData.weeklyData || []).length;
+          
+          parsedData.monthlyData = parsedData.monthlyData.filter(function(m) {
+            if (!m.year || !m.month) return true;
+            
+            if (m.year > currentYear || (m.year === currentYear && m.month > currentMonth)) {
+              console.warn('[Audit] ⚠️ 过滤掉月度数据:', m.year + '年' + m.month + '月');
+              return false;
+            }
+            return true;
+          });
+          
+          if (parsedData.weeklyData) {
+            parsedData.weeklyData = parsedData.weeklyData.filter(function(w) {
+              if (!w.year || !w.week_number) return true;
+              
+              var weekDateRange = getWeekDateRange(w.year, w.week_number);
+              var startDateStr = weekDateRange.split(' ~ ')[0];
+              var startMonth = parseInt(startDateStr.split('/')[0]);
+              
+              if (w.year > currentYear || (w.year === currentYear && startMonth > currentMonth)) {
+                console.warn('[Audit] ⚠️ 过滤掉周数据:', w.year + 'W' + String(w.week_number).padStart(2, '0'), '(' + weekDateRange + ')');
+                return false;
+              }
+              return true;
+            });
+          }
+          
+          var filteredMonthlyCount = originalMonthlyLength - parsedData.monthlyData.length;
+          var filteredWeeklyCount = originalWeeklyLength - (parsedData.weeklyData || []).length;
+          
+          if (filteredMonthlyCount > 0 || filteredWeeklyCount > 0) {
+            console.log('[Audit] 📊 过滤完成:');
+            console.log('   - 月度: 原始', originalMonthlyLength, '→ 过滤后', parsedData.monthlyData.length, '(移除', filteredMonthlyCount, ')');
+            console.log('   - 周度: 原始', originalWeeklyLength, '→ 过滤后', (parsedData.weeklyData || []).length, '(移除', filteredWeeklyCount, ')');
+            
+            localStorage.setItem('auditDataCache', JSON.stringify(parsedData));
+            console.log('[Audit] 💾 已更新缓存（移除未来日期）');
+            
+            showToast('⚠️ 已自动过滤 ' + (filteredMonthlyCount + filteredWeeklyCount) + ' 条未来日期数据', 'warning', 5000);
+          }
+          
           dataSource = 'localStorage';
           
           result = {

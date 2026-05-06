@@ -880,6 +880,7 @@
             // 保存到本地
             localStorage.setItem('auditDataCache', JSON.stringify(processedData));
             localStorage.setItem('auditDataTimestamp', new Date().toISOString());
+            localStorage.setItem('auditDataCacheVersion', '2.0');
             
             showToast('正在上传到云端...', 'info');
             
@@ -935,6 +936,7 @@
       
       localStorage.setItem('auditDataCache', JSON.stringify(processedData));
       localStorage.setItem('auditDataTimestamp', new Date().toISOString());
+      localStorage.setItem('auditDataCacheVersion', '2.0');
       
       console.log('[Admin] ✅ 数据已保存到 localStorage');
       
